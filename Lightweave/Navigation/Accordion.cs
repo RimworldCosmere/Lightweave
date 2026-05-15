@@ -82,7 +82,6 @@ public static class Accordion {
 
             Event e = Event.current;
             float cursorY = rect.y;
-            Color savedColor = GUI.color;
 
             for (int i = 0; i < items.Count; i++) {
                 AccordionItem item = items[i];
@@ -150,11 +149,9 @@ public static class Accordion {
                     );
                 }
 
-                GUI.color = theme.GetColor(ThemeSlot.TextPrimary);
-                GUI.Label(RectSnap.Snap(labelRect), item.Header, headerStyle);
+                TextDraw.DrawWithStyle(labelRect, item.Header, headerStyle, theme.GetColor(ThemeSlot.TextPrimary));
 
                 DrawChevron(chevronRect, theme, progress, rtl);
-                GUI.color = savedColor;
 
                 cursorY = headerRect.yMax;
 
@@ -177,16 +174,16 @@ public static class Accordion {
                         Mathf.Max(0f, panelRect.height - contentPadY * 2f)
                     );
 
-                    GUI.BeginClip(panelRect);
-                    Rect clippedInner = new Rect(
-                        contentPadX,
-                        contentPadY - (item.ContentHeight - revealHeight),
-                        innerRect.width,
-                        item.ContentHeight - contentPadY * 2f
-                    );
-                    item.Content.MeasuredRect = clippedInner;
-                    LightweaveRoot.PaintSubtree(item.Content, clippedInner);
-                    GUI.EndClip();
+                    using (ClipScope.Begin(panelRect)) {
+                        Rect clippedInner = new Rect(
+                            contentPadX,
+                            contentPadY - (item.ContentHeight - revealHeight),
+                            innerRect.width,
+                            item.ContentHeight - contentPadY * 2f
+                        );
+                        item.Content.MeasuredRect = clippedInner;
+                        LightweaveRoot.PaintSubtree(item.Content, clippedInner);
+                    }
 
                     cursorY = panelRect.yMax;
                 }
@@ -214,17 +211,11 @@ public static class Accordion {
     }
 
     private static void DrawChevron(Rect rect, Theme.Theme theme, float progress, bool rtl) {
-        Matrix4x4 savedMatrix = GUI.matrix;
         Vector2 pivot = new Vector2(rect.x + rect.width / 2f, rect.y + rect.height / 2f);
         float angle = Mathf.Lerp(90f, -90f, progress);
-        GUIUtility.RotateAroundPivot(angle, pivot);
-
-        Color savedColor = GUI.color;
-        GUI.color = theme.GetColor(ThemeSlot.TextSecondary);
-        GUI.DrawTexture(RectSnap.Snap(rect), TexUI.ArrowTexLeft, ScaleMode.ScaleToFit);
-        GUI.color = savedColor;
-
-        GUI.matrix = savedMatrix;
+        using (RotateScope.Around(angle, pivot)) {
+            PaintBox.DrawTexture(rect, TexUI.ArrowTexLeft, theme.GetColor(ThemeSlot.TextSecondary), ScaleMode.ScaleToFit);
+        }
     }
 
     private static List<AccordionItem> BuildSampleItems() {

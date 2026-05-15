@@ -74,7 +74,6 @@ public static class Segmented {
             }
 
             Event e = Event.current;
-            Color savedColor = GUI.color;
 
             for (int i = 0; i < count; i++) {
                 int logicalIndex = rtl ? count - 1 - i : i;
@@ -113,9 +112,7 @@ public static class Segmented {
 
                 GUIStyle style = active ? activeStyle : inactiveStyle;
                 ThemeSlot textSlot = active ? ThemeSlot.TextOnAccent : ThemeSlot.TextSecondary;
-                GUI.color = theme.GetColor(textSlot);
-                GUI.Label(RectSnap.Snap(segRect), labelFn(item), style);
-                GUI.color = savedColor;
+                TextDraw.DrawWithStyle(segRect, labelFn(item), style, theme.GetColor(textSlot));
 
                 if (i < count - 1) {
                     int nextLogical = rtl ? count - 2 - i : i + 1;

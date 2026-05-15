@@ -197,10 +197,7 @@ public static class Breadcrumbs {
             next = chevronRect.xMax + gapPx;
         }
 
-        Color saved = GUI.color;
-        GUI.color = theme.GetColor(ThemeSlot.TextMuted);
-        GUI.Label(RectSnap.Snap(chevronRect), chevronGlyph, style);
-        GUI.color = saved;
+        TextDraw.DrawWithStyle(chevronRect, chevronGlyph, style, theme.GetColor(ThemeSlot.TextMuted));
         return next;
     }
 
@@ -225,10 +222,7 @@ public static class Breadcrumbs {
             next = ellipsisRect.xMax + gapPx;
         }
 
-        Color saved = GUI.color;
-        GUI.color = theme.GetColor(ThemeSlot.TextMuted);
-        GUI.Label(RectSnap.Snap(ellipsisRect), Ellipsis, style);
-        GUI.color = saved;
+        TextDraw.DrawWithStyle(ellipsisRect, Ellipsis, style, theme.GetColor(ThemeSlot.TextMuted));
         return next;
     }
 
@@ -265,10 +259,7 @@ public static class Breadcrumbs {
             slot = ThemeSlot.TextMuted;
         }
 
-        Color saved = GUI.color;
-        GUI.color = theme.GetColor(slot);
-        GUI.Label(RectSnap.Snap(labelRect), text, style);
-        GUI.color = saved;
+        TextDraw.DrawWithStyle(labelRect, text, style, theme.GetColor(slot));
 
         if (interactive && e.type == EventType.MouseUp && e.button == 0 && labelRect.Contains(e.mousePosition)) {
             onNavigate?.Invoke(index);

@@ -41,10 +41,7 @@ public static class MenuDivider {
             Theme.Theme theme = RenderContext.Current.Theme;
             float midY = rect.y + rect.height / 2f - thickness / 2f;
             Rect line = new Rect(rect.x, midY, rect.width, thickness);
-            Color saved = GUI.color;
-            GUI.color = theme.GetColor(ThemeSlot.BorderSubtle);
-            GUI.DrawTexture(RectSnap.Snap(line), Texture2D.whiteTexture);
-            GUI.color = saved;
+            PaintBox.Fill(line, theme.GetColor(ThemeSlot.BorderSubtle));
             paintChildren();
         };
         return node;

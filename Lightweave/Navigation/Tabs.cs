@@ -100,7 +100,6 @@ public static class Tabs {
             }
 
             Event e = Event.current;
-            Color savedColor = GUI.color;
 
             float cursor = rtl ? barRect.xMax : barRect.x;
             for (int i = 0; i < count; i++) {
@@ -126,9 +125,7 @@ public static class Tabs {
 
                 ThemeSlot textSlot = active || hovering ? ThemeSlot.TextPrimary : ThemeSlot.TextSecondary;
 
-                GUI.color = theme.GetColor(textSlot);
-                GUI.Label(RectSnap.Snap(tabRect), labelFn(item), style);
-                GUI.color = savedColor;
+                TextDraw.DrawWithStyle(tabRect, labelFn(item), style, theme.GetColor(textSlot));
 
                 if (active) {
                     Rect underlineRect = new Rect(

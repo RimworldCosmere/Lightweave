@@ -86,11 +86,9 @@ public static class MenuItem {
                 slot = hot ? ThemeSlot.TextPrimary : ThemeSlot.TextSecondary;
             }
 
-            Color saved = GUI.color;
-            GUI.color = theme.GetColor(slot);
+
             Rect labelRect = new Rect(labelStartX, rect.y, rect.xMax - padPx - labelStartX, rect.height);
-            GUI.Label(RectSnap.Snap(labelRect), label, style);
-            GUI.color = saved;
+            TextDraw.DrawWithStyle(labelRect, label, style, theme.GetColor(slot));
 
             paintChildren();
 

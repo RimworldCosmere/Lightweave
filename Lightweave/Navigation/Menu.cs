@@ -302,18 +302,13 @@ public static class Menu {
         style.alignment = dir == Direction.Rtl ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft;
 
         Rect labelRect = new Rect(rect.x + padX, rect.y, rect.width - padX * 2f, rect.height);
-        Color saved = GUI.color;
-        GUI.color = theme.GetColor(ThemeSlot.TextMuted);
-        GUI.Label(RectSnap.Snap(labelRect), label.ToUpperInvariant(), style);
+        TextDraw.DrawWithStyle(labelRect, label.ToUpperInvariant(), style, theme.GetColor(ThemeSlot.TextMuted));
 
         if (!string.IsNullOrEmpty(meta)) {
             GUIStyle metaStyle = GuiStyleCache.GetOrCreate(font, px, FontStyle.Normal);
             metaStyle.alignment = dir == Direction.Rtl ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight;
-            GUI.color = theme.GetColor(ThemeSlot.TextMuted);
-            GUI.Label(RectSnap.Snap(labelRect), meta!.ToUpperInvariant(), metaStyle);
+            TextDraw.DrawWithStyle(labelRect, meta!.ToUpperInvariant(), metaStyle, theme.GetColor(ThemeSlot.TextMuted));
         }
-
-        GUI.color = saved;
     }
 
     private static void PaintHairline(float x, float y, float width) {
@@ -324,10 +319,7 @@ public static class Menu {
         Theme.Theme theme = RenderContext.Current.Theme;
         float thickness = Mathf.Max(1f, new Rem(1f / 16f).ToPixels());
         Rect line = new Rect(x, y - thickness * 0.5f, width, thickness);
-        Color saved = GUI.color;
-        GUI.color = theme.GetColor(ThemeSlot.BorderSubtle);
-        GUI.DrawTexture(RectSnap.Snap(line), Texture2D.whiteTexture);
-        GUI.color = saved;
+        PaintBox.FillSolid(line, theme.GetColor(ThemeSlot.BorderSubtle));
     }
 
     private static void PaintSearch(Rect rect, Hooks.Hooks.StateHandle<string> query, string placeholder) {
@@ -352,11 +344,8 @@ public static class Menu {
         GUIStyle style = GuiStyleCache.GetOrCreate(font, px, FontStyle.Italic);
         style.alignment = dir == Direction.Rtl ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft;
 
-        Color saved = GUI.color;
-        GUI.color = theme.GetColor(ThemeSlot.TextMuted);
         Rect labelRect = new Rect(rect.x + padX, rect.y, rect.width - padX * 2f, rect.height);
-        GUI.Label(RectSnap.Snap(labelRect), (string)"CL_Menu_NoMatches".Translate(), style);
-        GUI.color = saved;
+        TextDraw.DrawWithStyle(labelRect, (string)"CL_Menu_NoMatches".Translate(), style, theme.GetColor(ThemeSlot.TextMuted));
     }
 
     private static void PaintDivider(Rect rowRect) {
@@ -368,10 +357,7 @@ public static class Menu {
         float thickness = Mathf.Max(1f, new Rem(1f / 16f).ToPixels());
         float midY = rowRect.y + rowRect.height / 2f - thickness / 2f;
         Rect line = new Rect(rowRect.x, midY, rowRect.width, thickness);
-        Color saved = GUI.color;
-        GUI.color = theme.GetColor(ThemeSlot.BorderSubtle);
-        GUI.DrawTexture(RectSnap.Snap(line), Texture2D.whiteTexture);
-        GUI.color = saved;
+        PaintBox.FillSolid(line, theme.GetColor(ThemeSlot.BorderSubtle));
     }
 
     private static void PaintRow(
@@ -452,11 +438,8 @@ public static class Menu {
             int chevronSize = Mathf.RoundToInt(new Rem(1.25f).ToFontPx());
             GUIStyle chevronStyle = GuiStyleCache.GetOrCreate(chevronFont, chevronSize);
             chevronStyle.alignment = rtl ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight;
-            Color chevronSaved = GUI.color;
-            GUI.color = theme.GetColor(ThemeSlot.TextMuted);
             string chevronGlyph = rtl ? "‹" : "›";
-            GUI.Label(RectSnap.Snap(chevronRect), chevronGlyph, chevronStyle);
-            GUI.color = chevronSaved;
+            TextDraw.DrawWithStyle(chevronRect, chevronGlyph, chevronStyle, theme.GetColor(ThemeSlot.TextMuted));
             if (rtl) {
                 labelStartX = chevronX + chevronPx + gap;
             }
@@ -474,10 +457,7 @@ public static class Menu {
             int checkSize = Mathf.RoundToInt(new Rem(0.875f).ToFontPx());
             GUIStyle checkStyle = GuiStyleCache.GetOrCreate(checkFont, checkSize);
             checkStyle.alignment = rtl ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight;
-            Color checkSaved = GUI.color;
-            GUI.color = theme.GetColor(ThemeSlot.AccentMuted);
-            GUI.Label(RectSnap.Snap(checkRect), "✓", checkStyle);
-            GUI.color = checkSaved;
+            TextDraw.DrawWithStyle(checkRect, "✓", checkStyle, theme.GetColor(ThemeSlot.AccentMuted));
             if (rtl) {
                 labelStartX = checkX + checkPx + gap;
             }
@@ -495,10 +475,7 @@ public static class Menu {
             int hotSize = Mathf.RoundToInt(new Rem(0.6875f).ToFontPx());
             GUIStyle hotStyle = GuiStyleCache.GetOrCreate(hotFont, hotSize);
             hotStyle.alignment = rtl ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight;
-            Color hotSaved = GUI.color;
-            GUI.color = theme.GetColor(ThemeSlot.TextMuted);
-            GUI.Label(RectSnap.Snap(hotRect), "[" + item.Hotkey!.ToUpperInvariant() + "]", hotStyle);
-            GUI.color = hotSaved;
+            TextDraw.DrawWithStyle(hotRect, "[" + item.Hotkey!.ToUpperInvariant() + "]", hotStyle, theme.GetColor(ThemeSlot.TextMuted));
             if (rtl) {
                 labelStartX = hotX + hotPx + gap;
             }
@@ -526,9 +503,6 @@ public static class Menu {
             labelSlot = ThemeSlot.TextPrimary;
         }
 
-        Color savedColor = GUI.color;
-        GUI.color = theme.GetColor(labelSlot);
-
         if (hasSubtitle) {
             int subSize = Mathf.RoundToInt(new Rem(0.8125f).ToFontPx());
             GUIStyle subStyle = GuiStyleCache.GetOrCreate(labelFont, subSize);
@@ -545,7 +519,7 @@ public static class Menu {
                 labelTextH
             );
             labelStyle.alignment = rtl ? TextAnchor.UpperRight : TextAnchor.UpperLeft;
-            GUI.Label(RectSnap.Snap(labelLine), item.Label, labelStyle);
+            TextDraw.DrawWithStyle(labelLine, item.Label, labelStyle, theme.GetColor(labelSlot));
 
             Rect subLine = new Rect(
                 labelArea.x,
@@ -554,15 +528,12 @@ public static class Menu {
                 subTextH
             );
             subStyle.alignment = rtl ? TextAnchor.UpperRight : TextAnchor.UpperLeft;
-            GUI.color = theme.GetColor(ThemeSlot.TextMuted);
-            GUI.Label(RectSnap.Snap(subLine), item.Subtitle!, subStyle);
+            TextDraw.DrawWithStyle(subLine, item.Subtitle!, subStyle, theme.GetColor(ThemeSlot.TextMuted));
         }
         else {
             labelStyle.alignment = Typography.Typography.ResolveAnchor(TextAlign.Start, dir);
-            GUI.Label(RectSnap.Snap(labelArea), item.Label, labelStyle);
+            TextDraw.DrawWithStyle(labelArea, item.Label, labelStyle, theme.GetColor(labelSlot));
         }
-
-        GUI.color = savedColor;
 
         if (!item.Disabled && e.type == EventType.MouseUp && e.button == 0 && rowRect.Contains(e.mousePosition)) {
             if (hasChildren) {
