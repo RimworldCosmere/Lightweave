@@ -1,0 +1,23 @@
+root = true
+
+[*]
+# Optional: indent settings
+indent_style = space
+indent_size = 4
+
+# Recommended: keep consistent file headers or documentation
+file_header_template = unset
+
+
+[*.xml]
+max_line_length = off
+
+[*.xml.template]
+max_line_length = off
+
+[*.cs]
+# Force block-scoped namespaces (with braces)
+csharp_style_namespace_declarations = file_scoped:suggestion
+csharp_indent_braces = false
+csharp_new_line_before_open_brace = false
+dotnet_style_prefer_collection_expression = true

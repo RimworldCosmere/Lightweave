@@ -1,5 +1,9 @@
 [global]
-extends = "../"
+unity_version = "2022.3.35f1"
+exclude_patterns = ["*.meta"]
+link_method = "symlink"
+skip_existing_meta = false
+unity_args = ["-nographics", "-disable-assembly-updater"]
 
 [bundles.lightweave_shaders]
 description = "Lightweave Shaders"

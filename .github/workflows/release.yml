@@ -1,0 +1,281 @@
+name: Publish Lightweave
+
+on:
+  release:
+    types:
+      - published
+  push:
+    branches:
+      - 'main'
+      - 'beta'
+      - 'alpha'
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
+
+env:
+  MOD_NAME: Lightweave
+  BUNDLE_NAME: cosmere.lightweave
+
+jobs:
+  validate-tag:
+    runs-on: ubuntu-latest
+    if: github.event.release.tag_name != ''
+    env:
+      RELEASE_TAG: ${{ github.event.release.tag_name }}
+    steps:
+      - name: Validate Git tag format
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+          echo "Checking tag format: $VERSION"
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-(alpha|beta)\.[0-9]+)?$ ]]; then
+            echo "Invalid tag format: '$VERSION'"
+            echo "Expected: MAJOR.MINOR.PATCH or MAJOR.MINOR.PATCH-(alpha|beta).N"
+            exit 1
+          fi
+          echo "Tag format valid."
+
+  build-assetbundles:
+    runs-on: ubuntu-latest
+    env:
+      BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Restore AssetBundles cache
+        id: assetbundle-cache
+        uses: actions/cache@v5
+        with:
+          path: AssetBundles
+          key: ${{ runner.os }}-assetbundles-${{ hashFiles('.assetbundler.toml', 'scripts/build-assets.csx', 'Makefile', 'Assets/**') }}
+
+      - name: Setup Dotnet
+        if: steps.assetbundle-cache.outputs.cache-hit != 'true'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Install dotnet-script
+        if: steps.assetbundle-cache.outputs.cache-hit != 'true'
+        run: dotnet tool install --global dotnet-script
+
+      - uses: buildalon/unity-setup@v1
+        if: steps.assetbundle-cache.outputs.cache-hit != 'true'
+        with:
+          unity-version: 2022.3.35f1
+          build-targets: StandaloneWindows64 StandaloneOSX StandaloneLinux64
+          modules: windows-mono mac-mono linux-il2cpp
+          cache-installation: 'true'
+          auto-update-hub: 'false'
+
+      - uses: buildalon/activate-unity-license@v1
+        if: steps.assetbundle-cache.outputs.cache-hit != 'true'
+        with:
+          license: 'Personal'
+          username: ${{ secrets.UNITY_EMAIL }}
+          password: ${{ secrets.UNITY_PASSWORD }}
+
+      - name: Configure AssetBundleBuilder for CI
+        if: steps.assetbundle-cache.outputs.cache-hit != 'true'
+        run: |
+          sed -i 's/link_method = "symlink"/link_method = "copy"/' .assetbundler.toml
+          echo "Updated .assetbundler.toml for CI environment:"
+          grep -E "link_method|unity_args" .assetbundler.toml
+
+      - name: Build AssetBundles for all platforms
+        if: steps.assetbundle-cache.outputs.cache-hit != 'true'
+        run: make build-assets-all-verbose
+
+      - name: Archive asset bundles
+        run: |
+          if [ -d AssetBundles ]; then
+            zip -r "${MOD_NAME}-assetbundles.zip" AssetBundles
+          fi
+
+      - name: Upload asset bundles artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: assetbundles
+          path: "${{ env.MOD_NAME }}-assetbundles.zip"
+          if-no-files-found: warn
+
+  prepare:
+    needs: build-assetbundles
+    runs-on: ubuntu-latest
+    env:
+      BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+      RELEASE_TAG: ${{ github.event.release.tag_name }}
+      REF_TYPE: ${{ github.ref_type }}
+      REF_NAME: ${{ github.ref_name }}
+      TEMP_DIR: "/tmp/lightweave_upload"
+      STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          path: 'Lightweave'
+
+      - uses: actions/cache@v5
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: ${{ runner.os }}-nuget-
+
+      - name: Setup Dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+
+      - name: Install steamdown + tsx
+        working-directory: Lightweave
+        run: npm install -g @steamdown/cli@1.0.0-beta.2 tsx
+
+      - name: Restore solution dependencies
+        working-directory: Lightweave
+        run: dotnet restore Lightweave.sln
+
+      - name: Set build configuration
+        working-directory: Lightweave
+        run: |
+          if [[ "$REF_TYPE" == "tag" ]]; then
+            echo "BUILD=Release" >> $GITHUB_ENV
+          else
+            echo "BUILD=Debug" >> $GITHUB_ENV
+          fi
+
+      - name: Download asset bundles
+        uses: actions/download-artifact@v5
+        with:
+          name: assetbundles
+          path: Lightweave
+
+      - name: Extract asset bundles
+        working-directory: Lightweave
+        run: |
+          if [ -f "${MOD_NAME}-assetbundles.zip" ]; then
+            unzip -o "${MOD_NAME}-assetbundles.zip"
+            rm "${MOD_NAME}-assetbundles.zip"
+          fi
+
+      - name: Build solution (tagged release)
+        working-directory: Lightweave
+        if: ${{ github.event.release.tag_name != '' }}
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+          REGEX='^([0-9]+)\.([0-9]+)\.([0-9]+)(-(alpha|beta)\.([0-9]+))?$'
+          [[ "$VERSION" =~ $REGEX ]]
+          MAJOR="${BASH_REMATCH[1]}"
+          MINOR="${BASH_REMATCH[2]}"
+          PATCH="${BASH_REMATCH[3]}"
+          LABEL="${BASH_REMATCH[5]}"
+          REVISION="${BASH_REMATCH[6]:-0}"
+          CONFIG="Debug"
+          [[ -z "$LABEL" && "$REF_NAME" == "main" ]] && CONFIG="Release"
+          BUILD_VERSION="$VERSION"
+
+          echo "Building Lightweave.sln@$BUILD_VERSION ($CONFIG)"
+          dotnet build Lightweave.sln \
+            --configuration "$CONFIG" \
+            -p:Version="$BUILD_VERSION" \
+            -p:FileVersion="$MAJOR.$MINOR.$PATCH.$REVISION" \
+            -p:AssemblyVersion="$MAJOR.$MINOR.$PATCH.0" \
+            -p:InformationalVersion="$BUILD_VERSION" \
+            --no-restore
+
+      - name: Build solution (non-tagged)
+        if: ${{ github.ref_type != 'tag' }}
+        working-directory: Lightweave
+        run: dotnet build Lightweave.sln --configuration Debug --no-restore
+
+      - name: Verify Lightweave.dll exists
+        working-directory: Lightweave
+        run: |
+          DLL_PATH="Assemblies/Lightweave.dll"
+          if [ ! -f "$DLL_PATH" ]; then
+            echo "Error: Lightweave.dll not found at $DLL_PATH"
+            ls -la Assemblies/ || echo "Assemblies directory does not exist"
+            exit 1
+          fi
+          echo "Found Lightweave.dll at $DLL_PATH"
+          ls -lh "$DLL_PATH"
+
+      - name: Prepare upload zip
+        working-directory: Lightweave
+        run: |
+          mkdir -p "$TEMP_DIR"
+          ZIP_PATH="${{ github.workspace }}/${MOD_NAME}-${BRANCH_NAME}.zip"
+          zip -r "$ZIP_PATH" . -x "*.git*" "tools/*" "scripts/*" "*.mjs" "package.json" "Makefile" "Lightweave.sln*" "PublishedFileIds.json" ".desloppify/*" ".claude/*"
+          echo "Generated zip artifact at $ZIP_PATH"
+          ls -lh "$ZIP_PATH"
+
+      - name: Upload zip artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: ${{ env.MOD_NAME }}-zip
+          path: ${{ github.workspace }}/${{ env.MOD_NAME }}-${{ env.BRANCH_NAME }}.zip
+
+  semantic-release:
+    needs: prepare
+    if: needs.prepare.result == 'success' && github.ref_type != 'tag'
+    runs-on: ubuntu-latest
+    env:
+      REF_NAME: ${{ github.ref_name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+      - name: Set up SteamCMD
+        uses: buildalon/setup-steamcmd@v1
+      - name: Restore Steam config
+        env:
+          STEAM_CONFIG_VDF_B64: ${{ secrets.STEAM_CONFIG_VDF_B64 }}
+        run: |
+          mkdir -p "$STEAM_DIR/config"
+          printf '%s' "$STEAM_CONFIG_VDF_B64" | base64 -d > "$STEAM_DIR/config/config.vdf"
+          echo "STEAM_CONFIG_VDF=$STEAM_DIR/config/config.vdf" >> "$GITHUB_ENV"
+
+      - name: Steam login preflight
+        env:
+          STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
+        run: |
+          "$STEAM_CMD/steamcmd.sh" +@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +login "$STEAM_USERNAME" +quit
+
+      - name: Download zip artifacts
+        uses: actions/download-artifact@v5
+        with:
+          pattern: '*-zip'
+          path: ./zips
+          merge-multiple: true
+
+      - name: Extract built mod artifacts
+        run: |
+          for artifact in ./zips/*.zip; do
+            [ -f "$artifact" ] || continue
+            filename=$(basename "$artifact")
+            mod_name="${filename%-${REF_NAME}.zip}"
+            mkdir -p "./${mod_name}"
+            unzip -o "$artifact" -d "./${mod_name}"
+          done
+
+      - name: Release
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}
+          STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
+          STEAM_CONFIG_VDF: ${{ env.STEAM_CONFIG_VDF }}
+          STEAMCMD_PATH: ${{ env.STEAM_CMD }}/steamcmd.sh
+        run: |
+          npm install @semantic-release/git semantic-release-replace-plugin @steamdown/cli@1.0.0-beta.2 -D
+          node --test tools/semantic-release-steam/tests/*.test.mjs
+          npx semantic-release
