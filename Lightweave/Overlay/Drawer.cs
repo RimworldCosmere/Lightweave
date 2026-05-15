@@ -114,38 +114,36 @@ public static class Drawer {
             float scrimAlpha = progress * 0.35f;
 
             RenderContext.Current.PendingOverlays.Enqueue(() => {
-                Color savedColor = GUI.color;
-                GUI.color = Color.white;
-
                 Rect screenRect = host;
-                BackgroundSpec scrimBg = BackgroundSpec.Of(new Color(0f, 0f, 0f, scrimAlpha));
-                PaintBox.Draw(screenRect, scrimBg, null, null);
 
-                Rect shadowRect = new Rect(
-                    drawerRect.x + 3f,
-                    drawerRect.y + 3f,
-                    drawerRect.width,
-                    drawerRect.height
-                );
-                BackgroundSpec shadowBg = BackgroundSpec.Of(ThemeSlot.SurfaceShadow);
-                PaintBox.Draw(shadowRect, shadowBg, null, null);
+                using (TintScope.Replace(Color.white)) {
+                    BackgroundSpec scrimBg = BackgroundSpec.Of(new Color(0f, 0f, 0f, scrimAlpha));
+                    PaintBox.Draw(screenRect, scrimBg, null, null);
 
-                BackgroundSpec drawerBg = BackgroundSpec.Of(ThemeSlot.SurfaceRaised);
-                BorderSpec? drawerBorder = ResolveBorder(side);
-                PaintBox.Draw(drawerRect, drawerBg, drawerBorder, null);
+                    Rect shadowRect = new Rect(
+                        drawerRect.x + 3f,
+                        drawerRect.y + 3f,
+                        drawerRect.width,
+                        drawerRect.height
+                    );
+                    BackgroundSpec shadowBg = BackgroundSpec.Of(ThemeSlot.SurfaceShadow);
+                    PaintBox.Draw(shadowRect, shadowBg, null, null);
 
-                float padPx = SpacingScale.Md.ToPixels();
-                Rect innerRect = new Rect(
-                    drawerRect.x + padPx,
-                    drawerRect.y + padPx,
-                    Mathf.Max(0f, drawerRect.width - padPx * 2f),
-                    Mathf.Max(0f, drawerRect.height - padPx * 2f)
-                );
+                    BackgroundSpec drawerBg = BackgroundSpec.Of(ThemeSlot.SurfaceRaised);
+                    BorderSpec? drawerBorder = ResolveBorder(side);
+                    PaintBox.Draw(drawerRect, drawerBg, drawerBorder, null);
 
-                LightweaveNode inner = content();
-                LightweaveRoot.PaintSubtree(inner, innerRect);
+                    float padPx = SpacingScale.Md.ToPixels();
+                    Rect innerRect = new Rect(
+                        drawerRect.x + padPx,
+                        drawerRect.y + padPx,
+                        Mathf.Max(0f, drawerRect.width - padPx * 2f),
+                        Mathf.Max(0f, drawerRect.height - padPx * 2f)
+                    );
 
-                GUI.color = savedColor;
+                    LightweaveNode inner = content();
+                    LightweaveRoot.PaintSubtree(inner, innerRect);
+                }
 
                 Event e = Event.current;
                 if (e.type == EventType.MouseDown &&

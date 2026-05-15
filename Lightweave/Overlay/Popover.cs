@@ -80,35 +80,32 @@ public static class Popover {
                 Rect anchorHere = OverlayAnchor.ResolveLocal(anchorAbsolute);
                 Rect popoverRect = PopoverLayout.Resolve(anchorHere, placement, dir, size, screen);
 
-                Color savedColor = GUI.color;
-                GUI.color = Color.white;
+                using (TintScope.Replace(Color.white)) {
+                    Rect shadowRect = new Rect(
+                        popoverRect.x + 2f,
+                        popoverRect.y + 3f,
+                        popoverRect.width,
+                        popoverRect.height
+                    );
+                    BackgroundSpec shadowBg = BackgroundSpec.Of(ThemeSlot.SurfaceShadow);
+                    PaintBox.Draw(shadowRect, shadowBg, null, RadiusSpec.All(RadiusScale.Lg));
 
-                Rect shadowRect = new Rect(
-                    popoverRect.x + 2f,
-                    popoverRect.y + 3f,
-                    popoverRect.width,
-                    popoverRect.height
-                );
-                BackgroundSpec shadowBg = BackgroundSpec.Of(ThemeSlot.SurfaceShadow);
-                PaintBox.Draw(shadowRect, shadowBg, null, RadiusSpec.All(RadiusScale.Lg));
+                    BackgroundSpec bg = BackgroundSpec.Of(ThemeSlot.SurfaceRaised);
+                    RadiusSpec radius = RadiusSpec.All(RadiusScale.Lg);
+                    PaintBox.Draw(popoverRect, bg, null, radius);
 
-                BackgroundSpec bg = BackgroundSpec.Of(ThemeSlot.SurfaceRaised);
-                RadiusSpec radius = RadiusSpec.All(RadiusScale.Lg);
-                PaintBox.Draw(popoverRect, bg, null, radius);
+                    RenderContext.Current.OverlayContentDepth++;
+                    try {
+                        LightweaveRoot.PaintSubtree(content, popoverRect);
+                    }
+                    finally {
+                        RenderContext.Current.OverlayContentDepth--;
+                    }
 
-                RenderContext.Current.OverlayContentDepth++;
-                try {
-                    LightweaveRoot.PaintSubtree(content, popoverRect);
+                    BorderSpec border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderSubtle);
+                    BackgroundSpec clearBg = BackgroundSpec.Of(Color.clear);
+                    PaintBox.Draw(popoverRect, clearBg, border, radius);
                 }
-                finally {
-                    RenderContext.Current.OverlayContentDepth--;
-                }
-
-                BorderSpec border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderSubtle);
-                BackgroundSpec clearBg = BackgroundSpec.Of(Color.clear);
-                PaintBox.Draw(popoverRect, clearBg, border, radius);
-
-                GUI.color = savedColor;
 
                 Event e = Event.current;
                 if (e.rawType == EventType.MouseDown &&

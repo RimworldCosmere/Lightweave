@@ -157,16 +157,10 @@ public static class Table {
     ) {
         Theme.Theme theme = RenderContext.Current.Theme;
 
-        Color savedBg = GUI.color;
-        GUI.color = theme.GetColor(ThemeSlot.SurfaceRaised);
-        GUI.DrawTexture(RectSnap.Snap(headerRect), Texture2D.whiteTexture);
-        GUI.color = savedBg;
+        PaintBox.FillSolid(headerRect, theme.GetColor(ThemeSlot.SurfaceRaised));
 
         Rect borderRect = new Rect(headerRect.x, headerRect.yMax - 1f, headerRect.width, 1f);
-        Color savedBorder = GUI.color;
-        GUI.color = theme.GetColor(ThemeSlot.BorderDefault);
-        GUI.DrawTexture(RectSnap.Snap(borderRect), Texture2D.whiteTexture);
-        GUI.color = savedBorder;
+        PaintBox.FillSolid(borderRect, theme.GetColor(ThemeSlot.BorderDefault));
 
         float padPx = SpacingScale.Sm.ToPixels();
         Font font = theme.GetFont(FontRole.BodyBold);
@@ -191,10 +185,7 @@ public static class Table {
                 cellRect.height
             );
 
-            Color savedLabel = GUI.color;
-            GUI.color = theme.GetColor(ThemeSlot.TextPrimary);
-            GUI.Label(RectSnap.Snap(labelRect), columns[logical].Header ?? string.Empty, style);
-            GUI.color = savedLabel;
+            TextDraw.DrawWithStyle(labelRect, columns[logical].Header ?? string.Empty, style, theme.GetColor(ThemeSlot.TextPrimary));
 
             cursor += w;
         }
@@ -212,10 +203,7 @@ public static class Table {
         Theme.Theme theme = RenderContext.Current.Theme;
 
         ThemeSlot bgSlot = rowIndex % 2 == 0 ? ThemeSlot.SurfacePrimary : ThemeSlot.SurfaceRaised;
-        Color savedBg = GUI.color;
-        GUI.color = theme.GetColor(bgSlot);
-        GUI.DrawTexture(RectSnap.Snap(rowRect), Texture2D.whiteTexture);
-        GUI.color = savedBg;
+        PaintBox.FillSolid(rowRect, theme.GetColor(bgSlot));
 
         float padPx = SpacingScale.Sm.ToPixels();
         float cursor = rowRect.x;
@@ -249,10 +237,7 @@ public static class Table {
     private static void PaintSeparator(Rect cellRect) {
         Theme.Theme theme = RenderContext.Current.Theme;
         Rect sepRect = new Rect(cellRect.xMax - 1f, cellRect.y + 2f, 1f, Mathf.Max(0f, cellRect.height - 4f));
-        Color saved = GUI.color;
-        GUI.color = theme.GetColor(ThemeSlot.BorderSubtle);
-        GUI.DrawTexture(RectSnap.Snap(sepRect), Texture2D.whiteTexture);
-        GUI.color = saved;
+        PaintBox.FillSolid(sepRect, theme.GetColor(ThemeSlot.BorderSubtle));
     }
 
     private static LightweaveNode BuildSampleTable() {

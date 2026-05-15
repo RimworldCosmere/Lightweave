@@ -189,10 +189,7 @@ public static class Tree {
                     ? ChevronCollapsedRtl
                     : ChevronCollapsedLtr;
 
-            Color savedChevron = GUI.color;
-            GUI.color = theme.GetColor(ThemeSlot.TextMuted);
-            GUI.Label(RectSnap.Snap(chevronRect), glyph, chevronStyle);
-            GUI.color = savedChevron;
+            TextDraw.DrawWithStyle(chevronRect, glyph, chevronStyle, theme.GetColor(ThemeSlot.TextMuted));
         }
 
         Font labelFont = theme.GetFont(FontRole.Body);
@@ -200,10 +197,7 @@ public static class Tree {
         GUIStyle labelStyle = GuiStyleCache.GetOrCreate(labelFont, labelPixelSize);
         labelStyle.alignment = rtl ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft;
 
-        Color savedLabel = GUI.color;
-        GUI.color = theme.GetColor(ThemeSlot.TextPrimary);
-        GUI.Label(RectSnap.Snap(labelRect), treeNode.Label ?? string.Empty, labelStyle);
-        GUI.color = savedLabel;
+        TextDraw.DrawWithStyle(labelRect, treeNode.Label ?? string.Empty, labelStyle, theme.GetColor(ThemeSlot.TextPrimary));
 
         if (hasChildren) {
             Cosmere.Lightweave.Input.InteractionFeedback.Apply(chevronRect, true, soundEnabled);

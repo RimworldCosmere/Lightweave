@@ -215,91 +215,80 @@ public static class Toast {
             }
 
             RenderContext.Current.PendingOverlays.Enqueue(() => {
-                Color savedGuiColor = GUI.color;
                 for (int i = 0; i < count; i++) {
                     ToastMessage msg = snapshot[i];
                     float alpha = alphas[i];
                     Rect toastRect = new Rect(anchorX, positionsY[i], widthPx, heights[i]);
 
-                    Color savedInner = GUI.color;
-                    GUI.color = new Color(1f, 1f, 1f, alpha);
+                    using (TintScope.Multiply(new Color(1f, 1f, 1f, alpha))) {
+                        BackgroundSpec bg = BackgroundSpec.Of(ThemeSlot.SurfaceRaised);
+                        BorderSpec border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderDefault);
+                        RadiusSpec radius = RadiusSpec.All(RadiusScale.Sm);
+                        PaintBox.Draw(toastRect, bg, border, radius);
 
-                    BackgroundSpec bg = BackgroundSpec.Of(ThemeSlot.SurfaceRaised);
-                    BorderSpec border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderDefault);
-                    RadiusSpec radius = RadiusSpec.All(RadiusScale.Sm);
-                    PaintBox.Draw(toastRect, bg, border, radius);
+                        ThemeSlot stripSlot = StripSlot(msg.Kind);
+                        float stripX = dir == Direction.Ltr
+                            ? toastRect.x
+                            : toastRect.xMax - stripWidth;
+                        Rect stripRect = new Rect(stripX, toastRect.y, stripWidth, toastRect.height);
+                        PaintBox.Draw(stripRect, BackgroundSpec.Of(stripSlot), null, null);
 
-                    ThemeSlot stripSlot = StripSlot(msg.Kind);
-                    Color stripColor = theme.GetColor(stripSlot);
-                    Color stripWithAlpha = new Color(
-                        stripColor.r,
-                        stripColor.g,
-                        stripColor.b,
-                        stripColor.a * alpha
-                    );
-                    float stripX = dir == Direction.Ltr
-                        ? toastRect.x
-                        : toastRect.xMax - stripWidth;
-                    Rect stripRect = new Rect(stripX, toastRect.y, stripWidth, toastRect.height);
-                    GUI.color = new Color(1f, 1f, 1f, 1f);
-                    PaintBox.Draw(stripRect, BackgroundSpec.Of(stripWithAlpha), null, null);
-                    GUI.color = new Color(1f, 1f, 1f, alpha);
+                        float textLeft;
+                        float textRight;
+                        if (dir == Direction.Ltr) {
+                            textLeft = padPx + stripWidth;
+                            textRight = padPx + closeSize + padPx;
+                        }
+                        else {
+                            textLeft = padPx + closeSize + padPx;
+                            textRight = padPx + stripWidth;
+                        }
 
-                    float textLeft;
-                    float textRight;
-                    if (dir == Direction.Ltr) {
-                        textLeft = padPx + stripWidth;
-                        textRight = padPx + closeSize + padPx;
-                    }
-                    else {
-                        textLeft = padPx + closeSize + padPx;
-                        textRight = padPx + stripWidth;
-                    }
+                        Rect textRect = new Rect(
+                            toastRect.x + textLeft,
+                            toastRect.y + padPx,
+                            Mathf.Max(0f, toastRect.width - textLeft - textRight),
+                            Mathf.Max(0f, toastRect.height - padPx * 2f)
+                        );
 
-                    Rect textRect = new Rect(
-                        toastRect.x + textLeft,
-                        toastRect.y + padPx,
-                        Mathf.Max(0f, toastRect.width - textLeft - textRight),
-                        Mathf.Max(0f, toastRect.height - padPx * 2f)
-                    );
+                        Color textColor = theme.GetColor(ThemeSlot.TextPrimary);
+                        TextDraw.DrawWithStyle(
+                            textRect,
+                            msg.Text,
+                            textStyle,
+                            new Color(textColor.r, textColor.g, textColor.b, textColor.a * alpha)
+                        );
 
-                    Color savedTextColor = GUI.color;
-                    Color textColor = theme.GetColor(ThemeSlot.TextPrimary);
-                    GUI.color = new Color(textColor.r, textColor.g, textColor.b, textColor.a * alpha);
-                    GUI.Label(RectSnap.Snap(textRect), msg.Text, textStyle);
-                    GUI.color = savedTextColor;
+                        float closeX = dir == Direction.Ltr
+                            ? toastRect.xMax - padPx - closeSize
+                            : toastRect.x + padPx;
+                        Rect closeRect = new Rect(
+                            closeX,
+                            toastRect.y + padPx,
+                            closeSize,
+                            closeSize
+                        );
 
-                    float closeX = dir == Direction.Ltr
-                        ? toastRect.xMax - padPx - closeSize
-                        : toastRect.x + padPx;
-                    Rect closeRect = new Rect(
-                        closeX,
-                        toastRect.y + padPx,
-                        closeSize,
-                        closeSize
-                    );
+                        Font closeFont = theme.GetFont(FontRole.BodyBold);
+                        int closePixelSize = Mathf.RoundToInt(new Rem(1f).ToFontPx());
+                        GUIStyle closeStyle = GuiStyleCache.GetOrCreate(closeFont, closePixelSize);
+                        closeStyle.alignment = TextAnchor.MiddleCenter;
 
-                    Font closeFont = theme.GetFont(FontRole.BodyBold);
-                    int closePixelSize = Mathf.RoundToInt(new Rem(1f).ToFontPx());
-                    GUIStyle closeStyle = GuiStyleCache.GetOrCreate(closeFont, closePixelSize);
-                    closeStyle.alignment = TextAnchor.MiddleCenter;
+                        Color closeColor = theme.GetColor(ThemeSlot.TextMuted);
+                        TextDraw.DrawWithStyle(
+                            closeRect,
+                            "×",
+                            closeStyle,
+                            new Color(closeColor.r, closeColor.g, closeColor.b, closeColor.a * alpha)
+                        );
 
-                    Color savedCloseColor = GUI.color;
-                    Color closeColor = theme.GetColor(ThemeSlot.TextMuted);
-                    GUI.color = new Color(closeColor.r, closeColor.g, closeColor.b, closeColor.a * alpha);
-                    GUI.Label(RectSnap.Snap(closeRect), "×", closeStyle);
-                    GUI.color = savedCloseColor;
-
-                    GUI.color = savedInner;
-
-                    Event e = Event.current;
-                    if (e.type == EventType.MouseUp && e.button == 0 && closeRect.Contains(e.mousePosition)) {
-                        onDismiss?.Invoke(msg.Id);
-                        e.Use();
+                        Event e = Event.current;
+                        if (e.type == EventType.MouseUp && e.button == 0 && closeRect.Contains(e.mousePosition)) {
+                            onDismiss?.Invoke(msg.Id);
+                            e.Use();
+                        }
                     }
                 }
-
-                GUI.color = savedGuiColor;
             }
             );
         };
