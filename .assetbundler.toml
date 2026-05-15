@@ -5,6 +5,15 @@ link_method = "symlink"
 skip_existing_meta = false
 unity_args = ["-nographics", "-disable-assembly-updater"]
 
+[bundles.lightweave_textures]
+description = "Lightweave Textures"
+asset_directory = "./Assets"
+output_directory = "./AssetBundles"
+bundle_path = "lightweave"
+bundle_name = "lightweave_textures"
+filename = "resource_[bundle_name]"
+include_patterns = ["*.png", "*.psd", "*.jpg", "*.jpeg"]
+
 [bundles.lightweave_shaders]
 description = "Lightweave Shaders"
 asset_directory = "./Assets"
