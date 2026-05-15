@@ -8,5 +8,5 @@
     <supportedVersions>
         <li>1.6</li>
     </supportedVersions>
-    <packageId>CryptikLemur.Lightweave</packageId>
+    <packageId>Cosmere.Lightweave</packageId>
 </ModMetaData>

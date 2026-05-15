@@ -4,9 +4,7 @@ await plugin.verifyConditions(
   {
     branchTargets: { main: 'stable', beta: 'beta' },
     mods: [
-      { name: 'CosmereCore', path: 'CosmereCore', workshopIds: { stable: process.env.COSMERE_CORE_STABLE, beta: process.env.COSMERE_CORE_BETA } },
-      { name: 'CosmereScadrial', path: 'CosmereScadrial', workshopIds: { stable: process.env.COSMERE_SCADRIAL_STABLE, beta: process.env.COSMERE_SCADRIAL_BETA } },
-      { name: 'CosmereRoshar', path: 'CosmereRoshar', workshopIds: { stable: process.env.COSMERE_ROSHAR_STABLE, beta: process.env.COSMERE_ROSHAR_BETA } },
+      { name: 'Lightweave', path: '.', workshopIds: { stable: process.env.LIGHTWEAVE_STABLE, beta: process.env.LIGHTWEAVE_BETA } },
     ],
   },
   {

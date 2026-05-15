@@ -20,9 +20,13 @@ test('stages mod content while excluding .steamignore matches', async () => {
   assert.equal(existsSync(join(stagedPath, 'Secrets.txt')), false);
 });
 
-test('roshar steamignore keeps CombatExtended compatibility patches publishable', () => {
-  const ignorePath = new URL('../../../CosmereRoshar/.steamignore', import.meta.url).pathname;
+test('lightweave steamignore excludes dev files but keeps shipped runtime', () => {
+  const ignorePath = new URL('../../../.steamignore', import.meta.url).pathname;
   const ignoreEntries = readFileSync(ignorePath, 'utf8').split(/\r?\n/).filter(Boolean);
 
-  assert.equal(ignoreEntries.includes('CombatExtended'), false);
+  assert.ok(ignoreEntries.includes('Lightweave'), 'source dir should be excluded');
+  assert.ok(ignoreEntries.includes('Assets'), 'raw assets should be excluded');
+  assert.equal(ignoreEntries.includes('Assemblies'), false, 'built DLL must ship');
+  assert.equal(ignoreEntries.includes('AssetBundles'), false, 'built bundles must ship');
+  assert.equal(ignoreEntries.includes('About'), false, 'About.xml must ship');
 });

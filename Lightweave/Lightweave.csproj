@@ -20,10 +20,30 @@
         <DebugType>embedded</DebugType>
         <Optimize>false</Optimize>
         <DefineConstants>DEBUG;TRACE</DefineConstants>
-        <PackageId>Lightweave</PackageId>
+        <PackageId>Cosmere.Lightweave</PackageId>
         <RootNamespace>Cosmere.Lightweave</RootNamespace>
         <AssemblyName>Lightweave</AssemblyName>
+
+        <Title>Cosmere.Lightweave</Title>
+        <Description>A composable IMGUI framework for RimWorld mods. Provides nodes, layout, theming, typography, navigation, and adapters that bridge nodes into vanilla surfaces (gizmos, ITabs, MainTabs, FloatMenuOptions, ChoiceLetters, tooltips).</Description>
+        <Authors>CryptikLemur</Authors>
+        <Company>RimworldCosmere</Company>
+        <Copyright>Copyright (c) RimworldCosmere contributors</Copyright>
+        <PackageProjectUrl>https://github.com/RimworldCosmere/Lightweave</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/RimworldCosmere/Lightweave</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageTags>rimworld;modding;imgui;ui;lightweave;cosmere</PackageTags>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
     </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="..\README.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
 
     <PropertyGroup Condition="'$(Configuration)' == 'Release'">
         <DebugSymbols>false</DebugSymbols>
