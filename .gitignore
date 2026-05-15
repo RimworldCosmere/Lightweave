@@ -1,0 +1,14 @@
+bin/
+obj/
+riderModule.iml
+/_ReSharper.Caches/
+.vs
+.idea
+node_modules
+Lightweave.sln.DotSettings.user
+**/Assemblies
+**/AssetBundles
+**/.lastassetbuildhash
+*.stackdump
+*.nupkg
+*.snupkg
