@@ -15,7 +15,7 @@ public class LightweaveMod : Verse.Mod {
         instance = this;
         Settings = GetSettings<LightweaveSettings>();
         BootRedesignMainMenu = Settings.RedesignMainMenu;
-        Harmony harmony = new Harmony("cryptiklemur.lightweave");
+        Harmony harmony = new Harmony("cosmere.lightweave");
         harmony.PatchAll(typeof(LightweaveMod).Assembly);
     }
 

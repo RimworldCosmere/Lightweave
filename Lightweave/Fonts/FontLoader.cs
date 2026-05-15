@@ -7,7 +7,7 @@ namespace Cosmere.Lightweave.Fonts;
 
 [StaticConstructorOnStartup]
 public static class FontLoader {
-    private const string LightweavePackageId = "cryptiklemur.lightweave";
+    private const string LightweavePackageId = "cosmere.lightweave";
 
     static FontLoader() {
         (string assetName, Action<Font?> setter)[] fonts = [
