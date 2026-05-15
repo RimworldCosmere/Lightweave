@@ -24,7 +24,7 @@ public static class ModSettingsTab {
         LightweaveNode[] rows = new LightweaveNode[modsWithSettings.Count];
         for (int i = 0; i < modsWithSettings.Count; i++) {
             Mod captured = modsWithSettings[i];
-            rows[i] = MenuItem.Create(
+            rows[i] = Menu.Item(
                 label: captured.SettingsCategory(),
                 onClick: () => Find.WindowStack.Add(new Dialog_ModSettings(captured))
             );

@@ -42,7 +42,7 @@ public static class BaseTheme {
             [RadiusScale.Md] = 0f,
             [RadiusScale.Lg] = 0f,
             [RadiusScale.Xl] = 0f,
-            [RadiusScale.Full] = 0f,
+            [RadiusScale.Full] = 9999f,
         };
     }
 

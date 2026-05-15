@@ -69,50 +69,50 @@ public static class MoreButton {
 
     public static IReadOnlyList<MenuEntry> BuildItems(Action onDismiss) {
         List<MenuEntry> items = new List<MenuEntry> {
-            Menu.Entry(
+            MenuEntry.Of(
                 (string)"CL_MainMenu_Playground".Translate(),
                 () => Run(OpenPlayground, onDismiss),
                 icon: BuildIcon("✦"),
                 subtitle: (string)"CL_MainMenu_More_Sub_Playground".Translate()
             ),
-            Menu.Divider(),
-            Menu.Entry(
+            MenuEntry.Divider(),
+            MenuEntry.Of(
                 (string)"CL_MainMenu_Credits".Translate(),
                 () => Run(MainMenuActions.OpenCredits, onDismiss),
                 icon: BuildIcon("★"),
                 subtitle: (string)"CL_MainMenu_More_Sub_Credits".Translate()
             ),
-            Menu.Entry(
+            MenuEntry.Of(
                 (string)"CL_MainMenu_SteamWorkshop".Translate(),
                 () => Run(OpenSteamWorkshop, onDismiss),
                 icon: BuildIcon("⛁"),
                 subtitle: (string)"CL_MainMenu_More_Sub_SteamWorkshop".Translate()
             ),
-            Menu.Entry(
+            MenuEntry.Of(
                 (string)"CL_MainMenu_OfficialDiscord".Translate(),
                 () => Run(OpenOfficialDiscord, onDismiss),
                 icon: BuildIcon("◈"),
                 subtitle: (string)"CL_MainMenu_More_Sub_OfficialDiscord".Translate()
             ),
-            Menu.Entry(
+            MenuEntry.Of(
                 (string)"CL_MainMenu_WikiTutorials".Translate(),
                 () => Run(OpenWiki, onDismiss),
                 icon: BuildIcon("?"),
                 subtitle: (string)"CL_MainMenu_More_Sub_WikiTutorials".Translate()
             ),
-            Menu.Entry(
+            MenuEntry.Of(
                 (string)"CL_MainMenu_BugReport".Translate(),
                 () => Run(OpenBugReport, onDismiss),
                 icon: BuildIcon("▲"),
                 subtitle: (string)"CL_MainMenu_More_Sub_BugReport".Translate()
             ),
-            Menu.Divider(),
-            Menu.Entry(
+            MenuEntry.Divider(),
+            MenuEntry.Of(
                 (string)"CL_MainMenu_EulaLicenses".Translate(),
                 () => Run(OpenEula, onDismiss),
                 icon: BuildIcon("§")
             ),
-            Menu.Entry(
+            MenuEntry.Of(
                 (string)"CL_MainMenu_PrivacyPolicy".Translate(),
                 () => Run(OpenPrivacy, onDismiss),
                 icon: BuildIcon("§")
@@ -120,15 +120,15 @@ public static class MoreButton {
         };
 
         if (Prefs.DevMode) {
-            items.Add(Menu.Divider());
-            items.Add(Menu.Entry(
+            items.Add(MenuEntry.Divider());
+            items.Add(MenuEntry.Of(
                 (string)"CL_MainMenu_DevQuickTest".Translate(),
                 () => Run(MainMenuActions.DevQuickTest, onDismiss),
                 icon: BuildIcon("⚙")
             ));
             if (LanguageDatabase.activeLanguage == LanguageDatabase.defaultLanguage &&
                 LanguageDatabase.activeLanguage.anyError) {
-                items.Add(Menu.Entry(
+                items.Add(MenuEntry.Of(
                     (string)"CL_MainMenu_TranslationReport".Translate(),
                     () => Run(MainMenuActions.SaveTranslationReport, onDismiss),
                     icon: BuildIcon("⚙")
@@ -136,8 +136,8 @@ public static class MoreButton {
             }
         }
 
-        items.Add(Menu.Divider());
-        items.Add(Menu.Entry(
+        items.Add(MenuEntry.Divider());
+        items.Add(MenuEntry.Of(
             (string)"CL_MainMenu_QuitToOS".Translate(),
             () => Run(MainMenuActions.QuitToOS, onDismiss),
             icon: BuildIcon("×"),

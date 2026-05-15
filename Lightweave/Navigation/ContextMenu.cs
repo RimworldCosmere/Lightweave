@@ -75,11 +75,11 @@ public static class ContextMenu {
     [DocVariant("CL_Playground_Label_Default")]
     public static DocSample DocsDefault() {
         List<MenuEntry> items = new List<MenuEntry> {
-            Menu.Entry((string)"CL_Playground_ContextMenu_Inspect".Translate(), () => { }),
-            Menu.Entry((string)"CL_Playground_ContextMenu_Rename".Translate(), () => { }),
-            Menu.Entry((string)"CL_Playground_ContextMenu_Duplicate".Translate(), () => { }),
-            Menu.Divider(),
-            Menu.Entry((string)"CL_Playground_ContextMenu_Delete".Translate(), () => { }),
+            MenuEntry.Of((string)"CL_Playground_ContextMenu_Inspect".Translate(), () => { }),
+            MenuEntry.Of((string)"CL_Playground_ContextMenu_Rename".Translate(), () => { }),
+            MenuEntry.Of((string)"CL_Playground_ContextMenu_Duplicate".Translate(), () => { }),
+            MenuEntry.Divider(),
+            MenuEntry.Of((string)"CL_Playground_ContextMenu_Delete".Translate(), () => { }),
         };
 
         LightweaveNode target = Box.Create(
@@ -100,10 +100,10 @@ public static class ContextMenu {
     [DocUsage]
     public static DocSample DocsUsage() {
         List<MenuEntry> items = new List<MenuEntry> {
-            Menu.Entry("Inspect", () => { }),
-            Menu.Entry("Rename", () => { }),
-            Menu.Divider(),
-            Menu.Entry("Delete", () => { }),
+            MenuEntry.Of("Inspect", () => { }),
+            MenuEntry.Of("Rename", () => { }),
+            MenuEntry.Divider(),
+            MenuEntry.Of("Delete", () => { }),
         };
 
         LightweaveNode target = Box.Create(

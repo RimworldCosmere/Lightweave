@@ -8,8 +8,10 @@ using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
+using RimWorld;
 using UnityEngine;
 using Verse;
+using Verse.Sound;
 
 namespace Cosmere.Lightweave.Navigation;
 
@@ -40,39 +42,18 @@ public static class Menu {
     private static readonly Color PopBackdrop = new Color(15f / 255f, 12f / 255f, 8f / 255f, 0.96f);
     private static readonly Color RowHover = new Color(40f / 255f, 32f / 255f, 22f / 255f, 0.75f);
 
-    public static MenuEntry Entry(
-        string label,
-        Action onInvoke,
-        LightweaveNode? icon = null,
-        bool disabled = false,
-        string? subtitle = null,
-        bool active = false,
-        string? hotkey = null,
-        bool danger = false
-    ) {
-        return new MenuEntry(label, onInvoke, icon, disabled, null, false, danger, subtitle, active, hotkey);
-    }
+    
 
-    public static MenuEntry Submenu(
-        string label,
-        IReadOnlyList<MenuEntry> children,
-        LightweaveNode? icon = null,
-        bool disabled = false,
-        string? subtitle = null
-    ) {
-        return new MenuEntry(label, null, icon, disabled, children, false, false, subtitle);
-    }
+    
 
-    public static MenuEntry Divider() {
-        return new MenuEntry(string.Empty, null, null, false, null, true);
-    }
+    
 
     public static LightweaveNode Create(
         [DocParam("Whether the menu is currently visible.")]
         bool isOpen,
         [DocParam("Screen-space rect the menu attaches to.")]
         Rect anchorRect,
-        [DocParam("Items rendered top-to-bottom; mix Menu.Entry, Menu.Submenu, and Menu.Divider.")]
+        [DocParam("Items rendered top-to-bottom; mix MenuEntry.Of, MenuEntry.Submenu, and MenuEntry.Divider.")]
         IReadOnlyList<MenuEntry> items,
         [DocParam("Invoked when the menu requests dismissal (escape, outside-click, item activation).")]
         Action onDismiss,
@@ -215,6 +196,119 @@ public static class Menu {
             line,
             file
         );
+    }
+
+
+    public static LightweaveNode Item(
+        [DocParam("Display label text.")]
+        string label,
+        [DocParam("Click handler.")]
+        Action? onClick = null,
+        [DocParam("Optional leading icon node.")]
+        LightweaveNode? icon = null,
+        [DocParam("Render in danger color (e.g. destructive actions like Quit).")]
+        bool danger = false,
+        [DocParam("Disable interaction.")]
+        bool disabled = false,
+        [DocParam("Row height in rems.")]
+        float heightRem = 1.65f,
+        Style? style = null,
+        string[]? classes = null,
+        string? id = null,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath] string file = ""
+    ) {
+        LightweaveNode node = NodeBuilder.New("Menu.Item:" + label, line, file);
+        node.ApplyStyling("menu-item", style, classes, id);
+        node.PreferredHeight = new Rem(heightRem).ToPixels();
+        if (icon != null) {
+            node.Children.Add(icon);
+        }
+
+        node.Paint = (rect, paintChildren) => {
+            Theme.Theme theme = RenderContext.Current.Theme;
+            InteractionState st = InteractionState.Resolve(rect, null, disabled);
+            bool hot = !disabled && (st.Hovered || st.Pressed);
+
+            if (hot) {
+                Color hover = theme.GetColor(ThemeSlot.SurfaceRaised);
+                hover.a = 0.55f;
+                PaintBox.Draw(rect, BackgroundSpec.Of(hover), null, RadiusSpec.All(RadiusScale.Xs));
+            }
+
+            float padPx = new Rem(0.4f).ToPixels();
+            float gapPx = new Rem(0.5f).ToPixels();
+            float iconPx = new Rem(1.0f).ToPixels();
+            float labelStartX = rect.x + padPx;
+
+            if (icon != null) {
+                Rect iconRect = new Rect(rect.x + padPx, rect.y + (rect.height - iconPx) * 0.5f, iconPx, iconPx);
+                icon.MeasuredRect = iconRect;
+                labelStartX = iconRect.xMax + gapPx;
+            }
+
+            int px = Mathf.RoundToInt(new Rem(0.78f).ToFontPx());
+            FontStyle weight = danger ? FontStyle.Bold : FontStyle.Normal;
+            GUIStyle textStyle = GuiStyleCache.GetOrCreate(theme, FontRole.Body, px, weight);
+            textStyle.alignment = TextAnchor.MiddleLeft;
+            textStyle.clipping = TextClipping.Clip;
+
+            ThemeSlot slot;
+            if (disabled) {
+                slot = ThemeSlot.TextMuted;
+            }
+            else if (danger) {
+                slot = hot ? ThemeSlot.TextPrimary : ThemeSlot.StatusDanger;
+            }
+            else {
+                slot = hot ? ThemeSlot.TextPrimary : ThemeSlot.TextSecondary;
+            }
+
+            Rect labelRect = new Rect(labelStartX, rect.y, rect.xMax - padPx - labelStartX, rect.height);
+            TextDraw.DrawWithStyle(labelRect, label, textStyle, theme.GetColor(slot));
+
+            paintChildren();
+
+            if (!disabled && onClick != null) {
+                MouseoverSounds.DoRegion(rect);
+                Event e = Event.current;
+                if (e.type == EventType.MouseUp && e.button == 0 && rect.Contains(e.mousePosition)) {
+                    onClick.Invoke();
+                    SoundDefOf.Click.PlayOneShotOnCamera();
+                    e.Use();
+                }
+            }
+        };
+        return node;
+    }
+
+    public static LightweaveNode Divider(
+        [DocParam("Vertical padding (in rems) above and below the rule.")]
+        float padRem = 0.25f,
+        Style? style = null,
+        string[]? classes = null,
+        string? id = null,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath] string file = ""
+    ) {
+        LightweaveNode node = NodeBuilder.New("Menu.Divider", line, file);
+        node.ApplyStyling("menu-divider", style, classes, id);
+        float padPx = new Rem(padRem).ToPixels();
+        float thickness = Mathf.Max(1f, new Rem(1f / 16f).ToPixels());
+        node.PreferredHeight = padPx * 2f + thickness;
+
+        node.Paint = (rect, paintChildren) => {
+            if (Event.current.type != EventType.Repaint) {
+                paintChildren();
+                return;
+            }
+            Theme.Theme theme = RenderContext.Current.Theme;
+            float midY = rect.y + rect.height / 2f - thickness / 2f;
+            Rect line = new Rect(rect.x, midY, rect.width, thickness);
+            PaintBox.Fill(line, theme.GetColor(ThemeSlot.BorderSubtle));
+            paintChildren();
+        };
+        return node;
     }
 
     private static IReadOnlyList<MenuEntry> FilterItems(IReadOnlyList<MenuEntry> items, string query) {
@@ -659,18 +753,18 @@ public static class Menu {
             Hooks.Hooks.RefHandle<Rect> anchor = Hooks.Hooks.UseRef(default(Rect));
 
             List<MenuEntry> exportChildren = new List<MenuEntry> {
-                Menu.Entry((string)"CL_Playground_Navigation_Menu_ExportPng".Translate(), () => open.Set(false)),
-                Menu.Entry((string)"CL_Playground_Navigation_Menu_ExportSvg".Translate(), () => open.Set(false)),
+                MenuEntry.Of((string)"CL_Playground_Navigation_Menu_ExportPng".Translate(), () => open.Set(false)),
+                MenuEntry.Of((string)"CL_Playground_Navigation_Menu_ExportSvg".Translate(), () => open.Set(false)),
             };
 
             List<MenuEntry> items = new List<MenuEntry> {
-                Menu.Entry((string)"CL_Playground_Navigation_Menu_Open".Translate(), () => open.Set(false)),
-                Menu.Entry((string)"CL_Playground_Navigation_Menu_Save".Translate(), () => open.Set(false)),
-                Menu.Entry((string)"CL_Playground_Navigation_Menu_SaveAs".Translate(), () => open.Set(false)),
-                Menu.Divider(),
-                Menu.Submenu((string)"CL_Playground_Navigation_Menu_Export".Translate(), exportChildren),
-                Menu.Divider(),
-                Menu.Entry((string)"CL_Playground_Navigation_Menu_Close".Translate(), () => open.Set(false)),
+                MenuEntry.Of((string)"CL_Playground_Navigation_Menu_Open".Translate(), () => open.Set(false)),
+                MenuEntry.Of((string)"CL_Playground_Navigation_Menu_Save".Translate(), () => open.Set(false)),
+                MenuEntry.Of((string)"CL_Playground_Navigation_Menu_SaveAs".Translate(), () => open.Set(false)),
+                MenuEntry.Divider(),
+                MenuEntry.Submenu((string)"CL_Playground_Navigation_Menu_Export".Translate(), exportChildren),
+                MenuEntry.Divider(),
+                MenuEntry.Of((string)"CL_Playground_Navigation_Menu_Close".Translate(), () => open.Set(false)),
             };
 
             LightweaveNode trigger = NodeBuilder.New("MenuTrigger", 0, nameof(Menu));
@@ -719,15 +813,15 @@ public static class Menu {
             Hooks.Hooks.RefHandle<Rect> anchor = Hooks.Hooks.UseRef(default(Rect));
 
             List<MenuEntry> items = new List<MenuEntry> {
-                Menu.Entry("English", () => open.Set(false), active: true, subtitle: "Default"),
-                Menu.Entry("Castellano", () => open.Set(false)),
-                Menu.Entry("Deutsch", () => open.Set(false)),
-                Menu.Entry("Espanol (Latinoamerica)", () => open.Set(false)),
-                Menu.Entry("Francais", () => open.Set(false)),
-                Menu.Entry("Italiano", () => open.Set(false)),
-                Menu.Entry("Polski", () => open.Set(false)),
-                Menu.Entry("Portugues do Brasil", () => open.Set(false)),
-                Menu.Entry("Russian", () => open.Set(false)),
+                MenuEntry.Of("English", () => open.Set(false), active: true, subtitle: "Default"),
+                MenuEntry.Of("Castellano", () => open.Set(false)),
+                MenuEntry.Of("Deutsch", () => open.Set(false)),
+                MenuEntry.Of("Espanol (Latinoamerica)", () => open.Set(false)),
+                MenuEntry.Of("Francais", () => open.Set(false)),
+                MenuEntry.Of("Italiano", () => open.Set(false)),
+                MenuEntry.Of("Polski", () => open.Set(false)),
+                MenuEntry.Of("Portugues do Brasil", () => open.Set(false)),
+                MenuEntry.Of("Russian", () => open.Set(false)),
             };
 
             LightweaveNode trigger = NodeBuilder.New("MenuTrigger", 0, nameof(Menu));
@@ -779,10 +873,10 @@ public static class Menu {
             Hooks.Hooks.RefHandle<Rect> anchor = Hooks.Hooks.UseRef(default(Rect));
 
             List<MenuEntry> items = new List<MenuEntry> {
-                Menu.Entry("Open", () => open.Set(false)),
-                Menu.Entry("Save", () => open.Set(false)),
-                Menu.Divider(),
-                Menu.Entry("Close", () => open.Set(false)),
+                MenuEntry.Of("Open", () => open.Set(false)),
+                MenuEntry.Of("Save", () => open.Set(false)),
+                MenuEntry.Divider(),
+                MenuEntry.Of("Close", () => open.Set(false)),
             };
 
             return Menu.Create(
