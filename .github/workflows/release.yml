@@ -240,6 +240,11 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
+      - name: NuGet login (OIDC trusted publishing)
+        uses: NuGet/login@v1
+        id: nuget-login
+        with:
+          user: ${{ secrets.NUGET_USER }}
       - name: Set up SteamCMD
         uses: buildalon/setup-steamcmd@v1
       - name: Restore Steam config
@@ -279,11 +284,10 @@ jobs:
       - name: Release
         env:
           GH_TOKEN: ${{ secrets.PAT }}
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
           STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
           STEAM_CONFIG_VDF: ${{ env.STEAM_CONFIG_VDF }}
           STEAMCMD_PATH: ${{ env.STEAM_CMD }}/steamcmd.sh
         run: |
-          npm install @semantic-release/exec @semantic-release/git semantic-release-replace-plugin @steamdown/cli@1.0.0-beta.2 -D
-          node --test tools/semantic-release-steam/tests/*.test.mjs
+          npm install @semantic-release/exec @semantic-release/git semantic-release-replace-plugin semantic-release-steam @steamdown/cli@1.0.0-beta.2 -D
           npx semantic-release

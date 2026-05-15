@@ -66,8 +66,9 @@ const plugins = [
 
 if (hasWorkshopIds) {
     plugins.push([
-        "./tools/semantic-release-steam/index.mjs",
+        "semantic-release-steam",
         {
+            "appId": "294100",
             "branchTargets": {
                 "main": "stable",
                 "beta": "beta"
