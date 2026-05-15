@@ -15,6 +15,7 @@ public static class GuiStyleCache {
         Key key = new Key(font, pixelSize, fontStyle);
         if (cache.TryGetValue(key, out GUIStyle style)) {
             Touch(key);
+            ResetMutableState(style);
             return style;
         }
 
@@ -23,6 +24,7 @@ public static class GuiStyleCache {
         style.hover.textColor = Color.white;
         style.active.textColor = Color.white;
         style.focused.textColor = Color.white;
+        ResetMutableState(style);
         cache[key] = style;
         LinkedListNode<Key> node = lru.AddFirst(key);
         lruNodes[key] = node;
@@ -68,6 +70,14 @@ public static class GuiStyleCache {
         cache.Clear();
         lru.Clear();
         lruNodes.Clear();
+    }
+
+    private static void ResetMutableState(GUIStyle style) {
+        style.alignment = TextAnchor.UpperLeft;
+        style.clipping = TextClipping.Overflow;
+        style.wordWrap = false;
+        style.richText = false;
+        style.contentOffset = Vector2.zero;
     }
 
     private readonly struct Key : IEquatable<Key> {

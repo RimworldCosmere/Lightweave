@@ -8,6 +8,7 @@ using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
 using UnityEngine;
 using Verse;
+using Verse.Sound;
 using static Cosmere.Lightweave.Hooks.Hooks;
 using Cosmere.Lightweave.Layout;
 
@@ -274,7 +275,11 @@ public static class Toast {
                         GUIStyle closeStyle = GuiStyleCache.GetOrCreate(closeFont, closePixelSize);
                         closeStyle.alignment = TextAnchor.MiddleCenter;
 
-                        Color closeColor = theme.GetColor(ThemeSlot.TextMuted);
+                        bool closeHovered = Mouse.IsOver(closeRect);
+                        if (closeHovered) {
+                            MouseoverSounds.DoRegion(closeRect);
+                        }
+                        Color closeColor = theme.GetColor(closeHovered ? ThemeSlot.TextPrimary : ThemeSlot.TextMuted);
                         TextDraw.DrawWithStyle(
                             closeRect,
                             "×",

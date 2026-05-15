@@ -68,7 +68,7 @@ public static class InterfaceTab {
             s.Add(SettingRow.Section("CL_Options_Section_Lightweave",
                 SettingRow.Create(
                     "CL_Options_FontScale".Translate(),
-                    SliderWithReadout.Create(
+                    Slider.Create(
                         value: lwSettings?.FontScalePercent ?? 100,
                         onChange: v => {
                             if (lwSettings == null) return;
@@ -96,7 +96,7 @@ public static class InterfaceTab {
             s.Add(SettingRow.Section("CL_Options_Section_Display",
                 SettingRow.Create(
                     "CL_Options_UIScale".Translate(),
-                    SliderWithReadout.Create(
+                    Slider.Create(
                         value: Prefs.UIScale,
                         onChange: v => {
                             float snapped = SnapUIScale(v);

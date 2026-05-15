@@ -199,24 +199,21 @@ public static class Tree {
 
         TextDraw.DrawWithStyle(labelRect, treeNode.Label ?? string.Empty, labelStyle, theme.GetColor(ThemeSlot.TextPrimary));
 
-        if (hasChildren) {
-            Cosmere.Lightweave.Input.InteractionFeedback.Apply(chevronRect, true, soundEnabled);
+        if (hasChildren || onSelect != null) {
+            Cosmere.Lightweave.Input.InteractionFeedback.Apply(rowRect, true, soundEnabled);
         }
 
-        if (e.type == EventType.MouseUp && e.button == 0) {
-            if (hasChildren && chevronRect.Contains(e.mousePosition)) {
+        if (e.type == EventType.MouseUp && e.button == 0 && rowRect.Contains(e.mousePosition)) {
+            if (hasChildren) {
                 HashSet<TreeNode> next = new HashSet<TreeNode>(expanded, ReferenceComparer.Instance);
                 if (!next.Add(treeNode)) {
                     next.Remove(treeNode);
                 }
 
                 expandedState.Set(next);
-                e.Use();
             }
-            else if (labelRect.Contains(e.mousePosition)) {
-                onSelect?.Invoke(treeNode);
-                e.Use();
-            }
+            onSelect?.Invoke(treeNode);
+            e.Use();
         }
     }
 

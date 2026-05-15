@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using Cosmere.Lightweave.Doc;
 using Cosmere.Lightweave.Rendering;
@@ -37,10 +38,10 @@ public static class Slider {
         int liveThrottleFrames = 10,
         [DocParam("Minimum frames between label string re-formats during drag. Default 3 (~20Hz at 60fps).")]
         int labelThrottleFrames = 3,
-        [DocParam(
-            "When false, the slider does not render its own readout label band (use this when the readout is rendered externally, e.g. by SliderWithReadout)."
-        )]
-        bool showReadout = true,
+        [DocParam("When true, renders a right-aligned mono-font readout column beside the track.")]
+        bool readout = true,
+        [DocParam("Readout column width. Defaults to 4rem.", TypeOverride = "Rem", DefaultOverride = "4")]
+        Rem? readoutWidth = null,
         Style? style = null,
         string[]? classes = null,
         string? id = null,
@@ -49,7 +50,10 @@ public static class Slider {
     ) {
         LightweaveNode node = NodeBuilder.New("Slider", line, file);
         node.ApplyStyling("slider", style, classes, id);
-        node.PreferredHeight = (showReadout ? new Rem(2.25f) : new Rem(1.25f)).ToPixels();
+        node.PreferredHeight = new Rem(1.25f).ToPixels();
+
+        float readoutColumnPx = readout ? (readoutWidth ?? new Rem(4f)).ToPixels() : 0f;
+        float readoutGapPx = readout ? SpacingScale.Md.ToPixels() : 0f;
 
         node.Paint = (rect, paintChildren) => {
             Theme.Theme theme = RenderContext.Current.Theme;
@@ -63,7 +67,6 @@ public static class Slider {
             RefHandle<int> lastLabelFrame = UseRef(int.MinValue, line, file + "#labelFrame");
             RefHandle<float> lastLabelValue = UseRef(float.NaN, line, file + "#labelValue");
 
-            float labelBandHeight = showReadout ? new Rem(1f).ToPixels() : 0f;
             float trackBandHeight = new Rem(1.25f).ToPixels();
             float trackThickness = new Rem(0.5f).ToPixels();
             float thumbSize = new Rem(0.875f).ToPixels();
@@ -71,10 +74,27 @@ public static class Slider {
             float tickHeight = new Rem(0.75f).ToPixels();
             float edgePadding = thumbSize / 2f;
 
-            float contentHeight = labelBandHeight + trackBandHeight;
-            float contentY = rect.y + Mathf.Max(0f, (rect.height - contentHeight) / 2f);
-            Rect labelBand = new Rect(rect.x, contentY, rect.width, labelBandHeight);
-            Rect trackBand = new Rect(rect.x, contentY + labelBandHeight, rect.width, trackBandHeight);
+            float trackBandY = rect.y + Mathf.Max(0f, (rect.height - trackBandHeight) / 2f);
+
+            Rect readoutRect;
+            Rect trackBand;
+            if (readout) {
+                if (rtl) {
+                    readoutRect = new Rect(rect.x, trackBandY, readoutColumnPx, trackBandHeight);
+                    float trackX = rect.x + readoutColumnPx + readoutGapPx;
+                    trackBand = new Rect(trackX, trackBandY, Mathf.Max(0f, rect.xMax - trackX), trackBandHeight);
+                }
+                else {
+                    float readoutX = rect.xMax - readoutColumnPx;
+                    readoutRect = new Rect(readoutX, trackBandY, readoutColumnPx, trackBandHeight);
+                    float trackWidthPx = Mathf.Max(0f, readoutX - readoutGapPx - rect.x);
+                    trackBand = new Rect(rect.x, trackBandY, trackWidthPx, trackBandHeight);
+                }
+            }
+            else {
+                readoutRect = Rect.zero;
+                trackBand = new Rect(rect.x, trackBandY, rect.width, trackBandHeight);
+            }
 
             float trackLeft = trackBand.x + edgePadding;
             float trackRight = trackBand.xMax - edgePadding;
@@ -158,26 +178,28 @@ public static class Slider {
             BackgroundSpec thumbBg = BackgroundSpec.Of(thumbFillSlot);
             PaintBox.Draw(thumbRect, thumbBg, null, thumbRadius);
 
-            if (showReadout && Event.current.type == EventType.Repaint) {
+            if (readout && Event.current.type == EventType.Repaint) {
                 int currentFrame = Time.frameCount;
                 int labelThrottle = Mathf.Max(0, labelThrottleFrames);
                 bool valueChanged = !Mathf.Approximately(lastLabelValue.Current, clampedValue);
                 bool throttleElapsed = currentFrame - lastLabelFrame.Current >= labelThrottle;
                 bool stale = string.IsNullOrEmpty(cachedLabel.Current);
                 if (stale || valueChanged && (!dragging.Current || throttleElapsed)) {
-                    cachedLabel.Current = format != null ? format(clampedValue) : $"{clampedValue:0.00}";
+                    cachedLabel.Current = format != null
+                        ? format(clampedValue)
+                        : clampedValue.ToString("0.00", CultureInfo.InvariantCulture);
                     lastLabelValue.Current = clampedValue;
                     lastLabelFrame.Current = currentFrame;
                 }
 
-                Font labelFont = theme.GetFont(FontRole.Caption);
-                int labelPixelSize = Mathf.RoundToInt(new Rem(0.75f).ToFontPx());
-                GUIStyle labelStyle = GuiStyleCache.GetOrCreate(labelFont, labelPixelSize);
-                labelStyle.alignment = rtl ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight;
-                Color labelColor = disabled
+                Font readoutFont = theme.GetFont(FontRole.Mono);
+                int readoutPixelSize = Mathf.RoundToInt(new Rem(0.78f).ToFontPx());
+                GUIStyle readoutStyle = GuiStyleCache.GetOrCreate(readoutFont, readoutPixelSize, FontStyle.Normal);
+                readoutStyle.alignment = rtl ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight;
+                Color readoutColor = disabled
                     ? theme.GetColor(ThemeSlot.TextMuted)
                     : theme.GetColor(ThemeSlot.TextPrimary);
-                TextDraw.DrawWithStyle(labelBand, cachedLabel.Current, labelStyle, labelColor);
+                TextDraw.DrawWithStyle(readoutRect, cachedLabel.Current, readoutStyle, readoutColor);
             }
 
             paintChildren();

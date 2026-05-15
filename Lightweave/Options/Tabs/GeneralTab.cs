@@ -45,7 +45,7 @@ public static class GeneralTab {
                 ),
                 SettingRow.Create(
                     "CL_Options_Autosave_Slots".Translate(),
-                    SliderWithReadout.Create(
+                    Slider.Create(
                         value: Prefs.AutosavesCount,
                         onChange: v => Prefs.AutosavesCount = Mathf.Clamp(Mathf.RoundToInt(v), 1, 25),
                         min: 1f,

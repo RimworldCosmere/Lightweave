@@ -122,7 +122,6 @@ public sealed class LightweavePlayground : LightweaveWindow {
         { "switch", "Lightweave/Lightweave/Input/Switch.cs" },
         { "radio", "Lightweave/Lightweave/Input/Radio.cs" },
         { "slider", "Lightweave/Lightweave/Input/Slider.cs" },
-        { "slider-readout", "Lightweave/Lightweave/Input/SliderWithReadout.cs" },
         { "textarea", "Lightweave/Lightweave/Input/TextArea.cs" },
         { "numberfield", "Lightweave/Lightweave/Input/NumberField.cs" },
         { "searchfield", "Lightweave/Lightweave/Input/SearchField.cs" },
@@ -140,8 +139,7 @@ public sealed class LightweavePlayground : LightweaveWindow {
         { "segmented", "Lightweave/Lightweave/Navigation/Segmented.cs" },
         { "breadcrumbs", "Lightweave/Lightweave/Navigation/Breadcrumbs.cs" },
         { "menu", "Lightweave/Lightweave/Navigation/Menu.cs" },
-        { "menu-item", "Lightweave/Lightweave/Navigation/MenuItem.cs" },
-        { "menu-divider", "Lightweave/Lightweave/Navigation/MenuDivider.cs" },
+
         { "contextmenu", "Lightweave/Lightweave/Navigation/ContextMenu.cs" },
         { "accordion", "Lightweave/Lightweave/Navigation/Accordion.cs" },
         { "sidenav", "Lightweave/Lightweave/Playground/PlaygroundRail.cs" },

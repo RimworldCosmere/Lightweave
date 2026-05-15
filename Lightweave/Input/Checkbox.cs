@@ -105,8 +105,8 @@ public static class Checkbox {
         Vector2 p1 = new Vector2(rect.x + pad, rect.y + rect.height * 0.52f);
         Vector2 p2 = new Vector2(rect.x + rect.width * 0.42f, rect.yMax - pad);
         Vector2 p3 = new Vector2(rect.xMax - pad, rect.y + pad);
-        PaintBox.DrawLine(p1, p2, color, stroke);
-        PaintBox.DrawLine(p2, p3, color, stroke);
+        PaintBox.DrawRotatedLine(p1, p2, color, stroke);
+        PaintBox.DrawRotatedLine(p2, p3, color, stroke);
     }
 
 

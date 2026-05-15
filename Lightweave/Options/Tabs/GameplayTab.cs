@@ -37,7 +37,7 @@ public static class GameplayTab {
             s.Add(SettingRow.Section("CL_Options_Section_Combat",
                 SettingRow.Create(
                     "CL_Options_MaxSettlements".Translate(),
-                    SliderWithReadout.Create(
+                    Slider.Create(
                         value: Prefs.MaxNumberOfPlayerSettlements,
                         onChange: v => Prefs.MaxNumberOfPlayerSettlements = Mathf.Clamp(Mathf.RoundToInt(v), 1, 5),
                         min: 1f,

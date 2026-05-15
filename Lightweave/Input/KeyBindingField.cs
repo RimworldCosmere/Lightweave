@@ -173,9 +173,6 @@ public static class KeyBindingField {
 
     private static void DrawClearButton(Rect rect, Theme.Theme theme, Action<KeyBinding>? onChange) {
         bool hovered = Mouse.IsOver(rect);
-        if (hovered) {
-            PaintBox.FillSolid(rect, theme.GetColor(ThemeSlot.SurfaceRaised));
-        }
 
         Font font = theme.GetFont(FontRole.Body);
         int pixelSize = Mathf.RoundToInt(new Rem(1f).ToFontPx());

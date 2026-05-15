@@ -37,6 +37,23 @@ public static class PaintBox {
         Widgets.DrawLine(start, end, color, width);
     }
 
+    public static void DrawRotatedLine(Vector2 start, Vector2 end, Color color, float width) {
+        Vector2 delta = end - start;
+        float length = delta.magnitude;
+        if (length <= 0.001f) {
+            return;
+        }
+
+        float angle = Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg;
+        Color saved = GUI.color;
+        GUI.color = color;
+        Matrix4x4 savedMatrix = GUI.matrix;
+        GUIUtility.RotateAroundPivot(angle, start);
+        GUI.DrawTexture(new Rect(start.x, start.y - width * 0.5f, length, width), Texture2D.whiteTexture);
+        GUI.matrix = savedMatrix;
+        GUI.color = saved;
+    }
+
     public static void FillSolid(Rect rect, Color color) {
         Widgets.DrawBoxSolid(RectSnap.Snap(rect), color);
     }
