@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using Cosmere.Lightweave.Hooks;
+using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Settings;
 using UnityEngine;
@@ -47,11 +48,10 @@ public static class StaggerIn {
             float opacity = eased;
             float translate = (1f - eased) * TranslatePx;
 
-            Color prev = GUI.color;
-            GUI.color = new Color(prev.r, prev.g, prev.b, prev.a * opacity);
-            child.MeasuredRect = new Rect(rect.x, rect.y + translate, rect.width, rect.height);
-            paintChildren();
-            GUI.color = prev;
+            using (TintScope.Opacity(opacity)) {
+                child.MeasuredRect = new Rect(rect.x, rect.y + translate, rect.width, rect.height);
+                paintChildren();
+            }
         };
         return node;
     }

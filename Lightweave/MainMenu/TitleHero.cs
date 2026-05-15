@@ -44,10 +44,7 @@ public static class TitleHero {
                 w,
                 h
             );
-            Color saved = GUI.color;
-            GUI.color = Color.white;
-            GUI.DrawTexture(RectSnap.Snap(target), TitleTex, ScaleMode.ScaleToFit);
-            GUI.color = saved;
+            PaintBox.DrawTexture(target, TitleTex, Color.white, ScaleMode.ScaleToFit);
         };
         return logo;
     }
@@ -60,38 +57,24 @@ public static class TitleHero {
                 return;
             }
 
-            Theme.Theme theme = RenderContext.Current.Theme;
-            Font font = theme.GetFont(FontRole.Display);
-            int pixelSize = Mathf.RoundToInt(new Rem(1.375f).ToFontPx());
-            GUIStyle style = GuiStyleCache.GetOrCreate(font, pixelSize, FontStyle.Italic);
-            style.alignment = TextAnchor.MiddleRight;
-
             float logoH = new Rem(7.2f).ToPixels();
             float wordmarkW = Mathf.Min(logoH * TitleAspect, rect.width);
             float wordmarkRight = rect.x + (rect.width + wordmarkW) * 0.5f;
 
+            int pixelSize = Mathf.RoundToInt(new Rem(1.375f).ToFontPx());
             float tracking = pixelSize * 0.02f;
-            float totalW = 0f;
-            for (int i = 0; i < raw.Length; i++) {
-                GUIContent gc = new GUIContent(raw[i].ToString());
-                totalW += style.CalcSize(gc).x;
-                if (i < raw.Length - 1) {
-                    totalW += tracking;
-                }
-            }
 
-            float cursor = wordmarkRight - totalW;
-            Color saved = GUI.color;
-            GUI.color = theme.GetColor(ThemeSlot.TextMuted);
-            for (int i = 0; i < raw.Length; i++) {
-                string ch = raw[i].ToString();
-                GUIContent gc = new GUIContent(ch);
-                float w = style.CalcSize(gc).x;
-                GUI.Label(RectSnap.Snap(new Rect(cursor, rect.y, w, rect.height)), ch, style);
-                cursor += w + tracking;
-            }
-
-            GUI.color = saved;
+            Rect anchored = new Rect(rect.x, rect.y, wordmarkRight - rect.x, rect.height);
+            TextDraw.DrawTracked(
+                anchored,
+                raw,
+                FontRole.Display,
+                new Rem(1.375f),
+                TextAnchor.MiddleRight,
+                ThemeSlot.TextMuted,
+                tracking,
+                FontStyle.Italic
+            );
         };
         return node;
     }

@@ -171,26 +171,22 @@ public static class LangPopover {
                 labelRect = new Rect(labelLeft, rect.y, Mathf.Max(0f, labelRight - labelLeft), rect.height);
             }
 
-            Color savedGui = GUI.color;
-
             if (!string.IsNullOrEmpty(iso)) {
-                Font isoFont = theme.GetFont(FontRole.Mono);
-                int isoPx = Mathf.RoundToInt(new Rem(0.7f).ToFontPx());
-                GUIStyle isoStyle = GuiStyleCache.GetOrCreate(isoFont, isoPx, FontStyle.Bold);
-                isoStyle.alignment = TextAnchor.MiddleCenter;
-                GUI.color = theme.GetColor(isSelected ? ThemeSlot.SurfaceAccent : ThemeSlot.TextMuted);
-                GUI.Label(RectSnap.Snap(isoRect), iso, isoStyle);
+                TextDraw.Draw(
+                    isoRect,
+                    iso!,
+                    FontRole.Mono,
+                    new Rem(0.7f),
+                    TextAnchor.MiddleCenter,
+                    isSelected ? ThemeSlot.SurfaceAccent : ThemeSlot.TextMuted,
+                    FontStyle.Bold
+                );
             }
-
-            Font topFont = theme.GetFont(FontRole.BodyBold);
-            int topPx = Mathf.RoundToInt(new Rem(0.95f).ToFontPx());
-            GUIStyle topStyle = GuiStyleCache.GetOrCreate(topFont, topPx, FontStyle.Bold);
-            topStyle.alignment = rtl ? TextAnchor.UpperRight : TextAnchor.UpperLeft;
-            topStyle.clipping = TextClipping.Clip;
 
             bool showEnglish = !string.IsNullOrEmpty(englishName)
                 && !string.Equals(englishName, nativeName, StringComparison.OrdinalIgnoreCase);
 
+            int topPx = Mathf.RoundToInt(new Rem(0.95f).ToFontPx());
             int botPx = Mathf.RoundToInt(new Rem(0.72f).ToFontPx());
             float topLineH = topPx + 6f;
             float botLineH = botPx + 4f;
@@ -198,30 +194,42 @@ public static class LangPopover {
             float blockH = showEnglish ? (topLineH + lineGap + botLineH) : topLineH;
             float blockY = labelRect.y + (labelRect.height - blockH) * 0.5f;
 
-            GUI.color = theme.GetColor(isSelected ? ThemeSlot.SurfaceAccent : ThemeSlot.TextPrimary);
             Rect topRect = new Rect(labelRect.x, blockY, labelRect.width, topLineH);
-            GUI.Label(RectSnap.Snap(topRect), nativeName, topStyle);
+            TextDraw.Draw(
+                topRect,
+                nativeName,
+                FontRole.BodyBold,
+                new Rem(0.95f),
+                rtl ? TextAnchor.UpperRight : TextAnchor.UpperLeft,
+                isSelected ? ThemeSlot.SurfaceAccent : ThemeSlot.TextPrimary,
+                FontStyle.Bold,
+                TextClipping.Clip
+            );
 
             if (showEnglish) {
-                Font botFont = theme.GetFont(FontRole.Body);
-                GUIStyle botStyle = GuiStyleCache.GetOrCreate(botFont, botPx, FontStyle.Normal);
-                botStyle.alignment = rtl ? TextAnchor.UpperRight : TextAnchor.UpperLeft;
-                botStyle.clipping = TextClipping.Clip;
-                GUI.color = theme.GetColor(ThemeSlot.TextMuted);
                 Rect botRect = new Rect(labelRect.x, blockY + topLineH + lineGap, labelRect.width, botLineH);
-                GUI.Label(RectSnap.Snap(botRect), englishName, botStyle);
+                TextDraw.Draw(
+                    botRect,
+                    englishName,
+                    FontRole.Body,
+                    new Rem(0.72f),
+                    rtl ? TextAnchor.UpperRight : TextAnchor.UpperLeft,
+                    ThemeSlot.TextMuted,
+                    FontStyle.Normal,
+                    TextClipping.Clip
+                );
             }
 
             if (isSelected) {
-                Font checkFont = theme.GetFont(FontRole.Body);
-                int checkPx = Mathf.RoundToInt(new Rem(1.05f).ToFontPx());
-                GUIStyle checkStyle = GuiStyleCache.GetOrCreate(checkFont, checkPx);
-                checkStyle.alignment = TextAnchor.MiddleCenter;
-                GUI.color = theme.GetColor(ThemeSlot.SurfaceAccent);
-                GUI.Label(RectSnap.Snap(checkRect), "✓", checkStyle);
+                TextDraw.Draw(
+                    checkRect,
+                    "✓",
+                    FontRole.Body,
+                    new Rem(1.05f),
+                    TextAnchor.MiddleCenter,
+                    ThemeSlot.SurfaceAccent
+                );
             }
-
-            GUI.color = savedGui;
 
             if (!isSelected) {
                 MouseoverSounds.DoRegion(rect);

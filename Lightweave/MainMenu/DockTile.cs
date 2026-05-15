@@ -88,14 +88,9 @@ public static class DockTile {
             return;
         }
 
-        Theme.Theme theme = RenderContext.Current.Theme;
-        Font font = theme.GetFont(FontRole.Body);
-        int pixelSize = Mathf.RoundToInt(new Rem(0.875f).ToFontPx());
-        GUIStyle style = GuiStyleCache.GetOrCreate(font, pixelSize, FontStyle.Normal);
-        style.alignment = TextAnchor.MiddleLeft;
-        style.clipping = TextClipping.Overflow;
-
         string upper = (label ?? string.Empty).ToUpperInvariant();
+        Rem fontSize = new Rem(0.875f);
+        int pixelSize = Mathf.RoundToInt(fontSize.ToFontPx());
         float labelH = new Rem(1.3f).ToPixels();
         Rect labelRect = new Rect(
             tile.x,
@@ -104,38 +99,15 @@ public static class DockTile {
             labelH
         );
 
-        Color saved = GUI.color;
         bool hovered = !disabled && tile.Contains(Event.current.mousePosition);
         ThemeSlot fgSlot = disabled
             ? ThemeSlot.TextMuted
             : hovered
                 ? ThemeSlot.TextOnAccent
                 : ThemeSlot.TextPrimary;
-        GUI.color = theme.GetColor(fgSlot);
 
-        int trackedAdvance = Mathf.Max(1, Mathf.RoundToInt(pixelSize * 0.04f));
-        int[] charWidths = new int[upper.Length];
-        int totalW = 0;
-        for (int i = 0; i < upper.Length; i++) {
-            GUIContent ch = new GUIContent(upper[i].ToString());
-            charWidths[i] = Mathf.CeilToInt(style.CalcSize(ch).x);
-            totalW += charWidths[i];
-            if (i < upper.Length - 1) {
-                totalW += trackedAdvance;
-            }
-        }
-
-        int startX = Mathf.FloorToInt(labelRect.x + (labelRect.width - totalW) * 0.5f);
-        int y = Mathf.FloorToInt(labelRect.y);
-        int h = Mathf.CeilToInt(labelRect.height);
-        int cursor = startX;
-        for (int i = 0; i < upper.Length; i++) {
-            string ch = upper[i].ToString();
-            GUI.Label(new Rect(cursor, y, charWidths[i], h), ch, style);
-            cursor += charWidths[i] + trackedAdvance;
-        }
-
-        GUI.color = saved;
+        float tracking = Mathf.Max(1, Mathf.RoundToInt(pixelSize * 0.04f));
+        TextDraw.DrawTracked(labelRect, upper, FontRole.Body, fontSize, TextAnchor.MiddleCenter, fgSlot, tracking);
     }
 
     private static void DrawHotkeyHint(Rect tile, string key, bool disabled) {
@@ -147,32 +119,21 @@ public static class DockTile {
             return;
         }
 
-        Theme.Theme theme = RenderContext.Current.Theme;
-        Font font = theme.GetFont(FontRole.Mono);
-        int pixelSize = Mathf.RoundToInt(new Rem(0.9f).ToFontPx());
-        GUIStyle style = GuiStyleCache.GetOrCreate(font, pixelSize, FontStyle.Normal);
-        style.alignment = TextAnchor.MiddleLeft;
-        style.clipping = TextClipping.Overflow;
-
         string label = "[" + key.ToUpperInvariant() + "]";
-        GUIContent gc = new GUIContent(label);
-        float w = style.CalcSize(gc).x;
+        Rem fontSize = new Rem(0.9f);
+        Vector2 size = TextDraw.Measure(label, FontRole.Mono, fontSize);
         float h = new Rem(1.25f).ToPixels();
-
-        float x = tile.x + (tile.width - w) * 0.5f;
+        float x = tile.x + (tile.width - size.x) * 0.5f;
         float y = tile.yMax - h - new Rem(0.4f).ToPixels();
-        Rect hint = RectSnap.SnapText(new Rect(x, y, w, h));
+        Rect hint = new Rect(x, y, size.x, h);
 
-        Color saved = GUI.color;
         bool hovered = !disabled && tile.Contains(Event.current.mousePosition);
         ThemeSlot fgSlot = disabled
             ? ThemeSlot.TextMuted
             : hovered
                 ? ThemeSlot.TextOnAccent
                 : ThemeSlot.TextSecondary;
-        GUI.color = theme.GetColor(fgSlot);
-        GUI.Label(hint, label, style);
-        GUI.color = saved;
+        TextDraw.Draw(hint, label, FontRole.Mono, fontSize, TextAnchor.MiddleLeft, fgSlot);
     }
 
     
@@ -197,33 +158,11 @@ public static class DockTile {
         Rect chevronRect = RectSnap.Snap(new Rect(cx - chevronSize * 0.5f, yTop, chevronSize, chevronSize));
 
         float scaleY = 1f - 2f * flipRatio;
-        Matrix4x4 savedMatrix = GUI.matrix;
-        GUIUtility.ScaleAroundPivot(new Vector2(1f, scaleY), chevronRect.center);
-
-        Color saved = GUI.color;
-        GUI.color = tint;
         Texture2D tex = ChevronTextureCache.Down(strokePx: 38f, armSpan: 0.7f, armHeight: 0.42f);
-        GUI.DrawTexture(chevronRect, tex);
-        GUI.color = saved;
-        GUI.matrix = savedMatrix;
+        using (ScaleScope.Around(new Vector2(1f, scaleY), chevronRect.center)) {
+            PaintBox.DrawTexture(chevronRect, tex, tint);
+        }
     }
 
-    private static void DrawDiagonal(float x0, float y0, float x1, float y1, float thickness, Color color) {
-        Color saved = GUI.color;
-        GUI.color = color;
-        float dx = x1 - x0;
-        float dy = y1 - y0;
-        float len = Mathf.Sqrt(dx * dx + dy * dy);
-        if (len < 0.001f) {
-            GUI.color = saved;
-            return;
-        }
-        Matrix4x4 prev = GUI.matrix;
-        float angle = Mathf.Atan2(dy, dx) * Mathf.Rad2Deg;
-        Vector2 pivot = new Vector2(x0, y0);
-        GUIUtility.RotateAroundPivot(angle, pivot);
-        GUI.DrawTexture(RectSnap.Snap(new Rect(x0, y0, len, thickness)), BaseContent.WhiteTex);
-        GUI.matrix = prev;
-        GUI.color = saved;
-    }
+    
 }

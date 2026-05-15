@@ -27,6 +27,11 @@ public static class PaintBox {
         GUI.DrawTexture(r, Texture2D.whiteTexture, ScaleMode.StretchToFill, true, 0, color, Vector4.zero, Vector4.zero);
     }
 
+    public static void DrawTexture(Rect rect, Texture texture, Color tint, ScaleMode scaleMode = ScaleMode.StretchToFill) {
+        Rect r = RectSnap.Snap(rect);
+        GUI.DrawTexture(r, texture, scaleMode, true, 0, tint, Vector4.zero, Vector4.zero);
+    }
+
     public static void Draw(Rect rect, BackgroundSpec? bg, BorderSpec? border, RadiusSpec? radius) {
         Rect r = RectSnap.Snap(rect);
         Direction dir = RenderContext.Current.Direction;

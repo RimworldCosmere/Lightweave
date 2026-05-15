@@ -76,17 +76,10 @@ public static class LangSelectField {
                 : "English";
 
             ThemeSlot fgSlot = ButtonVariants.Foreground(ButtonVariant.Frosted, state);
-            Font labelFont = theme.GetFont(FontRole.BodyBold);
-            int labelPixelSize = Mathf.RoundToInt(new Rem(0.875f).ToFontPx());
-            GUIStyle labelStyle = GuiStyleCache.GetOrCreate(labelFont, labelPixelSize, FontStyle.Normal);
-            labelStyle.alignment = Typography.Typography.ResolveAnchor(TextAlign.Start, dir);
-
-            Color savedColor = GUI.color;
-            GUI.color = theme.GetColor(fgSlot);
-            GUI.Label(RectSnap.Snap(labelRect), labelText, labelStyle);
+            TextAnchor labelAnchor = Typography.Typography.ResolveAnchor(TextAlign.Start, dir);
+            TextDraw.Draw(labelRect, labelText, FontRole.BodyBold, new Rem(0.875f), labelAnchor, fgSlot);
 
             SelectorTrigger.DrawChevron(chevronRect, fgSlot, theme);
-            GUI.color = savedColor;
 
             if (!disabled) {
                 Event e = Event.current;

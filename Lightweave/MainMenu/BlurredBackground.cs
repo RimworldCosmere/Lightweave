@@ -18,20 +18,12 @@ public static class BlurredBackground {
             return;
         }
 
-        Color prev = GUI.color;
-
-        GUI.color = new Color(1f, 1f, 1f, CenterDarkenAlpha);
-        GUI.DrawTexture(RectSnap.Snap(screen), Scrim);
+        PaintBox.DrawTexture(screen, Scrim, new Color(1f, 1f, 1f, CenterDarkenAlpha));
 
         Rect topBand = new Rect(screen.x, screen.y, screen.width, screen.height * 0.18f);
         Rect bottomBand = new Rect(screen.x, screen.yMax - screen.height * 0.32f, screen.width, screen.height * 0.32f);
 
-        GUI.color = new Color(1f, 1f, 1f, TopScrimAlpha);
-        GUI.DrawTexture(RectSnap.Snap(topBand), ScrimGradient);
-
-        GUI.color = new Color(1f, 1f, 1f, BottomScrimAlpha);
-        GUI.DrawTexture(RectSnap.Snap(bottomBand), ScrimGradient);
-
-        GUI.color = prev;
+        PaintBox.DrawTexture(topBand, ScrimGradient, new Color(1f, 1f, 1f, TopScrimAlpha));
+        PaintBox.DrawTexture(bottomBand, ScrimGradient, new Color(1f, 1f, 1f, BottomScrimAlpha));
     }
 }
