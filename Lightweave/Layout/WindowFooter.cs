@@ -76,10 +76,7 @@ public static class WindowFooter {
                     borderColor = theme.GetColor(ThemeSlot.BorderDefault);
                 }
                 Rect divider = new Rect(rect.x, rect.y, rect.width, 1f);
-                Color saved = GUI.color;
-                GUI.color = borderColor;
-                GUI.DrawTexture(RectSnap.Snap(divider), BaseContent.WhiteTex);
-                GUI.color = saved;
+                PaintBox.Fill(divider, borderColor);
             }
 
             (float left, float top, float right, float bottom) = pad.Resolve(dir);
@@ -114,18 +111,14 @@ public static class WindowFooter {
         float baseY = footerRect.yMax - pad - dot;
 
         Color hint = theme.GetColor(ThemeSlot.TextMuted);
-        Color saved = GUI.color;
-        GUI.color = hint;
 
         for (int row = 0; row < 3; row++) {
             for (int col = row; col < 3; col++) {
                 float x = startX + col * (dot + gap);
                 float y = baseY - row * (dot + gap);
                 Rect d = new Rect(x, y, dot, dot);
-                GUI.DrawTexture(RectSnap.Snap(d), BaseContent.WhiteTex);
+                PaintBox.Fill(d, hint);
             }
         }
-
-        GUI.color = saved;
     }
 }

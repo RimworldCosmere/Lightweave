@@ -110,7 +110,7 @@ public static class Carousel {
             RadiusSpec frameRadius = RadiusSpec.All(RadiusScale.Sm);
             PaintBox.Draw(frameRect, frameBg, frameBorder, frameRadius);
 
-            GUI.BeginClip(frameRect);
+            using ClipScope _clip = ClipScope.Begin(frameRect);
 
             float slotWidth = frameRect.width;
             float baseX = -animIndex * slotWidth;
@@ -131,7 +131,7 @@ public static class Carousel {
                 LightweaveRoot.PaintSubtree(slides[i], slideRect);
             }
 
-            GUI.EndClip();
+
 
             bool soundEnabled = playHoverSound ?? false;
 
@@ -167,7 +167,7 @@ public static class Carousel {
                 float totalDotsWidth = count * (DotRadiusPx * 2f) + (count - 1) * DotGapPx;
                 float startX = dotRect.x + (dotRect.width - totalDotsWidth) / 2f;
                 float dotY = dotRect.y + (dotRect.height - DotRadiusPx * 2f) / 2f;
-                Color savedColor = GUI.color;
+
                 Event e = Event.current;
 
                 for (int i = 0; i < count; i++) {
@@ -180,9 +180,7 @@ public static class Carousel {
                     Color col = active
                         ? theme.GetColor(ThemeSlot.SurfaceAccent)
                         : theme.GetColor(ThemeSlot.BorderSubtle);
-                    GUI.color = col;
-                    GUI.DrawTexture(RectSnap.Snap(dot), Texture2D.whiteTexture);
-                    GUI.color = savedColor;
+                    PaintBox.Fill(dot, col);
 
                     Cosmere.Lightweave.Input.InteractionFeedback.Apply(hitRect, !active, soundEnabled);
                     if (e.type == EventType.MouseUp && e.button == 0 && hitRect.Contains(e.mousePosition)) {
@@ -219,11 +217,8 @@ public static class Carousel {
     }
 
     private static void DrawArrow(Rect rect, Theme.Theme theme, bool pointLeft, bool dimmed) {
-        Color saved = GUI.color;
         Color background = new Color(0f, 0f, 0f, dimmed ? 0.12f : 0.32f);
-        GUI.color = background;
-        GUI.DrawTexture(RectSnap.Snap(rect), Texture2D.whiteTexture);
-        GUI.color = saved;
+        PaintBox.Fill(rect, background);
 
         Texture2D? arrowTex = pointLeft ? TexUI.ArrowTexLeft : TexUI.ArrowTexRight;
         if (arrowTex == null) {
@@ -243,9 +238,7 @@ public static class Carousel {
             arrowColor = new Color(arrowColor.r, arrowColor.g, arrowColor.b, 0.4f);
         }
 
-        GUI.color = arrowColor;
-        GUI.DrawTexture(RectSnap.Snap(iconRect), arrowTex);
-        GUI.color = saved;
+        PaintBox.DrawTexture(iconRect, arrowTex, arrowColor);
     }
 
     private static LightweaveNode DocsSlide(ThemeSlot bg, string labelKey) {

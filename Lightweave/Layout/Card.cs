@@ -301,10 +301,7 @@ public static class Card {
             int size = Mathf.RoundToInt(new Rem(1.125f).ToFontPx());
             GUIStyle gstyle = GuiStyleCache.GetOrCreate(font, size);
             gstyle.alignment = dir == Direction.Rtl ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft;
-            Color saved = GUI.color;
-            GUI.color = theme.GetColor(ThemeSlot.TextPrimary);
-            GUI.Label(RectSnap.Snap(rect), text, gstyle);
-            GUI.color = saved;
+            TextDraw.DrawWithStyle(rect, text, gstyle, theme.GetColor(ThemeSlot.TextPrimary));
         };
         return node;
     }
@@ -325,13 +322,9 @@ public static class Card {
             Direction dir = RenderContext.Current.Direction;
             Font font = theme.GetFont(FontRole.Body);
             int size = Mathf.RoundToInt(new Rem(0.875f).ToFontPx());
-            GUIStyle gstyle = GuiStyleCache.GetOrCreate(font, size);
-            gstyle.alignment = dir == Direction.Rtl ? TextAnchor.UpperRight : TextAnchor.UpperLeft;
+            GUIStyle gstyle = GuiStyleCache.GetOrCreate(font, size);            gstyle.alignment = dir == Direction.Rtl ? TextAnchor.UpperRight : TextAnchor.UpperLeft;
             gstyle.wordWrap = true;
-            Color saved = GUI.color;
-            GUI.color = theme.GetColor(ThemeSlot.TextMuted);
-            GUI.Label(RectSnap.Snap(rect), text, gstyle);
-            GUI.color = saved;
+            TextDraw.DrawWithStyle(rect, text, gstyle, theme.GetColor(ThemeSlot.TextMuted));
         };
         return node;
     }

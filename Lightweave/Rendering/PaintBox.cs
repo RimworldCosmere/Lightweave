@@ -41,6 +41,11 @@ public static class PaintBox {
         Widgets.DrawBoxSolid(RectSnap.Snap(rect), color);
     }
 
+
+    public static bool ButtonImage(Rect rect, Texture2D texture, Color baseColor, Color hoverColor) {
+        return Widgets.ButtonImage(rect, texture, baseColor, hoverColor, true, null);
+    }
+
     public static void Draw(Rect rect, BackgroundSpec? bg, BorderSpec? border, RadiusSpec? radius) {
         Rect r = RectSnap.Snap(rect);
         Direction dir = RenderContext.Current.Direction;

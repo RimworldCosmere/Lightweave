@@ -66,8 +66,7 @@ public static class WindowHeader {
                     ColorRef.Token tok => theme.GetColor(tok.Slot),
                     _ => theme.GetColor(ThemeSlot.TextPrimary),
                 };
-                Color prev = GUI.color;
-                GUI.color = textColor;
+
                 Font font = theme.GetFont(FontRole.Heading);
                 int pixelSize = Mathf.RoundToInt(new Rem(1.125f).ToFontPx());
                 GUIStyle gstyle = GuiStyleCache.GetOrCreate(font, pixelSize);
@@ -83,8 +82,7 @@ public static class WindowHeader {
                     titleRect = new Rect(rect.x + pad, rect.y, rect.width - pad - closeReserve, rect.height);
                 }
 
-                GUI.Label(RectSnap.Snap(titleRect), title!, gstyle);
-                GUI.color = prev;
+                TextDraw.DrawWithStyle(titleRect, title, gstyle, textColor);
             }
 
             if (showClose) {
@@ -107,7 +105,7 @@ public static class WindowHeader {
                         break;
                 }
 
-                if (Widgets.ButtonImage(closeRect, TexButton.CloseXSmall, baseColor, hoverColor, true, null)) {
+                if (PaintBox.ButtonImage(closeRect, TexButton.CloseXSmall, baseColor, hoverColor)) {
                     onClose?.Invoke();
                 }
 
@@ -129,10 +127,7 @@ public static class WindowHeader {
                 else {
                     borderColor = theme.GetColor(ThemeSlot.BorderDefault);
                 }
-                Color savedDiv = GUI.color;
-                GUI.color = borderColor;
-                GUI.DrawTexture(RectSnap.Snap(lineRect), BaseContent.WhiteTex);
-                GUI.color = savedDiv;
+                PaintBox.Fill(lineRect, borderColor);
             }
         };
         return node;
