@@ -268,14 +268,11 @@ jobs:
           path: ./zips
           merge-multiple: true
 
-      - name: Extract built mod artifacts
+      - name: Stage bundles + assemblies for steam upload
         run: |
           for artifact in ./zips/*.zip; do
             [ -f "$artifact" ] || continue
-            filename=$(basename "$artifact")
-            mod_name="${filename%-${REF_NAME}.zip}"
-            mkdir -p "./${mod_name}"
-            unzip -o "$artifact" -d "./${mod_name}"
+            unzip -o "$artifact" 'AssetBundles/*' 'Assemblies/*'
           done
 
       - name: Restore solution dependencies (for nuget pack)
