@@ -315,19 +315,16 @@ public static class Dropdown {
         Rect screen = new Rect(0f, 0f, Screen.width, Screen.height);
         Rect popoverRect = PopoverLayout.Resolve(anchor, PopoverPlacement.Bottom, dir, size, screen);
 
-        Color savedOverlayColor = GUI.color;
-        GUI.color = Color.white;
+        using (TintScope.Replace(Color.white)) {
+            Rect shadowRect = new Rect(popoverRect.x + 2f, popoverRect.y + 3f, popoverRect.width, popoverRect.height);
+            BackgroundSpec shadowBg = BackgroundSpec.Of(ThemeSlot.SurfaceShadow);
+            PaintBox.Draw(shadowRect, shadowBg, null, RadiusSpec.All(RadiusScale.Lg));
 
-        Rect shadowRect = new Rect(popoverRect.x + 2f, popoverRect.y + 3f, popoverRect.width, popoverRect.height);
-        BackgroundSpec shadowBg = BackgroundSpec.Of(ThemeSlot.SurfaceShadow);
-        PaintBox.Draw(shadowRect, shadowBg, null, RadiusSpec.All(RadiusScale.Lg));
-
-        BackgroundSpec bg = BackgroundSpec.Of(ThemeSlot.SurfaceRaised);
-        BorderSpec border = BorderSpec.All(new Rem(2f / 16f), ThemeSlot.BorderDefault);
-        RadiusSpec radius = RadiusSpec.All(RadiusScale.Lg);
-        PaintBox.Draw(popoverRect, bg, border, radius);
-
-        GUI.color = savedOverlayColor;
+            BackgroundSpec bg = BackgroundSpec.Of(ThemeSlot.SurfaceRaised);
+            BorderSpec border = BorderSpec.All(new Rem(2f / 16f), ThemeSlot.BorderDefault);
+            RadiusSpec radius = RadiusSpec.All(RadiusScale.Lg);
+            PaintBox.Draw(popoverRect, bg, border, radius);
+        }
 
         HandleKeyboard(
             options,
@@ -432,10 +429,7 @@ public static class Dropdown {
             int checkPixelSize = Mathf.RoundToInt(new Rem(1f).ToFontPx());
             GUIStyle checkStyle = GuiStyleCache.GetOrCreate(checkFont, checkPixelSize);
             checkStyle.alignment = TextAnchor.MiddleCenter;
-            Color savedCheck = GUI.color;
-            GUI.color = theme.GetColor(ThemeSlot.TextPrimary);
-            GUI.Label(RectSnap.Snap(checkRect), "✓", checkStyle);
-            GUI.color = savedCheck;
+            TextDraw.DrawWithStyle(checkRect, "✓", checkStyle, theme.GetColor(ThemeSlot.TextPrimary));
             if (rtl) {
                 labelStartX = checkX + checkPx + padPx;
             }
@@ -450,10 +444,7 @@ public static class Dropdown {
         GUIStyle labelStyle = GuiStyleCache.GetOrCreate(labelFont, labelPixelSize);
         labelStyle.alignment = Typography.Typography.ResolveAnchor(TextAlign.Start, dir);
 
-        Color savedColor = GUI.color;
-        GUI.color = theme.GetColor(ThemeSlot.TextPrimary);
-        GUI.Label(RectSnap.Snap(labelRect), labelFn(option), labelStyle);
-        GUI.color = savedColor;
+        TextDraw.DrawWithStyle(labelRect, labelFn(option), labelStyle, theme.GetColor(ThemeSlot.TextPrimary));
 
         if (e.type == EventType.MouseDown && e.button == 0 && rowRect.Contains(e.mousePosition)) {
             e.Use();

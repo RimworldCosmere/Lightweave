@@ -85,10 +85,7 @@ public static class Checkbox {
             Color labelColor = disabled
                 ? theme.GetColor(ThemeSlot.TextMuted)
                 : theme.GetColor(ThemeSlot.TextPrimary);
-            Color savedLabel = GUI.color;
-            GUI.color = labelColor;
-            GUI.Label(RectSnap.Snap(labelRect), label, labelStyle);
-            GUI.color = savedLabel;
+            TextDraw.DrawWithStyle(labelRect, label, labelStyle, labelColor);
 
             paintChildren();
 
@@ -102,14 +99,14 @@ public static class Checkbox {
         return node;
     }
 
-    private static void DrawCheckmark(Rect rect) {
+    private static void DrawCheckmark(Rect rect, Color color) {
         float pad = rect.width * 0.18f;
         float stroke = Mathf.Max(2f, rect.width * 0.18f);
         Vector2 p1 = new Vector2(rect.x + pad, rect.y + rect.height * 0.52f);
         Vector2 p2 = new Vector2(rect.x + rect.width * 0.42f, rect.yMax - pad);
         Vector2 p3 = new Vector2(rect.xMax - pad, rect.y + pad);
-        DrawLine(p1, p2, stroke);
-        DrawLine(p2, p3, stroke);
+        PaintBox.DrawLine(p1, p2, color, stroke);
+        PaintBox.DrawLine(p2, p3, color, stroke);
     }
 
 
@@ -124,25 +121,8 @@ public static class Checkbox {
         RadiusSpec boxRadius = RadiusSpec.All(RadiusScale.Xs);
         PaintBox.Draw(rect, boxBg, boxBorder, boxRadius);
         if (value) {
-            Color saved = GUI.color;
-            GUI.color = theme.GetColor(ThemeSlot.TextOnAccent);
-            DrawCheckmark(rect);
-            GUI.color = saved;
+            DrawCheckmark(rect, theme.GetColor(ThemeSlot.TextOnAccent));
         }
-    }
-
-    private static void DrawLine(Vector2 a, Vector2 b, float thickness) {
-        Vector2 delta = b - a;
-        float length = delta.magnitude;
-        if (length <= 0.001f) {
-            return;
-        }
-
-        float angle = Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg;
-        Matrix4x4 saved = GUI.matrix;
-        GUIUtility.RotateAroundPivot(angle, a);
-        GUI.DrawTexture(new Rect(a.x, a.y - thickness * 0.5f, length, thickness), Texture2D.whiteTexture);
-        GUI.matrix = saved;
     }
 
     [DocVariant("CL_Playground_Label_True")]

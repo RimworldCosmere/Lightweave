@@ -163,10 +163,7 @@ public static class Radio {
             Color labelColor = disabled
                 ? theme.GetColor(ThemeSlot.TextMuted)
                 : theme.GetColor(ThemeSlot.TextPrimary);
-            Color savedLabel = GUI.color;
-            GUI.color = labelColor;
-            GUI.Label(RectSnap.Snap(labelRect), label, labelStyle);
-            GUI.color = savedLabel;
+            TextDraw.DrawWithStyle(labelRect, label, labelStyle, labelColor);
 
             paintChildren();
 

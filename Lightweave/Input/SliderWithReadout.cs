@@ -85,12 +85,10 @@ public static class SliderWithReadout {
             style.clipping = TextClipping.Clip;
 
             string text = fmt(value);
-            Color saved = GUI.color;
-            GUI.color = disabled
+            Color textColor = disabled
                 ? theme.GetColor(ThemeSlot.TextMuted)
                 : theme.GetColor(ThemeSlot.TextPrimary);
-            GUI.Label(RectSnap.Snap(rect), text, style);
-            GUI.color = saved;
+            TextDraw.DrawWithStyle(rect, text, style, textColor);
         };
         return node;
     }

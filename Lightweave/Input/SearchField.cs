@@ -171,10 +171,7 @@ public static class SearchField {
         GUIStyle style = GuiStyleCache.GetOrCreate(font, pixelSize);
         style.alignment = TextAnchor.MiddleCenter;
 
-        Color saved = GUI.color;
-        GUI.color = theme.GetColor(slot);
-        GUI.Label(RectSnap.Snap(rect), glyph, style);
-        GUI.color = saved;
+        TextDraw.DrawWithStyle(rect, glyph, style, theme.GetColor(slot));
     }
 
     private static void DrawMagnifier(Rect rect, Theme.Theme theme, ThemeSlot slot) {
@@ -190,10 +187,7 @@ public static class SearchField {
             size,
             size
         );
-        Color saved = GUI.color;
-        GUI.color = theme.GetColor(slot);
-        GUI.DrawTexture(RectSnap.Snap(iconRect), tex);
-        GUI.color = saved;
+        PaintBox.DrawTexture(iconRect, tex, theme.GetColor(slot));
     }
 
     private static void DrawClearButton(
@@ -212,10 +206,7 @@ public static class SearchField {
                 rect.width,
                 Mathf.Max(0f, rect.height - borderInset * 2f)
             );
-            Color saved = GUI.color;
-            GUI.color = theme.GetColor(ThemeSlot.SurfaceRaised);
-            GUI.DrawTexture(RectSnap.Snap(overlayRect), Texture2D.whiteTexture);
-            GUI.color = saved;
+            PaintBox.FillSolid(overlayRect, theme.GetColor(ThemeSlot.SurfaceRaised));
         }
 
         ThemeSlot glyphSlot = hovered ? ThemeSlot.TextPrimary : ThemeSlot.TextMuted;

@@ -96,7 +96,6 @@ public static class ButtonGroup {
             float segmentWidth = contentRect.width / count;
 
             Event e = Event.current;
-            Color savedColor = GUI.color;
 
             for (int i = 0; i < count; i++) {
                 int logicalIndex = rtl ? count - 1 - i : i;
@@ -144,9 +143,7 @@ public static class ButtonGroup {
                 InteractionFeedback.Apply(segRect, !item.Disabled, soundEnabled);
 
                 ThemeSlot fgSlot = ButtonVariants.Foreground(variant, state);
-                GUI.color = theme.GetColor(fgSlot);
-                GUI.Label(RectSnap.Snap(segRect), item.Label, style);
-                GUI.color = savedColor;
+                TextDraw.DrawWithStyle(segRect, item.Label, style, theme.GetColor(fgSlot));
 
                 if (!item.Disabled &&
                     e.type == EventType.MouseUp &&

@@ -136,10 +136,7 @@ internal static class InputSurface {
         int size = Mathf.RoundToInt(new Rem(1f).ToFontPx());
         GUIStyle style = GuiStyleCache.GetOrCreate(font, size);
         style.alignment = anchor;
-        Color savedColor = GUI.color;
-        GUI.color = theme.GetColor(ThemeSlot.TextMuted);
-        GUI.Label(RectSnap.Snap(inner), placeholder, style);
-        GUI.color = savedColor;
+        TextDraw.DrawWithStyle(inner, placeholder, style, theme.GetColor(ThemeSlot.TextMuted));
     }
 
     public static void DrawReadOnlyValue(Rect inner, string? value, Theme.Theme theme, TextAnchor anchor = TextAnchor.MiddleLeft) {
@@ -147,9 +144,6 @@ internal static class InputSurface {
         int size = Mathf.RoundToInt(new Rem(1f).ToFontPx());
         GUIStyle style = GuiStyleCache.GetOrCreate(font, size);
         style.alignment = anchor;
-        Color savedColor = GUI.color;
-        GUI.color = theme.GetColor(ThemeSlot.TextMuted);
-        GUI.Label(RectSnap.Snap(inner), value ?? string.Empty, style);
-        GUI.color = savedColor;
+        TextDraw.DrawWithStyle(inner, value ?? string.Empty, style, theme.GetColor(ThemeSlot.TextMuted));
     }
 }

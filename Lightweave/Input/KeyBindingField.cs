@@ -168,19 +168,13 @@ public static class KeyBindingField {
             colorSlot = disabled ? ThemeSlot.TextMuted : ThemeSlot.TextPrimary;
         }
 
-        Color saved = GUI.color;
-        GUI.color = theme.GetColor(colorSlot);
-        GUI.Label(RectSnap.Snap(rect), text, style);
-        GUI.color = saved;
+        TextDraw.DrawWithStyle(rect, text, style, theme.GetColor(colorSlot));
     }
 
     private static void DrawClearButton(Rect rect, Theme.Theme theme, Action<KeyBinding>? onChange) {
         bool hovered = Mouse.IsOver(rect);
         if (hovered) {
-            Color saved = GUI.color;
-            GUI.color = theme.GetColor(ThemeSlot.SurfaceRaised);
-            GUI.DrawTexture(RectSnap.Snap(rect), Texture2D.whiteTexture);
-            GUI.color = saved;
+            PaintBox.FillSolid(rect, theme.GetColor(ThemeSlot.SurfaceRaised));
         }
 
         Font font = theme.GetFont(FontRole.Body);
@@ -188,10 +182,7 @@ public static class KeyBindingField {
         GUIStyle style = GuiStyleCache.GetOrCreate(font, pixelSize);
         style.alignment = TextAnchor.MiddleCenter;
 
-        Color savedColor = GUI.color;
-        GUI.color = theme.GetColor(hovered ? ThemeSlot.TextPrimary : ThemeSlot.TextMuted);
-        GUI.Label(RectSnap.Snap(rect), ClearGlyph, style);
-        GUI.color = savedColor;
+        TextDraw.DrawWithStyle(rect, ClearGlyph, style, theme.GetColor(hovered ? ThemeSlot.TextPrimary : ThemeSlot.TextMuted));
 
         Event e = Event.current;
         if (e.type == EventType.MouseUp && e.button == 0 && rect.Contains(e.mousePosition)) {

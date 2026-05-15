@@ -172,10 +172,7 @@ public static class ColorPicker {
         GUIStyle style = GuiStyleCache.GetOrCreate(font, pixelSize, FontStyle.Italic);
         style.alignment = TextAnchor.MiddleCenter;
 
-        Color saved = GUI.color;
-        GUI.color = theme.GetColor(ThemeSlot.TextMuted);
-        GUI.Label(RectSnap.Snap(rect), (string)"CL_ColorPicker_NoColors".Translate(), style);
-        GUI.color = saved;
+        TextDraw.DrawWithStyle(rect, (string)"CL_ColorPicker_NoColors".Translate(), style, theme.GetColor(ThemeSlot.TextMuted));
     }
 
     private static bool ColorsApproximatelyEqual(Color a, Color b) {

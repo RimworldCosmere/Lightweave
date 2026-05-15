@@ -220,10 +220,7 @@ public static class Button {
                     _ => theme.GetColor(fgSlot),
                 };
 
-                Color savedColor = GUI.color;
-                GUI.color = fg;
-                GUI.Label(RectSnap.Snap(labelRect), label, gstyle);
-                GUI.color = savedColor;
+                TextDraw.DrawWithStyle(labelRect, label, gstyle, fg);
             }
 
             paintChildren();

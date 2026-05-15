@@ -61,10 +61,7 @@ public static class ToggleButton {
             gstyle.alignment = TextAnchor.MiddleCenter;
 
             Color fg = theme.GetColor(fgSlot);
-            Color savedColor = GUI.color;
-            GUI.color = fg;
-            GUI.Label(RectSnap.Snap(rect), label, gstyle);
-            GUI.color = savedColor;
+            TextDraw.DrawWithStyle(rect, label, gstyle, fg);
 
             paintChildren();
 

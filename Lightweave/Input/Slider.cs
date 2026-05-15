@@ -177,10 +177,7 @@ public static class Slider {
                 Color labelColor = disabled
                     ? theme.GetColor(ThemeSlot.TextMuted)
                     : theme.GetColor(ThemeSlot.TextPrimary);
-                Color savedLabel = GUI.color;
-                GUI.color = labelColor;
-                GUI.Label(RectSnap.Snap(labelBand), cachedLabel.Current, labelStyle);
-                GUI.color = savedLabel;
+                TextDraw.DrawWithStyle(labelBand, cachedLabel.Current, labelStyle, labelColor);
             }
 
             paintChildren();
