@@ -74,8 +74,6 @@ public static class PlaygroundRail {
             Vector2 mouse = e.mousePosition;
             float now = Time.realtimeSinceStartup;
 
-            Color saved = GUI.color;
-
             float padX = SpacingScale.Sm.ToPixels();
             float padY = SpacingScale.Sm.ToPixels();
             float contentX = rect.x + padX;
@@ -152,7 +150,7 @@ public static class PlaygroundRail {
                 bool overRow = rowRect.Contains(mouse);
                 bool activeContainsSelection = cat.Id == activeCategoryId;
 
-                DrawCategoryRow(rowRect, cat, theme, rtl, expanded, pinned, overRow, activeContainsSelection, baseColor: saved);
+                DrawCategoryRow(rowRect, cat, theme, rtl, expanded, pinned, overRow, activeContainsSelection);
 
                 if (overRow && e.type == EventType.MouseUp && e.button == 0) {
                     pinnedCategoryId.Set(pinned ? null : cat.Id);
@@ -178,7 +176,7 @@ public static class PlaygroundRail {
                     bool isSelected = primId == selectedPrimitiveId.Value;
                     bool primHover = primRect.Contains(mouse);
 
-                    DrawPrimitiveRow(primRect, primId, theme, rtl, isSelected, primHover, baseColor: saved);
+                    DrawPrimitiveRow(primRect, primId, theme, rtl, isSelected, primHover);
 
                     if (primHover && e.type == EventType.MouseUp && e.button == 0) {
                         selectedPrimitiveId.Set(primId);
@@ -203,22 +201,17 @@ public static class PlaygroundRail {
         bool expanded,
         bool pinned,
         bool hovering,
-        bool activeContainsSelection,
-        Color baseColor
+        bool activeContainsSelection
     ) {
         if (pinned || activeContainsSelection) {
             Color bg = theme.GetColor(ThemeSlot.SurfaceAccent);
             bg.a = 0.14f;
-            GUI.color = bg;
-            GUI.DrawTexture(rowRect, Texture2D.whiteTexture);
-            GUI.color = baseColor;
+            PaintBox.Fill(rowRect, bg);
 
             Color focusBar = theme.GetColor(ThemeSlot.BorderFocus);
             float barX = rtl ? rowRect.xMax - HighlightBarWidth : rowRect.x;
             Rect bar = new Rect(barX, rowRect.y, HighlightBarWidth, rowRect.height);
-            GUI.color = focusBar;
-            GUI.DrawTexture(bar, Texture2D.whiteTexture);
-            GUI.color = baseColor;
+            PaintBox.Fill(bar, focusBar);
         }
         else if (hovering) {
             PaintBox.DrawHighlight(rowRect, RadiusSpec.All(RadiusScale.Sm), true);
@@ -234,29 +227,21 @@ public static class PlaygroundRail {
             rowRect.height
         );
 
-        int pixelSize = Mathf.RoundToInt(new Rem(0.875f).ToFontPx());
         FontRole role = expanded || activeContainsSelection ? FontRole.BodyBold : FontRole.Body;
-        Font font = theme.GetFont(role);
-        GUIStyle style = GuiStyleCache.GetOrCreate(font, pixelSize);
-        style.alignment = rtl ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft;
-
         ThemeSlot textSlot = activeContainsSelection ? ThemeSlot.TextPrimary : ThemeSlot.TextSecondary;
-        GUI.color = theme.GetColor(textSlot);
 
         string labelText = (string)cat.LabelKey.Translate();
-        GUI.Label(RectSnap.Snap(labelRect), labelText, style);
+        TextAnchor labelAnchor = rtl ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft;
+        TextDraw.Draw(labelRect, labelText, role, new Rem(0.875f), labelAnchor, textSlot);
 
-        GUIStyle chevronStyle = GuiStyleCache.GetOrCreate(font, pixelSize, FontStyle.Normal);
-        chevronStyle.alignment = rtl ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight;
         Rect chevronRect = new Rect(
             rtl ? rowRect.x + RowPaddingX : rowRect.xMax - RowPaddingX - 12f,
             rowRect.y,
             12f,
             rowRect.height
         );
-        GUI.Label(RectSnap.Snap(chevronRect), chevron, chevronStyle);
-
-        GUI.color = baseColor;
+        TextAnchor chevronAnchor = rtl ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight;
+        TextDraw.Draw(chevronRect, chevron, role, new Rem(0.875f), chevronAnchor, textSlot);
     }
 
     private static void DrawPrimitiveRow(
@@ -265,22 +250,17 @@ public static class PlaygroundRail {
         Theme.Theme theme,
         bool rtl,
         bool isSelected,
-        bool hovering,
-        Color baseColor
+        bool hovering
     ) {
         if (isSelected) {
             Color bg = theme.GetColor(ThemeSlot.SurfaceAccent);
             bg.a = 0.22f;
-            GUI.color = bg;
-            GUI.DrawTexture(rowRect, Texture2D.whiteTexture);
-            GUI.color = baseColor;
+            PaintBox.Fill(rowRect, bg);
 
             Color focusBar = theme.GetColor(ThemeSlot.BorderFocus);
             float barX = rtl ? rowRect.xMax - HighlightBarWidth : rowRect.x;
             Rect bar = new Rect(barX, rowRect.y, HighlightBarWidth, rowRect.height);
-            GUI.color = focusBar;
-            GUI.DrawTexture(bar, Texture2D.whiteTexture);
-            GUI.color = baseColor;
+            PaintBox.Fill(bar, focusBar);
         }
         else if (hovering) {
             PaintBox.DrawHighlight(rowRect, RadiusSpec.All(RadiusScale.Sm), true);
@@ -295,18 +275,13 @@ public static class PlaygroundRail {
             rowRect.height
         );
 
-        int pixelSize = Mathf.RoundToInt(new Rem(0.8125f).ToFontPx());
         FontRole role = isSelected ? FontRole.BodyBold : FontRole.Body;
-        GUIStyle style = GuiStyleCache.GetOrCreate(theme, role, pixelSize);
-        style.alignment = rtl ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft;
-
         ThemeSlot textSlot = isSelected ? ThemeSlot.TextPrimary : ThemeSlot.TextSecondary;
-        GUI.color = theme.GetColor(textSlot);
 
         string labelKey = "CL_Playground_" + primId + "_Title";
         string labelText = (string)labelKey.Translate();
-        GUI.Label(RectSnap.Snap(labelRect), labelText, style);
-        GUI.color = baseColor;
+        TextAnchor labelAnchor = rtl ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft;
+        TextDraw.Draw(labelRect, labelText, role, new Rem(0.8125f), labelAnchor, textSlot);
 
         TooltipHandler.TipRegion(rowRect, labelText);
     }

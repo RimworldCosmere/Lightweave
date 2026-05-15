@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
@@ -74,17 +75,14 @@ public static class PlaygroundShell {
 
             paintChildren();
 
-            Color saved = GUI.color;
-            GUI.color = theme.GetColor(ThemeSlot.BorderSubtle);
+            Color dividerColor = theme.GetColor(ThemeSlot.BorderSubtle);
 
             Rect headerDivider = new Rect(rect.x, rect.y + resolvedHeaderHeight - 1f, rect.width, 1f);
-            GUI.DrawTexture(headerDivider, Texture2D.whiteTexture);
+            PaintBox.Fill(headerDivider, dividerColor);
 
             float dividerX = rtl ? railRect.x : railRect.xMax - 1f;
             Rect railDivider = new Rect(dividerX, rowRect.y, 1f, rowRect.height);
-            GUI.DrawTexture(railDivider, Texture2D.whiteTexture);
-
-            GUI.color = saved;
+            PaintBox.Fill(railDivider, dividerColor);
         };
 
         return node;

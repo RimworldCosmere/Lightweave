@@ -107,31 +107,21 @@ public static class SourceLink {
         node.PreferredHeight = new Rem(1.25f).ToPixels();
         node.Paint = (rect, _) => {
             Theme.Theme theme = RenderContext.Current.Theme;
-            Font mono = theme.GetFont(FontRole.Mono);
-            int pixelSize = Mathf.RoundToInt(new Rem(0.75f).ToFontPx());
-            GUIStyle style = GuiStyleCache.GetOrCreate(mono, pixelSize);
-            style.alignment = TextAnchor.MiddleLeft;
-
             Event e = Event.current;
             bool hovering = rect.Contains(e.mousePosition);
             ThemeSlot slot = hovering ? ThemeSlot.BorderFocus : ThemeSlot.SurfaceAccent;
-            Color c = theme.GetColor(slot);
 
             string text = (string)labelKey.Translate();
-
-            Color saved = GUI.color;
-            GUI.color = c;
-            GUI.Label(RectSnap.Snap(rect), text, style);
-            GUI.color = saved;
+            TextDraw.Draw(rect, text, FontRole.Mono, new Rem(0.75f), TextAnchor.MiddleLeft, slot);
 
             if (hovering) {
+                int pixelSize = Mathf.RoundToInt(new Rem(0.75f).ToFontPx());
+                GUIStyle style = GuiStyleCache.GetOrCreate(theme, FontRole.Mono, pixelSize);
                 Vector2 size = style.CalcSize(new GUIContent(text));
                 float underlineY = rect.y + rect.height / 2f + size.y / 2f - 1f;
                 float underlineWidth = Mathf.Min(size.x, rect.width);
                 Rect underline = new Rect(rect.x, underlineY, underlineWidth, 1f);
-                GUI.color = c;
-                GUI.DrawTexture(underline, Texture2D.whiteTexture);
-                GUI.color = saved;
+                PaintBox.Fill(underline, theme.GetColor(slot));
 
                 TooltipHandler.TipRegion(rect, (string)tooltipKey.Translate());
             }

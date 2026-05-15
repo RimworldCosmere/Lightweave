@@ -1,9 +1,12 @@
 using System.Runtime.CompilerServices;
+using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
 using UnityEngine;
 
 namespace Cosmere.Lightweave.Playground;
+
+
 
 public static class BrassRailDivider {
     private const float BarWidthFraction = 0.4f;
@@ -38,10 +41,8 @@ public static class BrassRailDivider {
                 BarThickness
             );
 
-            Color saved = GUI.color;
-            GUI.color = accent;
-            GUI.DrawTexture(leftBar, Texture2D.whiteTexture);
-            GUI.DrawTexture(rightBar, Texture2D.whiteTexture);
+            PaintBox.Fill(leftBar, accent);
+            PaintBox.Fill(rightBar, accent);
 
             Rect diamond = new Rect(
                 rect.x + (rect.width - DiamondSize) / 2f,
@@ -49,9 +50,7 @@ public static class BrassRailDivider {
                 DiamondSize,
                 DiamondSize
             );
-            GUI.DrawTexture(diamond, Texture2D.whiteTexture);
-
-            GUI.color = saved;
+            PaintBox.Fill(diamond, accent);
         };
         return node;
     }
