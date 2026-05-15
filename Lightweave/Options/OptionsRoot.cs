@@ -75,7 +75,6 @@ public static class OptionsRoot {
         LightweaveNode node = NodeBuilder.New("OptionsTab:" + tab);
         node.PreferredHeight = new Rem(2.8f).ToPixels();
         node.Paint = (rect, _) => {
-            Theme.Theme theme = RenderContext.Current.Theme;
             InteractionState state = InteractionState.Resolve(rect, null, false);
 
             if (isActive) {
@@ -93,17 +92,16 @@ public static class OptionsRoot {
                 PaintBox.Draw(stripe, BackgroundSpec.Of(ThemeSlot.SurfaceAccent), null, null);
             }
 
-            Font font = theme.GetFont(isActive ? FontRole.BodyBold : FontRole.Body);
-            int px = Mathf.RoundToInt(new Rem(0.95f).ToFontPx());
-            GUIStyle style = GuiStyleCache.GetOrCreate(font, px, FontStyle.Normal);
-            style.alignment = TextAnchor.MiddleLeft;
-
-            Color saved = GUI.color;
-            GUI.color = theme.GetColor(isActive ? ThemeSlot.TextPrimary : ThemeSlot.TextSecondary);
             float padX = SpacingScale.Md.ToPixels();
             Rect labelRect = new Rect(rect.x + padX, rect.y, rect.width - padX * 2f, rect.height);
-            GUI.Label(RectSnap.Snap(labelRect), label, style);
-            GUI.color = saved;
+            TextDraw.Draw(
+                labelRect,
+                label,
+                isActive ? FontRole.BodyBold : FontRole.Body,
+                new Rem(0.95f),
+                TextAnchor.MiddleLeft,
+                isActive ? ThemeSlot.TextPrimary : ThemeSlot.TextSecondary
+            );
 
             InteractionFeedback.Apply(rect, true, true);
 

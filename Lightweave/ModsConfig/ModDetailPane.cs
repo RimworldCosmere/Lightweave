@@ -127,12 +127,11 @@ public static class ModDetailPane {
         node.PreferredHeight = size;
         node.MeasureWidth = () => size;
         node.Paint = (rect, _) => {
-            Theme.Theme theme = RenderContext.Current.Theme;
             float sq = Mathf.Min(rect.width, rect.height);
             Rect r = new Rect(rect.x, rect.y, sq, sq);
             Texture2D? preview = mod.PreviewImage;
             if (preview != null) {
-                GUI.DrawTexture(RectSnap.Snap(r), preview, ScaleMode.ScaleToFit);
+                PaintBox.DrawTexture(r, preview, Color.white, ScaleMode.ScaleToFit);
             }
             else {
                 PaintBox.Draw(
@@ -152,30 +151,19 @@ public static class ModDetailPane {
         LightweaveNode node = NodeBuilder.New("ModKindTag");
         float h = new Rem(1.5f).ToPixels();
         float padX = new Rem(0.6f).ToPixels();
+        Rem fontSize = new Rem(0.75f);
         node.PreferredHeight = h;
         string label = ((string)labelKey.Translate()).ToUpperInvariant();
 
         node.MeasureWidth = () => {
-            Theme.Theme theme = RenderContext.Current.Theme;
-            Font font = theme.GetFont(FontRole.Mono);
-            int px = Mathf.RoundToInt(new Rem(0.75f).ToFontPx());
-            GUIStyle style = GuiStyleCache.GetOrCreate(font, px);
-            return Mathf.Ceil(style.CalcSize(new GUIContent(label)).x + padX * 2f);
+            return Mathf.Ceil(TextDraw.Measure(label, FontRole.Mono, fontSize).x + padX * 2f);
         };
 
         node.Paint = (rect, _) => {
-            Theme.Theme theme = RenderContext.Current.Theme;
             float natH = h;
             Rect chip = new Rect(rect.x, rect.y + (rect.height - natH) / 2f, rect.width, natH);
             PaintBox.Draw(chip, null, BorderSpec.All(new Rem(1f / 16f), tone), null);
-            Font font = theme.GetFont(FontRole.Mono);
-            int px = Mathf.RoundToInt(new Rem(0.75f).ToFontPx());
-            GUIStyle style = GuiStyleCache.GetOrCreate(font, px);
-            style.alignment = TextAnchor.MiddleCenter;
-            Color saved = GUI.color;
-            GUI.color = theme.GetColor(tone);
-            GUI.Label(RectSnap.Snap(chip), label, style);
-            GUI.color = saved;
+            TextDraw.Draw(chip, label, FontRole.Mono, fontSize, TextAnchor.MiddleCenter, tone);
         };
         return node;
     }
@@ -259,7 +247,6 @@ public static class ModDetailPane {
         LightweaveNode node = NodeBuilder.New("DepRow:" + (req.packageId ?? req.displayName ?? "?"));
         node.PreferredHeight = new Rem(1.75f).ToPixels();
         node.Paint = (rect, _) => {
-            Theme.Theme theme = RenderContext.Current.Theme;
             PaintBox.Draw(
                 rect,
                 null,
@@ -267,29 +254,16 @@ public static class ModDetailPane {
                 null
             );
 
-            Font font = theme.GetFont(FontRole.Body);
-            int px = Mathf.RoundToInt(new Rem(0.825f).ToFontPx());
-            GUIStyle leftStyle = GuiStyleCache.GetOrCreate(font, px);
-            leftStyle.alignment = TextAnchor.MiddleLeft;
-            Color saved = GUI.color;
-            GUI.color = theme.GetColor(ThemeSlot.TextSecondary);
             string name = req.displayName ?? req.packageId ?? string.Empty;
-            GUI.Label(RectSnap.Snap(rect), name, leftStyle);
+            TextDraw.Draw(rect, name, FontRole.Body, new Rem(0.825f), TextAnchor.MiddleLeft, ThemeSlot.TextSecondary);
 
             bool installed = req.IsSatisfied;
             string status = installed
                 ? (string)"CL_ModsConfig_Dep_Installed".Translate()
                 : (string)"CL_ModsConfig_Dep_Missing".Translate();
             ThemeSlot slot = installed ? ThemeSlot.StatusSuccess : ThemeSlot.StatusDanger;
-
-            Font monoFont = theme.GetFont(FontRole.Mono);
-            int monoPx = Mathf.RoundToInt(new Rem(0.65f).ToFontPx());
-            GUIStyle rightStyle = GuiStyleCache.GetOrCreate(monoFont, monoPx);
-            rightStyle.alignment = TextAnchor.MiddleRight;
-            GUI.color = theme.GetColor(slot);
             string dot = installed ? "● " : "▲ ";
-            GUI.Label(RectSnap.Snap(rect), dot + status, rightStyle);
-            GUI.color = saved;
+            TextDraw.Draw(rect, dot + status, FontRole.Mono, new Rem(0.65f), TextAnchor.MiddleRight, slot);
         };
         return node;
     }

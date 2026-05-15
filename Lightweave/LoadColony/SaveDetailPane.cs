@@ -139,7 +139,6 @@ public static class SaveDetailPane {
         LightweaveNode node = NodeBuilder.New("SavePreview");
         node.PreferredHeight = new Rem(13.75f).ToPixels();
         node.Paint = (rect, _) => {
-            Theme.Theme theme = RenderContext.Current.Theme;
             PaintBox.Draw(
                 rect,
                 BackgroundSpec.Of(ThemeSlot.MapPreviewTint),
@@ -151,10 +150,7 @@ public static class SaveDetailPane {
             Texture2D? thumb = MainMenu.ColonyScreenshotCache.GetOrLoad(cacheKey, status.Sidecar);
             if (thumb != null) {
                 Rect inner = rect.ContractedBy(new Rem(0.0625f).ToPixels());
-                Color saved = GUI.color;
-                GUI.color = Color.white;
-                GUI.DrawTexture(inner, thumb, ScaleMode.ScaleAndCrop);
-                GUI.color = saved;
+                PaintBox.DrawTexture(inner, thumb, Color.white, ScaleMode.ScaleAndCrop);
             }
         };
         return node;
@@ -395,53 +391,31 @@ public static class SaveDetailPane {
 
             Color leftBorder = new Color(0f, 0f, 0f, 0.4f);
             Rect leftStroke = new Rect(rect.x, rect.y, 1f, rect.height);
-            Color savedColor = GUI.color;
-            GUI.color = leftBorder;
-            GUI.DrawTexture(RectSnap.Snap(leftStroke), BaseContent.WhiteTex);
-            GUI.color = savedColor;
+            PaintBox.Fill(leftStroke, leftBorder);
 
             if (Event.current.type == EventType.Repaint) {
                 Font? font = LightweaveFonts.CarlitoBold ?? LightweaveFonts.CarlitoRegular;
-                if (font == null) {
-                    font = RenderContext.Current.Theme.GetFont(FontRole.BodyBold);
-                }
                 Rem fontSizeRem = new Rem(1.1f);
-                int pixelSize = Mathf.RoundToInt(fontSizeRem.ToFontPx());
-                GUIStyle gstyle = GuiStyleCache.GetOrCreate(font, pixelSize);
-                gstyle.alignment = TextAnchor.MiddleLeft;
-                gstyle.clipping = TextClipping.Overflow;
 
                 Style resolved = node.GetResolvedStyle();
-                int letterSpacing = resolved.LetterSpacing.HasValue
+                float letterSpacing = resolved.LetterSpacing.HasValue
                     ? Mathf.Max(0, Mathf.RoundToInt(resolved.LetterSpacing.Value.ToPixels(fontSizeRem.ToFontPx())))
-                    : 0;
+                    : 0f;
 
                 Color inkColor = new Color(26f / 255f, 19f / 255f, 10f / 255f, 1f);
                 string text = "▶  " + ((string)"CL_LoadColony_Load".Translate()).ToUpperInvariant();
 
-                int[] widths = new int[text.Length];
-                int totalW = 0;
-                for (int i = 0; i < text.Length; i++) {
-                    GUIContent gc = new GUIContent(text[i].ToString());
-                    widths[i] = Mathf.CeilToInt(gstyle.CalcSize(gc).x);
-                    totalW += widths[i];
-                    if (i < text.Length - 1) {
-                        totalW += letterSpacing;
-                    }
-                }
-                int startX = Mathf.FloorToInt(rect.x + (rect.width - totalW) * 0.5f);
-                int y = Mathf.FloorToInt(rect.y);
-                int h = Mathf.CeilToInt(rect.height);
-
-                Color saved = GUI.color;
-                GUI.color = inkColor;
-                int cursor = startX;
-                for (int i = 0; i < text.Length; i++) {
-                    string ch = text[i].ToString();
-                    GUI.Label(new Rect(cursor, y, widths[i], h), ch, gstyle);
-                    cursor += widths[i] + letterSpacing;
-                }
-                GUI.color = saved;
+                TextDraw.DrawTracked(
+                    rect,
+                    text,
+                    FontRole.BodyBold,
+                    fontSizeRem,
+                    TextAnchor.MiddleCenter,
+                    inkColor,
+                    letterSpacing,
+                    FontStyle.Normal,
+                    font
+                );
             }
 
             InteractionFeedback.Apply(rect, true, true);

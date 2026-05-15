@@ -65,7 +65,6 @@ public static class SaveListPane {
         LightweaveNode node = NodeBuilder.New("SaveListRow:" + fileName);
         node.PreferredHeight = RowHeight.ToPixels();
         node.Paint = (rect, _) => {
-            Theme.Theme theme = RenderContext.Current.Theme;
             InteractionState state = InteractionState.Resolve(rect, null, false);
 
             if (isSelected) {
@@ -109,45 +108,32 @@ public static class SaveListPane {
 
             float labelWidth = Mathf.Max(0f, content.width - chipReserve);
 
-            Font titleFont = theme.GetFont(FontRole.Display);
-            int titlePx = Mathf.RoundToInt(new Rem(1.05f).ToFontPx());
-            GUIStyle titleStyle = GuiStyleCache.GetOrCreate(titleFont, titlePx, FontStyle.Normal);
-            titleStyle.alignment = TextAnchor.UpperLeft;
-            titleStyle.clipping = TextClipping.Clip;
+            Rem titleSize = new Rem(1.05f);
+            int titlePx = Mathf.RoundToInt(titleSize.ToFontPx());
+            Rem detailSize = new Rem(0.7f);
+            int detailPx = Mathf.RoundToInt(detailSize.ToFontPx());
 
-            Color saved = GUI.color;
             float titleCursor = content.x;
             if (isSelected) {
-                GUIContent starGc = new GUIContent("★");
-                float starW = titleStyle.CalcSize(starGc).x;
-                GUI.color = theme.GetColor(ThemeSlot.SurfaceAccent);
+                float starW = TextDraw.Measure("★", FontRole.Display, titleSize).x;
                 Rect starRect = new Rect(titleCursor, content.y, starW + 2f, titlePx + 6f);
-                GUI.Label(RectSnap.Snap(starRect), "★", titleStyle);
+                TextDraw.Draw(starRect, "★", FontRole.Display, titleSize, TextAnchor.UpperLeft, ThemeSlot.SurfaceAccent, FontStyle.Normal, TextClipping.Clip);
                 titleCursor += starW + new Rem(0.4f).ToPixels();
             }
-            GUI.color = theme.GetColor(ThemeSlot.TextPrimary);
             Rect titleRect = new Rect(titleCursor, content.y, Mathf.Max(0f, content.xMax - chipReserve - titleCursor), titlePx + 6f);
-            GUI.Label(RectSnap.Snap(titleRect), display, titleStyle);
+            TextDraw.Draw(titleRect, display, FontRole.Display, titleSize, TextAnchor.UpperLeft, ThemeSlot.TextPrimary, FontStyle.Normal, TextClipping.Clip);
 
-            Font metaFont = theme.GetFont(FontRole.Body);
-            int detailPx = Mathf.RoundToInt(new Rem(0.7f).ToFontPx());
-            GUIStyle detailStyle = GuiStyleCache.GetOrCreate(metaFont, detailPx, FontStyle.Normal);
-            detailStyle.alignment = TextAnchor.UpperLeft;
-            detailStyle.clipping = TextClipping.Clip;
-            GUI.color = theme.GetColor(ThemeSlot.TextMuted);
             Rect detailRect = new Rect(content.x, titleRect.yMax + 2f, labelWidth, detailPx + 4f);
-            GUI.Label(RectSnap.Snap(detailRect), detail, detailStyle);
+            TextDraw.Draw(detailRect, detail, FontRole.Body, detailSize, TextAnchor.UpperLeft, ThemeSlot.TextMuted, FontStyle.Normal, TextClipping.Clip);
 
             if (status.ModMatch == SaveStatusInspector.ModMatchKind.Mismatch) {
                 int count = status.MissingModNames.Count;
                 if (count > 0) {
                     string warn = "CL_LoadColony_Status_ModsMissing".Translate(count.Named("COUNT"));
-                    GUI.color = theme.GetColor(ThemeSlot.StatusWarning);
                     Rect warnRect = new Rect(content.x, detailRect.yMax + 2f, labelWidth, detailPx + 4f);
-                    GUI.Label(RectSnap.Snap(warnRect), warn, detailStyle);
+                    TextDraw.Draw(warnRect, warn, FontRole.Body, detailSize, TextAnchor.UpperLeft, ThemeSlot.StatusWarning, FontStyle.Normal, TextClipping.Clip);
                 }
             }
-            GUI.color = saved;
 
             InteractionFeedback.Apply(rect, true, true);
 

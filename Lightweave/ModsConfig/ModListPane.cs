@@ -101,8 +101,6 @@ public static class ModListPane {
         LightweaveNode node = NodeBuilder.New("ModListHeader");
         node.PreferredHeight = HeaderHeight.ToPixels();
         node.Paint = (rect, _) => {
-            Theme.Theme theme = RenderContext.Current.Theme;
-
             PaintBox.Draw(
                 rect,
                 null,
@@ -111,24 +109,13 @@ public static class ModListPane {
             );
 
             ColumnRects cols = ComputeColumns(rect);
+            Rem fontSize = new Rem(0.8f);
 
-            Font font = theme.GetFont(FontRole.Mono);
-            int px = Mathf.RoundToInt(new Rem(0.8f).ToFontPx());
-            GUIStyle style = GuiStyleCache.GetOrCreate(font, px);
-
-            Color saved = GUI.color;
-            GUI.color = theme.GetColor(ThemeSlot.MetadataLabel);
-
-            style.alignment = TextAnchor.MiddleLeft;
-            GUI.Label(RectSnap.Snap(cols.Order), "CL_ModsConfig_Col_Order".Translate(), style);
-            GUI.Label(RectSnap.Snap(cols.Name), ((string)"CL_ModsConfig_Col_Name".Translate()).ToUpperInvariant(), style);
-            GUI.Label(RectSnap.Snap(cols.Author), ((string)"CL_ModsConfig_Col_Author".Translate()).ToUpperInvariant(), style);
-            GUI.Label(RectSnap.Snap(cols.Version), ((string)"CL_ModsConfig_Col_Version".Translate()).ToUpperInvariant(), style);
-
-            style.alignment = TextAnchor.MiddleRight;
-            GUI.Label(RectSnap.Snap(cols.Status), ((string)"CL_ModsConfig_Col_Status".Translate()).ToUpperInvariant(), style);
-
-            GUI.color = saved;
+            TextDraw.Draw(cols.Order, "CL_ModsConfig_Col_Order".Translate(), FontRole.Mono, fontSize, TextAnchor.MiddleLeft, ThemeSlot.MetadataLabel);
+            TextDraw.Draw(cols.Name, ((string)"CL_ModsConfig_Col_Name".Translate()).ToUpperInvariant(), FontRole.Mono, fontSize, TextAnchor.MiddleLeft, ThemeSlot.MetadataLabel);
+            TextDraw.Draw(cols.Author, ((string)"CL_ModsConfig_Col_Author".Translate()).ToUpperInvariant(), FontRole.Mono, fontSize, TextAnchor.MiddleLeft, ThemeSlot.MetadataLabel);
+            TextDraw.Draw(cols.Version, ((string)"CL_ModsConfig_Col_Version".Translate()).ToUpperInvariant(), FontRole.Mono, fontSize, TextAnchor.MiddleLeft, ThemeSlot.MetadataLabel);
+            TextDraw.Draw(cols.Status, ((string)"CL_ModsConfig_Col_Status".Translate()).ToUpperInvariant(), FontRole.Mono, fontSize, TextAnchor.MiddleRight, ThemeSlot.MetadataLabel);
         };
         return node;
     }
@@ -194,19 +181,24 @@ public static class ModListPane {
 
             ColumnRects cols = ComputeColumns(rect);
 
-            Color saved = GUI.color;
             if (isDragSource) {
-                GUI.color = new Color(saved.r, saved.g, saved.b, saved.a * 0.45f);
+                using (TintScope.Opacity(0.45f)) {
+                    DrawOrder(cols.Order, loadOrder, theme);
+                    DrawCheckbox(cols.Check, mod, theme);
+                    DrawName(cols.Name, mod, theme);
+                    DrawAuthor(cols.Author, mod, theme);
+                    DrawVersion(cols.Version, mod, theme);
+                    DrawStatus(cols.Status, mod, theme);
+                }
             }
-
-            DrawOrder(cols.Order, loadOrder, theme);
-            DrawCheckbox(cols.Check, mod, theme);
-            DrawName(cols.Name, mod, theme);
-            DrawAuthor(cols.Author, mod, theme);
-            DrawVersion(cols.Version, mod, theme);
-            DrawStatus(cols.Status, mod, theme);
-
-            GUI.color = saved;
+            else {
+                DrawOrder(cols.Order, loadOrder, theme);
+                DrawCheckbox(cols.Check, mod, theme);
+                DrawName(cols.Name, mod, theme);
+                DrawAuthor(cols.Author, mod, theme);
+                DrawVersion(cols.Version, mod, theme);
+                DrawStatus(cols.Status, mod, theme);
+            }
 
             Event e = Event.current;
 
@@ -296,14 +288,7 @@ public static class ModListPane {
     }
 
     private static void DrawOrder(Rect r, int order, Theme.Theme theme) {
-        Font font = theme.GetFont(FontRole.Mono);
-        int px = Mathf.RoundToInt(new Rem(0.75f).ToFontPx());
-        GUIStyle style = GuiStyleCache.GetOrCreate(font, px);
-        style.alignment = TextAnchor.MiddleLeft;
-        Color saved = GUI.color;
-        GUI.color = theme.GetColor(ThemeSlot.TextMuted);
-        GUI.Label(RectSnap.Snap(r), order.ToString("D2"), style);
-        GUI.color = saved;
+        TextDraw.Draw(r, order.ToString("D2"), FontRole.Mono, new Rem(0.75f), TextAnchor.MiddleLeft, ThemeSlot.TextMuted);
     }
 
     private static void DrawCheckbox(Rect r, ModMetaData mod, Theme.Theme theme) {
@@ -325,11 +310,7 @@ public static class ModListPane {
     }
 
     private static void DrawName(Rect r, ModMetaData mod, Theme.Theme theme) {
-        Font font = theme.GetFont(FontRole.Body);
-        int px = Mathf.RoundToInt(new Rem(1.0f).ToFontPx());
-        GUIStyle style = GuiStyleCache.GetOrCreate(font, px);
-        style.alignment = TextAnchor.MiddleLeft;
-        style.clipping = TextClipping.Clip;
+        Rem nameSize = new Rem(1.0f);
 
         ModKind kind = ModKindResolver.Resolve(mod);
         bool showDlc = kind == ModKind.Core || kind == ModKind.Expansion;
@@ -341,15 +322,12 @@ public static class ModListPane {
         float tagPad = new Rem(0.375f).ToPixels();
 
         string name = mod.Name ?? mod.PackageId ?? string.Empty;
-        Vector2 nameSize = style.CalcSize(new GUIContent(name));
+        Vector2 measured = TextDraw.Measure(name, FontRole.Body, nameSize);
         float maxNameW = r.width - (showDlc || showLib ? new Rem(2.5f).ToPixels() : 0f) - (locked ? new Rem(1.0f).ToPixels() : 0f);
-        float nameW = Mathf.Min(nameSize.x, maxNameW);
+        float nameW = Mathf.Min(measured.x, maxNameW);
 
-        Color saved = GUI.color;
-        GUI.color = theme.GetColor(ThemeSlot.TextPrimary);
         Rect nameRect = new Rect(r.x, r.y, nameW, r.height);
-        GUI.Label(RectSnap.Snap(nameRect), name, style);
-        GUI.color = saved;
+        TextDraw.Draw(nameRect, name, FontRole.Body, nameSize, TextAnchor.MiddleLeft, ThemeSlot.TextPrimary, FontStyle.Normal, TextClipping.Clip);
 
         float cursorX = r.x + nameW + tagGap;
         float tagY = r.y + (r.height - tagH) / 2f;
@@ -366,31 +344,18 @@ public static class ModListPane {
         }
 
         if (locked) {
-            Font glyphFont = theme.GetFont(FontRole.Body);
-            int glyphPx = Mathf.RoundToInt(new Rem(0.75f).ToFontPx());
-            GUIStyle glyphStyle = GuiStyleCache.GetOrCreate(glyphFont, glyphPx);
-            glyphStyle.alignment = TextAnchor.MiddleLeft;
-            Color savedG = GUI.color;
-            GUI.color = theme.GetColor(ThemeSlot.TextMuted);
             Rect glyphRect = new Rect(cursorX, r.y, new Rem(1.0f).ToPixels(), r.height);
-            GUI.Label(RectSnap.Snap(glyphRect), "🔒", glyphStyle);
-            GUI.color = savedG;
+            TextDraw.Draw(glyphRect, "🔒", FontRole.Body, new Rem(0.75f), TextAnchor.MiddleLeft, ThemeSlot.TextMuted);
         }
     }
 
     private static float DrawTagChip(float x, float y, float h, float padX, string text, ThemeSlot toneSlot, Theme.Theme theme) {
-        Font font = theme.GetFont(FontRole.Mono);
-        int px = Mathf.RoundToInt(new Rem(0.7f).ToFontPx());
-        GUIStyle style = GuiStyleCache.GetOrCreate(font, px);
-        style.alignment = TextAnchor.MiddleCenter;
-        Vector2 size = style.CalcSize(new GUIContent(text));
+        Rem fontSize = new Rem(0.7f);
+        Vector2 size = TextDraw.Measure(text, FontRole.Mono, fontSize);
         float w = size.x + padX * 2f;
         Rect chip = new Rect(x, y, w, h);
         PaintBox.Draw(chip, null, BorderSpec.All(new Rem(1f / 16f), toneSlot), null);
-        Color saved = GUI.color;
-        GUI.color = theme.GetColor(toneSlot);
-        GUI.Label(RectSnap.Snap(chip), text, style);
-        GUI.color = saved;
+        TextDraw.Draw(chip, text, FontRole.Mono, fontSize, TextAnchor.MiddleCenter, toneSlot);
         return x + w;
     }
 
@@ -399,28 +364,12 @@ public static class ModListPane {
         if (string.IsNullOrEmpty(author)) {
             return;
         }
-        Font font = theme.GetFont(FontRole.Mono);
-        int px = Mathf.RoundToInt(new Rem(0.85f).ToFontPx());
-        GUIStyle style = GuiStyleCache.GetOrCreate(font, px);
-        style.alignment = TextAnchor.MiddleLeft;
-        style.clipping = TextClipping.Clip;
-        Color saved = GUI.color;
-        GUI.color = theme.GetColor(ThemeSlot.TextSecondary);
-        GUI.Label(RectSnap.Snap(r), author, style);
-        GUI.color = saved;
+        TextDraw.Draw(r, author, FontRole.Mono, new Rem(0.85f), TextAnchor.MiddleLeft, ThemeSlot.TextSecondary, FontStyle.Normal, TextClipping.Clip);
     }
 
     private static void DrawVersion(Rect r, ModMetaData mod, Theme.Theme theme) {
         string version = string.IsNullOrEmpty(mod.ModVersion) ? "—" : mod.ModVersion;
-        Font font = theme.GetFont(FontRole.Mono);
-        int px = Mathf.RoundToInt(new Rem(0.85f).ToFontPx());
-        GUIStyle style = GuiStyleCache.GetOrCreate(font, px);
-        style.alignment = TextAnchor.MiddleLeft;
-        style.clipping = TextClipping.Clip;
-        Color saved = GUI.color;
-        GUI.color = theme.GetColor(ThemeSlot.TextMuted);
-        GUI.Label(RectSnap.Snap(r), version, style);
-        GUI.color = saved;
+        TextDraw.Draw(r, version, FontRole.Mono, new Rem(0.85f), TextAnchor.MiddleLeft, ThemeSlot.TextMuted, FontStyle.Normal, TextClipping.Clip);
     }
 
     private static void DrawStatus(Rect r, ModMetaData mod, Theme.Theme theme) {
@@ -441,14 +390,7 @@ public static class ModListPane {
                 slot = ThemeSlot.StatusSuccess;
             }
         }
-        Font font = theme.GetFont(FontRole.Mono);
-        int px = Mathf.RoundToInt(new Rem(0.85f).ToFontPx());
-        GUIStyle style = GuiStyleCache.GetOrCreate(font, px);
-        style.alignment = TextAnchor.MiddleRight;
-        Color saved = GUI.color;
-        GUI.color = theme.GetColor(slot);
-        GUI.Label(RectSnap.Snap(r), text, style);
-        GUI.color = saved;
+        TextDraw.Draw(r, text, FontRole.Mono, new Rem(0.85f), TextAnchor.MiddleRight, slot);
     }
 
     private static ColumnRects ComputeColumns(Rect rect) {
