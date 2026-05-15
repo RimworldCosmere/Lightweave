@@ -121,8 +121,6 @@ public static class Chart {
             GUIStyle tickStyle = GuiStyleCache.GetOrCreate(font, tickPx);
             GUIStyle labelStyle = GuiStyleCache.GetOrCreate(font, labelPx);
 
-            Color saved = GUI.color;
-
             if (showYAxis && tickCountY >= 2) {
                 tickStyle.alignment = TextAnchor.MiddleRight;
                 Color gridCol = new Color(mutedCol.r, mutedCol.g, mutedCol.b, 0.18f);
@@ -131,18 +129,16 @@ public static class Chart {
                     float val = Mathf.Lerp(max, min, t);
                     float yp = plotRect.y + t * plotRect.height;
                     Rect labelRect = new Rect(rect.x, yp - tickPx, yAxisGutter - 6f, tickPx * 2f);
-                    GUI.color = textCol;
                     string txt = yTickFormatter != null ? yTickFormatter(val) : val.ToString("0.#");
-                    GUI.Label(RectSnap.Snap(labelRect), txt, tickStyle);
-                    Widgets.DrawLine(new Vector2(plotRect.x, yp), new Vector2(plotRect.xMax, yp), gridCol, 1f);
+                    TextDraw.DrawWithStyle(labelRect, txt, tickStyle, textCol);
+                    PaintBox.DrawLine(new Vector2(plotRect.x, yp), new Vector2(plotRect.xMax, yp), gridCol, 1f);
                 }
             }
 
             if (showYAxis && yAxisLabel != null) {
                 labelStyle.alignment = TextAnchor.MiddleLeft;
-                GUI.color = mutedCol;
                 Rect ylRect = new Rect(rect.x, rect.y, yAxisGutter + plotRect.width, topPad);
-                GUI.Label(RectSnap.Snap(ylRect), yAxisLabel, labelStyle);
+                TextDraw.DrawWithStyle(ylRect, yAxisLabel, labelStyle, mutedCol);
             }
 
             if (showXAxis && tickCountX >= 2) {
@@ -152,17 +148,15 @@ public static class Chart {
                     int idx = Mathf.RoundToInt(t * (samples.Count - 1));
                     float xp = plotRect.x + t * plotRect.width;
                     Rect labelRect = new Rect(xp - 32f, plotRect.yMax + 4f, 64f, tickPx + 4f);
-                    GUI.color = textCol;
                     string txt = xTickFormatter != null ? xTickFormatter(idx) : idx.ToString();
-                    GUI.Label(RectSnap.Snap(labelRect), txt, tickStyle);
+                    TextDraw.DrawWithStyle(labelRect, txt, tickStyle, textCol);
                 }
             }
 
             if (showXAxis && xAxisLabel != null) {
                 labelStyle.alignment = TextAnchor.MiddleCenter;
-                GUI.color = mutedCol;
                 Rect xlRect = new Rect(plotRect.x, rect.yMax - labelPx - 4f, plotRect.width, labelPx + 4f);
-                GUI.Label(RectSnap.Snap(xlRect), xAxisLabel, labelStyle);
+                TextDraw.DrawWithStyle(xlRect, xAxisLabel, labelStyle, mutedCol);
             }
 
             if (samples.Count == 1) {
@@ -170,9 +164,7 @@ public static class Chart {
                 float dotY = plotRect.y + plotRect.height * 0.5f;
                 float dotSize = lw * 3f;
                 Rect dotRect = new Rect(dotX - dotSize * 0.5f, dotY - dotSize * 0.5f, dotSize, dotSize);
-                GUI.color = lineCol;
-                GUI.DrawTexture(dotRect, Texture2D.whiteTexture);
-                GUI.color = saved;
+                PaintBox.Fill(dotRect, lineCol);
                 paintChildren();
                 return;
             }
@@ -198,13 +190,12 @@ public static class Chart {
                         float barHeight = plotRect.yMax - lineY;
                         if (barHeight > 0f) {
                             Rect bar = new Rect(bx, lineY, 1f, barHeight);
-                            Widgets.DrawBoxSolid(bar, fillDraw);
+                            PaintBox.FillSolid(bar, fillDraw);
                         }
                     }
                 }
             }
 
-            GUI.color = lineCol;
             for (int i = 0; i < samples.Count - 1; i++) {
                 float x0 = plotRect.x + i * xStep;
                 float x1 = plotRect.x + (i + 1) * xStep;
@@ -214,7 +205,7 @@ public static class Chart {
                 float y1 = plotRect.yMax - norm1 * plotRect.height;
                 Vector2 p0 = new Vector2(x0, y0);
                 Vector2 p1 = new Vector2(x1, y1);
-                Widgets.DrawLine(p0, p1, lineCol, lw);
+                PaintBox.DrawLine(p0, p1, lineCol, lw);
             }
 
             if (pointHighlight && plotRect.Contains(Event.current.mousePosition)) {
@@ -233,13 +224,9 @@ public static class Chart {
                 Color halo = new Color(lineCol.r, lineCol.g, lineCol.b, 0.25f);
                 float haloSize = dotSize * 2.2f;
                 Rect haloRect = new Rect(hx - haloSize * 0.5f, hy - haloSize * 0.5f, haloSize, haloSize);
-                GUI.color = halo;
-                GUI.DrawTexture(haloRect, Texture2D.whiteTexture);
-                GUI.color = lineCol;
-                GUI.DrawTexture(dotRect, Texture2D.whiteTexture);
+                PaintBox.Fill(haloRect, halo);
+                PaintBox.Fill(dotRect, lineCol);
             }
-
-            GUI.color = saved;
             paintChildren();
         };
 

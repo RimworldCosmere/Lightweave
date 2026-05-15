@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using Cosmere.Lightweave.Doc;
+using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
@@ -56,7 +57,6 @@ public static class Spinner {
             float arcSpan = 270f;
             float segStep = arcSpan / segmentCount;
 
-            Color saved = GUI.color;
             for (int i = 0; i < segmentCount; i++) {
                 float a0 = angle + i * segStep;
                 float a1 = angle + (i + 1) * segStep;
@@ -69,11 +69,9 @@ public static class Spinner {
                 Vector2 p1 = new Vector2(cx + Mathf.Sin(rad1) * radius, cy - Mathf.Cos(rad1) * radius);
 
                 float alpha = Mathf.Lerp(0.15f, 1f, t);
-                GUI.color = new Color(arcColor.r, arcColor.g, arcColor.b, arcColor.a * alpha);
-                Widgets.DrawLine(p0, p1, GUI.color, lineWidth);
+                Color segColor = new Color(arcColor.r, arcColor.g, arcColor.b, arcColor.a * alpha);
+                PaintBox.DrawLine(p0, p1, segColor, lineWidth);
             }
-
-            GUI.color = saved;
             paintChildren();
         };
 

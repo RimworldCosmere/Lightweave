@@ -110,7 +110,7 @@ public static class TextDraw {
     }
 
 
-    public static void DrawWithStyle(Rect rect, string text, GUIStyle style, Color color) {
+    public static void DrawWithStyle(Rect rect, string? text, GUIStyle style, Color color) {
         if (string.IsNullOrEmpty(text)) {
             return;
         }

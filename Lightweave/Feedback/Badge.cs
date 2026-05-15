@@ -137,10 +137,7 @@ public static class Badge {
 
             Rect textRect = new Rect(leftEdge, rect.y, Mathf.Max(0f, rightEdge - leftEdge), rect.height);
 
-            Color savedColor = GUI.color;
-            GUI.color = theme.GetColor(BadgeVariants.Foreground(variant));
-            GUI.Label(RectSnap.Snap(textRect), display, style);
-            GUI.color = savedColor;
+            TextDraw.DrawWithStyle(textRect, display, style, theme.GetColor(BadgeVariants.Foreground(variant)));
 
             if (onTrailingClick != null && trailingHitRect.HasValue) {
                 Rect hit = trailingHitRect.Value;
@@ -257,24 +254,19 @@ public static class Badge {
                 rect.height - inset * 2f
             );
 
-            Color saved = GUI.color;
-            GUI.color = color;
-            DrawDiagonal(inner, thickness, ascending: true);
-            DrawDiagonal(inner, thickness, ascending: false);
-            GUI.color = saved;
+            DrawDiagonal(inner, thickness, color, ascending: true);
+            DrawDiagonal(inner, thickness, color, ascending: false);
         };
         return node;
     }
 
-    private static void DrawDiagonal(Rect r, float thickness, bool ascending) {
-        Matrix4x4 saved = GUI.matrix;
+    private static void DrawDiagonal(Rect r, float thickness, Color color, bool ascending) {
         Vector2 pivot = new Vector2(r.center.x, r.center.y);
         float angle = ascending ? -45f : 45f;
-        GUIUtility.RotateAroundPivot(angle, pivot);
+        using RotateScope _ = RotateScope.Around(angle, pivot);
         float length = Mathf.Sqrt(r.width * r.width + r.height * r.height);
         Rect line = new Rect(pivot.x - length / 2f, pivot.y - thickness / 2f, length, thickness);
-        GUI.DrawTexture(line, Texture2D.whiteTexture);
-        GUI.matrix = saved;
+        PaintBox.Fill(line, color);
     }
 
     private static Rect ExcludeTrailing(Rect badgeRect, Rect trailing, bool rtl) {

@@ -75,10 +75,7 @@ public static class ProgressBar {
                     ? BadgeVariants.Foreground(variant)
                     : ThemeSlot.TextPrimary;
 
-                Color savedColor = GUI.color;
-                GUI.color = theme.GetColor(labelSlot);
-                GUI.Label(RectSnap.Snap(rect), label, style);
-                GUI.color = savedColor;
+                TextDraw.DrawWithStyle(rect, label, style, theme.GetColor(labelSlot));
             }
 
             paintChildren();

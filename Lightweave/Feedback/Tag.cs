@@ -93,7 +93,6 @@ public static class Tag {
             );
 
             float cursorX = rect.x + padX;
-            Color saved = GUI.color;
 
             if (dot) {
                 Rect dotRect = new Rect(
@@ -111,7 +110,7 @@ public static class Tag {
                 cursorX += dotSize + dotGap;
             }
 
-            GUI.color = theme.GetColor(textColor);
+            Color textCol = theme.GetColor(textColor);
             float labelRight = rect.xMax - padX;
             float cursor = cursorX;
             for (int i = 0; i < display.Length; i++) {
@@ -119,10 +118,9 @@ public static class Tag {
                 GUIContent gc = new GUIContent(ch);
                 float w = gs.CalcSize(gc).x;
                 if (cursor + w > labelRight) break;
-                GUI.Label(RectSnap.Snap(new Rect(cursor, rect.y, w, rect.height)), ch, gs);
+                TextDraw.DrawWithStyle(new Rect(cursor, rect.y, w, rect.height), ch, gs, textCol);
                 cursor += w + tracking;
             }
-            GUI.color = saved;
         };
 
         return node;

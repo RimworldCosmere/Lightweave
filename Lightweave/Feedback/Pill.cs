@@ -94,7 +94,6 @@ public static class Pill {
                     break;
             }
 
-            Color savedColor = GUI.color;
             if (alpha < 1f) {
                 Color bg = theme.GetColor(bgSlot);
                 bg.a *= alpha;
@@ -113,9 +112,6 @@ public static class Pill {
                 Rect iconRect = new Rect(rect.x + padPx, rect.y + (rect.height - iconPx) * 0.5f, iconPx, iconPx);
                 leading.MeasuredRect = iconRect;
                 labelStartX = iconRect.xMax + gapPx;
-                if (alpha < 1f) {
-                    GUI.color = new Color(1f, 1f, 1f, alpha);
-                }
             }
 
             int px = Mathf.RoundToInt(new Rem(0.65f).ToFontPx());
@@ -124,14 +120,11 @@ public static class Pill {
             style.clipping = TextClipping.Clip;
 
             Rect labelRect = new Rect(labelStartX, rect.y, rect.xMax - padPx - labelStartX, rect.height);
-            GUI.color = theme.GetColor(textSlot);
+            Color labelColor = theme.GetColor(textSlot);
             if (alpha < 1f) {
-                Color c = GUI.color;
-                c.a *= alpha;
-                GUI.color = c;
+                labelColor.a *= alpha;
             }
-            GUI.Label(RectSnap.Snap(labelRect), display, style);
-            GUI.color = savedColor;
+            TextDraw.DrawWithStyle(labelRect, display, style, labelColor);
 
             paintChildren();
 

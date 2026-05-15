@@ -55,12 +55,9 @@ public static class RingGauge {
             Color trackCol = theme.GetColor(resolvedTrack);
             Color fillCol = theme.GetColor(resolvedFill);
 
-            Color saved = GUI.color;
-
             int totalSegments = 60;
             float segStep = 360f / totalSegments;
 
-            GUI.color = trackCol;
             for (int i = 0; i < totalSegments; i++) {
                 float a0 = i * segStep;
                 float a1 = (i + 1) * segStep;
@@ -68,12 +65,11 @@ public static class RingGauge {
                 float rad1 = a1 * Mathf.Deg2Rad;
                 Vector2 p0 = new Vector2(cx + Mathf.Sin(rad0) * radius, cy - Mathf.Cos(rad0) * radius);
                 Vector2 p1 = new Vector2(cx + Mathf.Sin(rad1) * radius, cy - Mathf.Cos(rad1) * radius);
-                Widgets.DrawLine(p0, p1, trackCol, lineWidth);
+                PaintBox.DrawLine(p0, p1, trackCol, lineWidth);
             }
 
             if (clamped > 0f) {
                 int fillSegments = Mathf.Max(1, Mathf.RoundToInt(clamped * totalSegments));
-                GUI.color = fillCol;
                 for (int i = 0; i < fillSegments; i++) {
                     float a0 = i * segStep;
                     float a1 = Mathf.Min((i + 1) * segStep, clamped * 360f);
@@ -81,22 +77,16 @@ public static class RingGauge {
                     float rad1 = a1 * Mathf.Deg2Rad;
                     Vector2 p0 = new Vector2(cx + Mathf.Sin(rad0) * radius, cy - Mathf.Cos(rad0) * radius);
                     Vector2 p1 = new Vector2(cx + Mathf.Sin(rad1) * radius, cy - Mathf.Cos(rad1) * radius);
-                    Widgets.DrawLine(p0, p1, fillCol, lineWidth);
+                    PaintBox.DrawLine(p0, p1, fillCol, lineWidth);
                 }
             }
-
-            GUI.color = saved;
 
             if (!string.IsNullOrEmpty(centerLabel)) {
                 Font font = theme.GetFont(FontRole.Body);
                 int pixelSize = Mathf.RoundToInt(new Rem(0.75f).ToFontPx());
                 GUIStyle style = GuiStyleCache.GetOrCreate(font, pixelSize);
                 style.alignment = TextAnchor.MiddleCenter;
-
-                Color labelColor = theme.GetColor(ThemeSlot.TextPrimary);
-                GUI.color = labelColor;
-                GUI.Label(RectSnap.Snap(rect), centerLabel, style);
-                GUI.color = saved;
+                TextDraw.DrawWithStyle(rect, centerLabel, style, theme.GetColor(ThemeSlot.TextPrimary));
             }
 
             paintChildren();

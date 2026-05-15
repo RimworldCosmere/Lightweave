@@ -32,6 +32,15 @@ public static class PaintBox {
         GUI.DrawTexture(r, texture, scaleMode, true, 0, tint, Vector4.zero, Vector4.zero);
     }
 
+
+    public static void DrawLine(Vector2 start, Vector2 end, Color color, float width) {
+        Widgets.DrawLine(start, end, color, width);
+    }
+
+    public static void FillSolid(Rect rect, Color color) {
+        Widgets.DrawBoxSolid(RectSnap.Snap(rect), color);
+    }
+
     public static void Draw(Rect rect, BackgroundSpec? bg, BorderSpec? border, RadiusSpec? radius) {
         Rect r = RectSnap.Snap(rect);
         Direction dir = RenderContext.Current.Direction;
