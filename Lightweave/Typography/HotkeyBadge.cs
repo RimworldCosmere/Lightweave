@@ -89,10 +89,7 @@ public static class HotkeyBadge {
                 ColorRef.Token tok => theme.GetColor(tok.Slot),
                 _ => theme.GetColor(ThemeSlot.TextSecondary),
             };
-            Color saved = GUI.color;
-            GUI.color = textColor;
-            GUI.Label(RectSnap.SnapText(capRect), label, gs);
-            GUI.color = saved;
+            TextDraw.DrawWithStyle(capRect, label, gs, textColor);
         };
 
         return node;

@@ -43,14 +43,14 @@ internal static class SelectorTrigger {
         return new Layout(labelRect, chevronRect);
     }
 
-    public static void DrawChevron(Rect chevronRect, ThemeSlot colorSlot, Theme.Theme theme) {
-        Font chevronFont = theme.GetFont(FontRole.Body);
-        int chevronPixelSize = Mathf.RoundToInt(ChevronFontSize.ToFontPx());
-        GUIStyle chevronStyle = GuiStyleCache.GetOrCreate(chevronFont, chevronPixelSize);
-        chevronStyle.alignment = TextAnchor.MiddleCenter;
-        Color saved = GUI.color;
-        GUI.color = theme.GetColor(colorSlot);
-        GUI.Label(RectSnap.Snap(chevronRect), "▾", chevronStyle);
-        GUI.color = saved;
+    public static void DrawChevron(Rect chevronRect, ThemeSlot colorSlot) {
+        TextDraw.Draw(
+            chevronRect,
+            "▾",
+            FontRole.Body,
+            ChevronFontSize,
+            TextAnchor.MiddleCenter,
+            colorSlot
+        );
     }
 }

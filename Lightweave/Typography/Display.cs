@@ -152,18 +152,15 @@ public static class Display {
                 ColorRef.Token tok => theme.GetColor(tok.Slot),
                 _ => theme.GetColor(ThemeSlot.TextPrimary),
             };
-            Color saved = GUI.color;
-            GUI.color = c;
             gs.alignment = TextAnchor.MiddleLeft;
             gs.clipping = TextClipping.Overflow;
 
             int cursor = startX;
             for (int i = 0; i < content.Length; i++) {
                 string ch = content[i].ToString();
-                GUI.Label(new Rect(cursor, y, widths[i], h), ch, gs);
+                TextDraw.DrawWithStyle(new Rect(cursor, y, widths[i], h), ch, gs, c);
                 cursor += widths[i] + letterSpacing;
             }
-            GUI.color = saved;
         };
         return node;
     }

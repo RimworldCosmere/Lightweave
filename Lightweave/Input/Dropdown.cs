@@ -84,7 +84,7 @@ public static class Dropdown {
             InteractionState state = InteractionState.Resolve(rect, null, disabled);
             TriggerStyle style = PaintTriggerSurface(rect, variant, buttonStyle, state, disabled);
             (Rect labelRect, Rect chevronRect) = ComputeTriggerLayout(rect, dir);
-            DrawTriggerContent(labelRect, chevronRect, labelFn(value), variant, style, theme, dir);
+            DrawTriggerContent(labelRect, chevronRect, labelFn(value), variant, style, dir);
 
             HandleTriggerInteraction(rect, disabled, options, value, isOpenKey, isOpen, highlightedIndex);
 
@@ -177,20 +177,20 @@ public static class Dropdown {
         string labelText,
         DropdownVariant variant,
         TriggerStyle style,
-        Theme.Theme theme,
         Direction dir
     ) {
-        Font labelFont = theme.GetFont(style.LabelFontRole);
-        int labelPixelSize = Mathf.RoundToInt(new Rem(0.875f).ToFontPx());
-        GUIStyle labelStyle = GuiStyleCache.GetOrCreate(labelFont, labelPixelSize, style.LabelFontStyle);
-        labelStyle.alignment = Typography.Typography.ResolveAnchor(TextAlign.Start, dir);
+        TextAnchor labelAnchor = Typography.Typography.ResolveAnchor(TextAlign.Start, dir);
+        TextDraw.Draw(
+            labelRect,
+            labelText,
+            style.LabelFontRole,
+            new Rem(0.875f),
+            labelAnchor,
+            style.LabelSlot,
+            style.LabelFontStyle
+        );
 
-        Color savedColor = GUI.color;
-        GUI.color = theme.GetColor(style.LabelSlot);
-        GUI.Label(RectSnap.Snap(labelRect), labelText, labelStyle);
-        GUI.color = savedColor;
-
-        SelectorTrigger.DrawChevron(chevronRect, style.ChevronSlot, theme);
+        SelectorTrigger.DrawChevron(chevronRect, style.ChevronSlot);
     }
 
     private static void HandleTriggerInteraction<T>(

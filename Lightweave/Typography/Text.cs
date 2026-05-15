@@ -103,10 +103,7 @@ public static partial class Typography {
                     ColorRef.Token tok => theme.GetColor(tok.Slot),
                     _ => theme.GetColor(ThemeSlot.TextPrimary),
                 };
-                Color saved = GUI.color;
-                GUI.color = c;
-                GUI.Label(RectSnap.Snap(rect), content, gs);
-                GUI.color = saved;
+                TextDraw.DrawWithStyle(rect, content, gs, c);
             };
             return node;
         }

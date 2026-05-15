@@ -141,18 +141,15 @@ public static class Eyebrow {
                 ColorRef.Token tok => theme.GetColor(tok.Slot),
                 _ => theme.GetColor(ThemeSlot.TextMuted),
             };
-            Color saved = GUI.color;
-            GUI.color = c;
             gs.alignment = TextAnchor.MiddleLeft;
             gs.clipping = TextClipping.Overflow;
 
             int cursor = startX;
             for (int i = 0; i < upper.Length; i++) {
                 string ch = upper[i].ToString();
-                GUI.Label(new Rect(cursor, y, widths[i], h), ch, gs);
+                TextDraw.DrawWithStyle(new Rect(cursor, y, widths[i], h), ch, gs, c);
                 cursor += widths[i] + letterSpacing;
             }
-            GUI.color = saved;
         };
         return node;
     }

@@ -110,10 +110,7 @@ public static class Vignette {
             VignetteShape.Linear => VignetteTextureCache.Linear(edge, falloff: 1.2f / s),
             _ => VignetteTextureCache.Radial(falloff: 1.6f / s),
         };
-        Color saved = GUI.color;
-        GUI.color = tint;
-        GUI.DrawTexture(RectSnap.Snap(rect), tex, ScaleMode.StretchToFill, true);
-        GUI.color = saved;
+        PaintBox.DrawTexture(rect, tex, tint);
     }
 
     [DocVariant("CL_Playground_Vignette_Radial")]

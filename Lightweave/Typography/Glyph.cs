@@ -107,10 +107,7 @@ public static class Glyph {
                 ColorRef.Token tok => theme.GetColor(tok.Slot),
                 _ => theme.GetColor(ThemeSlot.TextPrimary),
             };
-            Color saved = GUI.color;
-            GUI.color = c;
-            GUI.Label(RectSnap.Snap(new Rect(drawX, drawY, textSize.x, textSize.y)), glyph, gs);
-            GUI.color = saved;
+            TextDraw.DrawWithStyle(new Rect(drawX, drawY, textSize.x, textSize.y), glyph, gs, c);
         };
         return node;
     }

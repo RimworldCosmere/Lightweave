@@ -64,10 +64,7 @@ public static partial class Typography {
                     pushed = true;
                 }
 
-                Color savedColor = GUI.color;
-                GUI.color = c;
-                GUI.DrawTexture(RectSnap.Snap(r), texture, ScaleMode.ScaleToFit);
-                GUI.color = savedColor;
+                PaintBox.DrawTexture(r, texture, c, ScaleMode.ScaleToFit);
                 if (pushed) {
                     IconMirror.Pop(saved);
                 }

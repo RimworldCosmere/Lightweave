@@ -109,6 +109,18 @@ public static class TextDraw {
         return style.CalcSize(new GUIContent(text));
     }
 
+
+    public static void DrawWithStyle(Rect rect, string text, GUIStyle style, Color color) {
+        if (string.IsNullOrEmpty(text)) {
+            return;
+        }
+
+        Color saved = GUI.color;
+        GUI.color = color;
+        GUI.Label(RectSnap.SnapText(rect), text, style);
+        GUI.color = saved;
+    }
+
     public static float MeasureTracked(string text, FontRole role, Rem fontSize, float tracking, FontStyle fontStyle = FontStyle.Normal, Font? fontOverride = null) {
         if (string.IsNullOrEmpty(text)) {
             return 0f;

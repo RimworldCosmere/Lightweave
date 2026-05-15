@@ -79,7 +79,7 @@ public static class LangSelectField {
             TextAnchor labelAnchor = Typography.Typography.ResolveAnchor(TextAlign.Start, dir);
             TextDraw.Draw(labelRect, labelText, FontRole.BodyBold, new Rem(0.875f), labelAnchor, fgSlot);
 
-            SelectorTrigger.DrawChevron(chevronRect, fgSlot, theme);
+            SelectorTrigger.DrawChevron(chevronRect, fgSlot);
 
             if (!disabled) {
                 Event e = Event.current;
