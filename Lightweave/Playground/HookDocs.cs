@@ -147,7 +147,6 @@ public static class UseAnimDoc {
 
             LightweaveNode demo = NodeBuilder.New("UseAnimScale", 0, nameof(UseAnimDoc));
             demo.Paint = (rect, _) => {
-                Color saved = GUI.color;
                 Color accent = RenderContext.Current.Theme.GetColor(ThemeSlot.SurfaceAccent);
                 float side = Mathf.Min(rect.width, rect.height) * 0.4f * scale;
                 Rect square = new Rect(
@@ -156,9 +155,7 @@ public static class UseAnimDoc {
                     side,
                     side
                 );
-                GUI.color = accent;
-                GUI.DrawTexture(square, Texture2D.whiteTexture);
-                GUI.color = saved;
+                PaintBox.Fill(square, accent);
             };
 
             return HStack.Create(
@@ -186,7 +183,6 @@ public static class UseAnimDoc {
 
             LightweaveNode demo = NodeBuilder.New("UseAnimSlide", 0, nameof(UseAnimDoc));
             demo.Paint = (rect, _) => {
-                Color saved = GUI.color;
                 Color accent = RenderContext.Current.Theme.GetColor(ThemeSlot.SurfaceAccent);
                 float side = Mathf.Min(rect.height * 0.6f, 32f);
                 float travel = Mathf.Max(0f, rect.width - side);
@@ -196,9 +192,7 @@ public static class UseAnimDoc {
                     side,
                     side
                 );
-                GUI.color = accent;
-                GUI.DrawTexture(square, Texture2D.whiteTexture);
-                GUI.color = saved;
+                PaintBox.Fill(square, accent);
             };
 
             return HStack.Create(
@@ -230,10 +224,7 @@ public static class UseAnimDoc {
 
             LightweaveNode demo = NodeBuilder.New("UseAnimColor", 0, nameof(UseAnimDoc));
             demo.Paint = (rect, _) => {
-                Color saved = GUI.color;
-                GUI.color = new Color(r, g, b, 1f);
-                GUI.DrawTexture(rect, Texture2D.whiteTexture);
-                GUI.color = saved;
+                PaintBox.Fill(rect, new Color(r, g, b, 1f));
             };
 
             return HStack.Create(
@@ -266,15 +257,13 @@ public static class UseAnimDoc {
 
             LightweaveNode demo = NodeBuilder.New("UseAnimStagger", 0, nameof(UseAnimDoc));
             demo.Paint = (rect, _) => {
-                Color saved = GUI.color;
                 Color accent = RenderContext.Current.Theme.GetColor(ThemeSlot.SurfaceAccent);
                 float rowH = rect.height / 5f;
                 for (int i = 0; i < 5; i++) {
                     Rect bar = new Rect(rect.x, rect.y + rowH * i + 2f, rect.width * alphas[i], rowH - 4f);
-                    GUI.color = new Color(accent.r, accent.g, accent.b, accent.a * alphas[i]);
-                    GUI.DrawTexture(bar, Texture2D.whiteTexture);
+                    Color tint = new Color(accent.r, accent.g, accent.b, accent.a * alphas[i]);
+                    PaintBox.Fill(bar, tint);
                 }
-                GUI.color = saved;
             };
 
             return HStack.Create(
@@ -302,7 +291,6 @@ public static class UseAnimDoc {
 
             LightweaveNode demo = NodeBuilder.New("UseAnimBlur", 0, nameof(UseAnimDoc));
             demo.Paint = (rect, _) => {
-                Color saved = GUI.color;
                 Color accent = RenderContext.Current.Theme.GetColor(ThemeSlot.SurfaceAccent);
                 float alpha = Mathf.Lerp(1f, 0.3f, blur);
                 float scale = Mathf.Lerp(1f, 0.85f, blur);
@@ -320,9 +308,7 @@ public static class UseAnimDoc {
                     Mathf.Lerp(accent.b, gray, blur),
                     accent.a * alpha
                 );
-                GUI.color = tint;
-                GUI.DrawTexture(square, Texture2D.whiteTexture);
-                GUI.color = saved;
+                PaintBox.Fill(square, tint);
             };
 
             return HStack.Create(
@@ -350,13 +336,10 @@ public static class UseAnimDoc {
 
             LightweaveNode demo = NodeBuilder.New("UseAnimExpand", 0, nameof(UseAnimDoc));
             demo.Paint = (rect, _) => {
-                Color saved = GUI.color;
                 Color accent = RenderContext.Current.Theme.GetColor(ThemeSlot.SurfaceAccent);
                 float h = Mathf.Min(rect.height * 0.6f, 32f);
                 Rect bar = new Rect(rect.x, rect.y + (rect.height - h) * 0.5f, rect.width * widthFactor, h);
-                GUI.color = accent;
-                GUI.DrawTexture(bar, Texture2D.whiteTexture);
-                GUI.color = saved;
+                PaintBox.Fill(bar, accent);
             };
 
             return HStack.Create(
@@ -384,13 +367,10 @@ public static class UseAnimDoc {
 
             LightweaveNode demo = NodeBuilder.New("UseAnimShrink", 0, nameof(UseAnimDoc));
             demo.Paint = (rect, _) => {
-                Color saved = GUI.color;
                 Color accent = RenderContext.Current.Theme.GetColor(ThemeSlot.SurfaceAccent);
                 float h = Mathf.Min(rect.height * 0.6f, 32f);
                 Rect bar = new Rect(rect.x, rect.y + (rect.height - h) * 0.5f, rect.width * widthFactor, h);
-                GUI.color = accent;
-                GUI.DrawTexture(bar, Texture2D.whiteTexture);
-                GUI.color = saved;
+                PaintBox.Fill(bar, accent);
             };
 
             return HStack.Create(
@@ -417,7 +397,6 @@ public static class UseAnimDoc {
 
             LightweaveNode demo = NodeBuilder.New("UseAnimShake", 0, nameof(UseAnimDoc));
             demo.Paint = (rect, _) => {
-                Color saved = GUI.color;
                 Color accent = RenderContext.Current.Theme.GetColor(ThemeSlot.SurfaceAccent);
                 float elapsed = shakeStart.Current >= 0f ? Time.unscaledTime - shakeStart.Current : 999f;
                 float duration = 0.6f;
@@ -434,9 +413,7 @@ public static class UseAnimDoc {
                     side,
                     side
                 );
-                GUI.color = accent;
-                GUI.DrawTexture(square, Texture2D.whiteTexture);
-                GUI.color = saved;
+                PaintBox.Fill(square, accent);
             };
 
             return HStack.Create(
@@ -478,7 +455,6 @@ public static class UseAnimDoc {
 
             LightweaveNode demo = NodeBuilder.New("UseAnimBounce", 0, nameof(UseAnimDoc));
             demo.Paint = (rect, _) => {
-                Color saved = GUI.color;
                 Color accent = RenderContext.Current.Theme.GetColor(ThemeSlot.SurfaceAccent);
                 float side = Mathf.Min(rect.width, rect.height) * 0.35f;
                 float travel = Mathf.Max(0f, rect.height - side - 8f);
@@ -488,9 +464,7 @@ public static class UseAnimDoc {
                     side,
                     side
                 );
-                GUI.color = accent;
-                GUI.DrawTexture(square, Texture2D.whiteTexture);
-                GUI.color = saved;
+                PaintBox.Fill(square, accent);
             };
 
             return HStack.Create(
@@ -519,7 +493,6 @@ public static class UseAnimDoc {
 
             LightweaveNode demo = NodeBuilder.New("UseAnimPulse", 0, nameof(UseAnimDoc));
             demo.Paint = (rect, _) => {
-                Color saved = GUI.color;
                 Color accent = RenderContext.Current.Theme.GetColor(ThemeSlot.SurfaceAccent);
                 float side = Mathf.Min(rect.width, rect.height) * 0.4f * scale;
                 Rect square = new Rect(
@@ -528,9 +501,8 @@ public static class UseAnimDoc {
                     side,
                     side
                 );
-                GUI.color = new Color(accent.r, accent.g, accent.b, accent.a * alpha);
-                GUI.DrawTexture(square, Texture2D.whiteTexture);
-                GUI.color = saved;
+                Color tint = new Color(accent.r, accent.g, accent.b, accent.a * alpha);
+                PaintBox.Fill(square, tint);
             };
 
             return demo;
@@ -545,8 +517,6 @@ public static class UseAnimDoc {
 
             LightweaveNode demo = NodeBuilder.New("UseAnimWobble", 0, nameof(UseAnimDoc));
             demo.Paint = (rect, _) => {
-                Color saved = GUI.color;
-                Matrix4x4 savedMatrix = GUI.matrix;
                 Color accent = RenderContext.Current.Theme.GetColor(ThemeSlot.SurfaceAccent);
                 float side = Mathf.Min(rect.width, rect.height) * 0.4f;
                 Rect square = new Rect(
@@ -568,11 +538,9 @@ public static class UseAnimDoc {
                 }
 
                 Vector2 pivot = new Vector2(square.x + square.width * 0.5f, square.y + square.height * 0.5f);
-                GUIUtility.RotateAroundPivot(angle, pivot);
-                GUI.color = accent;
-                GUI.DrawTexture(square, Texture2D.whiteTexture);
-                GUI.matrix = savedMatrix;
-                GUI.color = saved;
+                using (RotateScope.Around(angle, pivot)) {
+                    PaintBox.Fill(square, accent);
+                }
             };
 
             return HStack.Create(
@@ -601,8 +569,6 @@ public static class UseAnimDoc {
             LightweaveNode demo = NodeBuilder.New("UseAnimSeesaw", 0, nameof(UseAnimDoc));
             demo.Paint = (rect, _) => {
                 AnimationClock.RegisterActive(RenderContext.Current.RootId);
-                Color saved = GUI.color;
-                Matrix4x4 savedMatrix = GUI.matrix;
                 Color accent = RenderContext.Current.Theme.GetColor(ThemeSlot.SurfaceAccent);
                 float side = Mathf.Min(rect.width, rect.height) * 0.4f;
                 Rect square = new Rect(
@@ -613,11 +579,9 @@ public static class UseAnimDoc {
                 );
                 float angle = Mathf.Sin(Time.unscaledTime * 1.2f) * 18f;
                 Vector2 pivot = new Vector2(square.x + square.width * 0.5f, square.y + square.height * 0.5f);
-                GUIUtility.RotateAroundPivot(angle, pivot);
-                GUI.color = accent;
-                GUI.DrawTexture(square, Texture2D.whiteTexture);
-                GUI.matrix = savedMatrix;
-                GUI.color = saved;
+                using (RotateScope.Around(angle, pivot)) {
+                    PaintBox.Fill(square, accent);
+                }
             };
             return demo;
         });
@@ -629,8 +593,6 @@ public static class UseAnimDoc {
             LightweaveNode demo = NodeBuilder.New("UseAnimSpin", 0, nameof(UseAnimDoc));
             demo.Paint = (rect, _) => {
                 AnimationClock.RegisterActive(RenderContext.Current.RootId);
-                Color saved = GUI.color;
-                Matrix4x4 savedMatrix = GUI.matrix;
                 Color accent = RenderContext.Current.Theme.GetColor(ThemeSlot.SurfaceAccent);
                 float side = Mathf.Min(rect.width, rect.height) * 0.4f;
                 Rect square = new Rect(
@@ -641,11 +603,9 @@ public static class UseAnimDoc {
                 );
                 float angle = Time.unscaledTime % 2f / 2f * 360f;
                 Vector2 pivot = new Vector2(square.x + square.width * 0.5f, square.y + square.height * 0.5f);
-                GUIUtility.RotateAroundPivot(angle, pivot);
-                GUI.color = accent;
-                GUI.DrawTexture(square, Texture2D.whiteTexture);
-                GUI.matrix = savedMatrix;
-                GUI.color = saved;
+                using (RotateScope.Around(angle, pivot)) {
+                    PaintBox.Fill(square, accent);
+                }
             };
             return demo;
         });
@@ -657,7 +617,6 @@ public static class UseAnimDoc {
             LightweaveNode demo = NodeBuilder.New("UseAnimBlink", 0, nameof(UseAnimDoc));
             demo.Paint = (rect, _) => {
                 AnimationClock.RegisterActive(RenderContext.Current.RootId);
-                Color saved = GUI.color;
                 Color accent = RenderContext.Current.Theme.GetColor(ThemeSlot.SurfaceAccent);
                 bool on = Mathf.FloorToInt(Time.unscaledTime / 0.5f) % 2 == 0;
                 float alpha = on ? 1f : 0.2f;
@@ -668,9 +627,8 @@ public static class UseAnimDoc {
                     side,
                     side
                 );
-                GUI.color = new Color(accent.r, accent.g, accent.b, accent.a * alpha);
-                GUI.DrawTexture(square, Texture2D.whiteTexture);
-                GUI.color = saved;
+                Color tint = new Color(accent.r, accent.g, accent.b, accent.a * alpha);
+                PaintBox.Fill(square, tint);
             };
             return demo;
         });
@@ -686,11 +644,9 @@ public static class UseAnimDoc {
         LightweaveNode fadeNode = NodeBuilder.New("UseAnimFade", 0, nameof(UseAnimDoc));
         fadeNode.Paint = (rect, _) => {
             float t = UseAnim.Animate(target.Value ? 1f : 0f, 0.35f);
-            Color saved = GUI.color;
             Color accent = RenderContext.Current.Theme.GetColor(ThemeSlot.SurfaceAccent);
-            GUI.color = new Color(accent.r, accent.g, accent.b, accent.a * t);
-            GUI.DrawTexture(rect, Texture2D.whiteTexture);
-            GUI.color = saved;
+            Color tint = new Color(accent.r, accent.g, accent.b, accent.a * t);
+            PaintBox.Fill(rect, tint);
         };
 
         return HStack.Create(
@@ -894,17 +850,14 @@ public static class UseHotkeyDoc {
     }
 
     private static void DrawHotkeyLabel(Rect rect, string value) {
-        Theme.Theme theme = RenderContext.Current.Theme;
-        GUIStyle style = GuiStyleCache.GetOrCreate(
-            theme.GetFont(FontRole.Body),
-            Mathf.RoundToInt(new Rem(0.875f).ToFontPx())
+        TextDraw.Draw(
+            rect,
+            value,
+            FontRole.Body,
+            new Rem(0.875f),
+            TextAnchor.MiddleLeft,
+            ThemeSlot.TextPrimary
         );
-        style.alignment = TextAnchor.MiddleLeft;
-
-        Color saved = GUI.color;
-        GUI.color = theme.GetColor(ThemeSlot.TextPrimary);
-        GUI.Label(rect, value, style);
-        GUI.color = saved;
     }
 }
 
@@ -1277,15 +1230,7 @@ public static class UseThemeDoc {
     }
 
     private static LightweaveNode BuildSurfaceDoc() {
-        Theme.Theme theme = UseTheme();
-
-        LightweaveNode swatch = NodeBuilder.New("UseThemeSurface", 0, nameof(UseThemeDoc));
-        swatch.Paint = (rect, _) => {
-            Color saved = GUI.color;
-            GUI.color = theme.GetColor(ThemeSlot.SurfaceRaised);
-            GUI.DrawTexture(rect, Texture2D.whiteTexture);
-            GUI.color = saved;
-        };
+        LightweaveNode swatch = Box.Create(style: new Style { Background = ThemeSlot.SurfaceRaised });
 
         return HStack.Create(
             SpacingScale.Xs,
@@ -1300,15 +1245,7 @@ public static class UseThemeDoc {
     }
 
     private static LightweaveNode BuildAccentDoc() {
-        Theme.Theme theme = UseTheme();
-
-        LightweaveNode swatch = NodeBuilder.New("UseThemeAccent", 0, nameof(UseThemeDoc));
-        swatch.Paint = (rect, _) => {
-            Color saved = GUI.color;
-            GUI.color = theme.GetColor(ThemeSlot.SurfaceAccent);
-            GUI.DrawTexture(rect, Texture2D.whiteTexture);
-            GUI.color = saved;
-        };
+        LightweaveNode swatch = Box.Create(style: new Style { Background = ThemeSlot.SurfaceAccent });
 
         return HStack.Create(
             SpacingScale.Xs,
