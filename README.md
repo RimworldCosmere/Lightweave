@@ -27,9 +27,23 @@ Subscribe on the [Steam Workshop](#) or download the latest release from the [Gi
 ```xml
 <!-- YourMod.csproj -->
 <ItemGroup>
-    <PackageReference Include="Cosmere.Lightweave" Version="*" />
+    <PackageReference Include="Cosmere.Lightweave" Version="*" GeneratePathProperty="true" />
 </ItemGroup>
 ```
+
+`PackageReference` only wires up the compile-time reference. RimWorld loads DLLs from each mod's `Assemblies/` folder at runtime, so you also need to drop a copy of `Lightweave.dll` (and `Lightweave.pdb` if you want symbols) there. Either copy it in by hand after a NuGet restore, or add a build target so it stays in sync:
+
+```xml
+<Target Name="CopyLightweaveToAssemblies" AfterTargets="Build">
+    <ItemGroup>
+        <LightweaveRuntime Include="$(PkgCosmere_Lightweave)/lib/**/Lightweave.dll" />
+        <LightweaveRuntime Include="$(PkgCosmere_Lightweave)/lib/**/Lightweave.pdb" />
+    </ItemGroup>
+    <Copy SourceFiles="@(LightweaveRuntime)" DestinationFolder="$(ProjectDir)../Assemblies/" SkipUnchangedFiles="true" />
+</Target>
+```
+
+The `GeneratePathProperty="true"` on the `PackageReference` is what makes `$(PkgCosmere_Lightweave)` resolve to the restored package directory.
 
 ## Develop
 
