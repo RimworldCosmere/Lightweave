@@ -152,10 +152,26 @@ if (!hasCorrectVersion)
 }
 
 // ---------- Discover mods (must contain About/) ----------
-var modDirs = Directory.EnumerateDirectories(root, "*", SearchOption.TopDirectoryOnly)
+// Multi-mod repos: each subdir with About/ is a mod.
+// Single-mod repos: root itself is the mod (About/ at root).
+var subdirMods = Directory.EnumerateDirectories(root, "*", SearchOption.TopDirectoryOnly)
     .Where(d => Directory.Exists(Path.Combine(d, "About")))
     .OrderBy(d => d, StringComparer.OrdinalIgnoreCase)
     .ToArray();
+
+string[] modDirs;
+if (subdirMods.Length > 0)
+{
+    modDirs = subdirMods;
+}
+else if (Directory.Exists(Path.Combine(root, "About")))
+{
+    modDirs = new[] { root };
+}
+else
+{
+    modDirs = Array.Empty<string>();
+}
 
 Console.WriteLine($"Found {modDirs.Length} mods:");
 foreach (var d in modDirs) Console.WriteLine($"  {Path.GetFileName(d)}");
