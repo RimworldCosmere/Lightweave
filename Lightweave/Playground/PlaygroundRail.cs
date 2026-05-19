@@ -152,9 +152,8 @@ public static class PlaygroundRail {
 
                 DrawCategoryRow(rowRect, cat, theme, rtl, expanded, pinned, overRow, activeContainsSelection);
 
-                if (overRow && e.type == EventType.MouseUp && e.button == 0) {
+                if (Widgets.ButtonInvisible(rowRect, doMouseoverSound: false)) {
                     pinnedCategoryId.Set(pinned ? null : cat.Id);
-                    e.Use();
                 }
 
                 TooltipHandler.TipRegion(rowRect, (string)cat.DescriptionKey.Translate());
@@ -178,9 +177,8 @@ public static class PlaygroundRail {
 
                     DrawPrimitiveRow(primRect, primId, theme, rtl, isSelected, primHover);
 
-                    if (primHover && e.type == EventType.MouseUp && e.button == 0) {
+                    if (Widgets.ButtonInvisible(primRect, doMouseoverSound: false)) {
                         selectedPrimitiveId.Set(primId);
-                        e.Use();
                     }
 
                     primY += PrimitiveRowHeight + PrimitiveGap;

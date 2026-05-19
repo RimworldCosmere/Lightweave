@@ -1,25 +1,17 @@
 using System;
 using System.Runtime.CompilerServices;
-using Cosmere.Lightweave.Doc;
 using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
-using Cosmere.Lightweave.Theme;
 using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
 using UnityEngine;
-using Verse;
 
 namespace Cosmere.Lightweave.Layout;
 
-[Doc(
-    Id = "windowfooter",
-    Summary = "Footer region of a LightweaveWindow with theme fill, optional top divider, and resize grip.",
-    WhenToUse = "Pin status text, dialog button rows, or a resize grip to the bottom of a window.",
-    SourcePath = "Lightweave/Lightweave/Layout/WindowFooter.cs"
-)]
 public static class WindowFooter {
     public static LightweaveNode Create(
-        Action<List<LightweaveNode>>? children = null,
+        LightweaveNode? content = null,
+        LightweaveNode? actions = null,
         bool drawDivider = true,
         bool showResizeGrip = false,
         Style? style = null,
@@ -28,85 +20,65 @@ public static class WindowFooter {
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = ""
     ) {
-        List<LightweaveNode> kids = new List<LightweaveNode>();
-        children?.Invoke(kids);
+        bool hasContent = content != null;
+        bool hasActions = actions != null;
 
-        LightweaveNode node = NodeBuilder.New("WindowFooter", line, file);
-        node.ApplyStyling("window-footer", style, classes, id);
+        Rem padX = new Rem(1.375f);
+        Rem padY = new Rem(0.875f);
 
-        Style s0 = node.GetResolvedStyle();
-        float footerH = s0.Height is { Mode: Length.Kind.Rem } hh
-            ? hh.ToPixels(0f, 0f)
-            : new Rem(4f).ToPixels();
-        node.PreferredHeight = footerH;
-        node.Children.AddRange(kids);
+        LightweaveNode row = HStack.Create(SpacingScale.Md, h => {
+            if (hasContent) {
+                h.AddFlex(content!);
+            }
+            else {
+                h.AddFlex(Spacer.Flex());
+            }
+            if (hasActions) {
+                h.AddHug(actions!);
+            }
+        }, style: new Style {
+            Padding = new EdgeInsets(
+                Top: padY,
+                Right: padX,
+                Bottom: padY,
+                Left: padX
+            ),
+        });
 
-        EdgeInsets defaultPad = new EdgeInsets(
-            Top: SpacingScale.Md,
-            Bottom: SpacingScale.Md,
-            Left: SpacingScale.Md,
-            Right: SpacingScale.Xs
+        LightweaveNode inner = Stack.Create(SpacingScale.None, s => {
+            if (drawDivider) {
+                s.Add(Divider.Horizontal());
+            }
+            s.Add(row);
+        });
+
+        LightweaveNode root = Box.Create(
+            children: b => b.Add(inner),
+            style: style,
+            classes: StyleExtensions.PrependClass("window-footer", classes),
+            id: id,
+            line: line,
+            file: file
         );
 
-        node.Paint = (rect, paintChildren) => {
-            Style s = node.GetResolvedStyle();
-            EdgeInsets pad = s.Padding ?? defaultPad;
-            BackgroundSpec bg = s.Background ?? BackgroundSpec.Of(ThemeSlot.SurfaceRaised);
-
+        Action<Rect, Action>? innerPaint = root.Paint;
+        root.Paint = (rect, paintChildren) => {
             LightweaveWindowContext.PublishFooter(rect, showResizeGrip);
-
-            RadiusSpec? effectiveRadius = s.Radius ?? LightweaveWindowContext.RequestedFooterRadius;
-            PaintBox.Draw(rect, bg, null, effectiveRadius);
-
-            Theme.Theme theme = RenderContext.Current.Theme;
-            Direction dir = RenderContext.Current.Direction;
-            bool rtl = dir == Direction.Rtl;
-
-            if (drawDivider) {
-                Color borderColor;
-                BorderSpec? sb = s.Border;
-                if (sb.HasValue && sb.Value.Color != null) {
-                    borderColor = sb.Value.Color switch {
-                        ColorRef.Literal lit => lit.Value,
-                        ColorRef.Token tok => theme.GetColor(tok.Slot),
-                        _ => theme.GetColor(ThemeSlot.BorderDefault),
-                    };
-                }
-                else {
-                    borderColor = theme.GetColor(ThemeSlot.BorderDefault);
-                }
-                Rect divider = new Rect(rect.x, rect.y, rect.width, 1f);
-                PaintBox.Fill(divider, borderColor);
-            }
-
-            (float left, float top, float right, float bottom) = pad.Resolve(dir);
-            Rect content = new Rect(
-                rect.x + left,
-                rect.y + top + (drawDivider ? 1f : 0f),
-                Mathf.Max(0f, rect.width - left - right),
-                Mathf.Max(0f, rect.height - top - bottom - (drawDivider ? 1f : 0f))
-            );
-
-            int count = kids.Count;
-            if (count > 0) {
-                for (int i = 0; i < count; i++) {
-                    kids[i].MeasuredRect = content;
-                }
-
-                paintChildren();
-            }
-
+            innerPaint?.Invoke(rect, paintChildren);
             if (showResizeGrip) {
+                Theme.Theme theme = RenderContext.Current.Theme;
+                bool rtl = RenderContext.Current.Direction == Direction.Rtl;
                 DrawResizeGrip(rect, theme, rtl);
             }
         };
-        return node;
+
+        return root;
     }
 
     private static void DrawResizeGrip(Rect footerRect, Theme.Theme theme, bool rtl) {
-        const float pad = 4f;
-        const float dot = 2f;
-        const float gap = 2f;
+        float pad = SpacingScale.Xxs.ToPixels();
+        float dot = new Rem(0.125f).ToPixels();
+        float gap = new Rem(0.125f).ToPixels();
         float startX = rtl ? footerRect.x + pad : footerRect.xMax - pad - (dot + gap) * 3f + gap;
         float baseY = footerRect.yMax - pad - dot;
 

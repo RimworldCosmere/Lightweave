@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using Cosmere.Lightweave.Doc;
+using Cosmere.Lightweave.Icons;
 using Cosmere.Lightweave.Input;
 using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
@@ -42,14 +43,16 @@ public sealed record ToastMessage(
     string Id,
     string Text,
     ToastKind Kind = ToastKind.Info,
-    float DurationSeconds = 4f
+    float DurationSeconds = 4f,
+    string? Title = null,
+    string? Meta = null
 );
 
 [Doc(
     Id = "toast",
     Summary = "Stacked transient notifications anchored to a window corner.",
     WhenToUse = "Confirm an action, surface a non-blocking warning, or report a result.",
-    SourcePath = "Lightweave/Lightweave/Overlay/Toast.cs"
+    SourcePath = "Lightweave/Overlay/Toast.cs"
 )]
 public static class Toast {
     public static LightweaveNode Create(
@@ -60,7 +63,7 @@ public static class Toast {
         [DocParam("Anchor corner or edge for the stack.")]
         ToastPosition position = ToastPosition.BottomRight,
         [DocParam("Whether the stack is positioned in the host window or the full screen.")]
-        ToastTarget target = ToastTarget.CurrentWindow,
+        ToastTarget target = ToastTarget.GameWindow,
         Style? style = null,
         string[]? classes = null,
         string? id = null,
@@ -73,13 +76,20 @@ public static class Toast {
             file
         );
 
+        List<string> staleScratch = new List<string>(8);
+        List<string> expiredScratch = new List<string>(8);
+        HashSet<string> presentScratch = new HashSet<string>();
+
         LightweaveNode node = NodeBuilder.New($"Toast:{position}", line, file);
         node.ApplyStyling("toast", style, classes, id);
+        node.MeasureWidth = () => Mathf.Ceil(new Rem(20f).ToPixels());
+        node.Measure = _ => 0f;
         node.Paint = (_, _) => {
             Dictionary<string, float> spawns = spawnsRef.Current;
             float now = Time.unscaledTime;
 
-            HashSet<string> presentIds = new HashSet<string>();
+            HashSet<string> presentIds = presentScratch;
+            presentIds.Clear();
             for (int i = 0; i < toasts.Count; i++) {
                 ToastMessage msg = toasts[i];
                 presentIds.Add(msg.Id);
@@ -88,7 +98,8 @@ public static class Toast {
                 }
             }
 
-            List<string> stale = new List<string>();
+            List<string> stale = staleScratch;
+            stale.Clear();
             foreach (KeyValuePair<string, float> kvp in spawns) {
                 if (!presentIds.Contains(kvp.Key)) {
                     stale.Add(kvp.Key);
@@ -99,11 +110,12 @@ public static class Toast {
                 spawns.Remove(stale[i]);
             }
 
-            List<string> expired = new List<string>();
+            List<string> expired = expiredScratch;
+            expired.Clear();
             for (int i = 0; i < toasts.Count; i++) {
                 ToastMessage msg = toasts[i];
                 float spawnTime = spawns[msg.Id];
-                if (now - spawnTime > msg.DurationSeconds) {
+                if (msg.DurationSeconds > 0f && now - spawnTime > msg.DurationSeconds) {
                     expired.Add(msg.Id);
                 }
             }
@@ -117,10 +129,17 @@ public static class Toast {
             }
 
             float widthPx = new Rem(20f).ToPixels();
-            float minHeightPx = new Rem(3.5f).ToPixels();
             float gapPx = SpacingScale.Sm.ToPixels();
             float marginPx = new Rem(1.5f).ToPixels();
             float fadePx = 0.2f;
+            float stripWidth = new Rem(0.1875f).ToPixels();
+            float padXPx = new Rem(1f).ToPixels();
+            float padYPx = new Rem(0.875f).ToPixels();
+            float iconBoxSize = new Rem(1.25f).ToPixels();
+            float closeSize = new Rem(1.125f).ToPixels();
+            float bodyGapPx = SpacingScale.Xs.ToPixels();
+            float metaGapPx = new Rem(0.25f).ToPixels();
+            float progressHeightPx = 2f;
 
             Rect host = target == ToastTarget.GameWindow
                 ? new Rect(0f, 0f, Screen.width, Screen.height)
@@ -145,19 +164,39 @@ public static class Toast {
             int count = toasts.Count;
             float[] heights = new float[count];
             float[] alphas = new float[count];
+            float[] progressFracs = new float[count];
             ToastMessage[] snapshot = new ToastMessage[count];
 
             Theme.Theme theme = RenderContext.Current.Theme;
             Direction dir = RenderContext.Current.Direction;
-            Font font = theme.GetFont(FontRole.Body);
-            int textPixelSize = Mathf.RoundToInt(new Rem(0.9375f).ToFontPx());
-            GUIStyle textStyle = GuiStyleCache.GetOrCreate(font, textPixelSize);
-            textStyle.alignment = TextAnchor.UpperLeft;
-            textStyle.wordWrap = true;
+            Font titleFont = theme.GetFont(FontRole.Heading);
+            int titlePixelSize = Mathf.RoundToInt(new Rem(0.9375f).ToFontPx());
+            GUIStyle titleStyle = GuiStyleCache.GetOrCreate(titleFont, titlePixelSize);
+            titleStyle.alignment = TextAnchor.UpperLeft;
+            titleStyle.wordWrap = true;
 
-            float stripWidth = 8f;
-            float padPx = SpacingScale.Md.ToPixels();
-            float closeSize = new Rem(1.25f).ToPixels();
+            Font bodyFont = theme.GetFont(FontRole.Body);
+            int bodyPixelSize = Mathf.RoundToInt(new Rem(0.8125f).ToFontPx());
+            GUIStyle bodyStyle = GuiStyleCache.GetOrCreate(bodyFont, bodyPixelSize);
+            bodyStyle.alignment = TextAnchor.UpperLeft;
+            bodyStyle.wordWrap = true;
+
+            Font metaFont = theme.GetFont(FontRole.Mono);
+            int metaPixelSize = Mathf.RoundToInt(new Rem(0.625f).ToFontPx());
+            GUIStyle metaStyle = GuiStyleCache.GetOrCreate(metaFont, metaPixelSize);
+            metaStyle.alignment = TextAnchor.UpperLeft;
+            metaStyle.wordWrap = false;
+
+            float bodyLeft;
+            float bodyRight;
+            if (dir == Direction.Ltr) {
+                bodyLeft = stripWidth + padXPx + iconBoxSize + bodyGapPx;
+                bodyRight = padXPx + closeSize + bodyGapPx;
+            }
+            else {
+                bodyLeft = padXPx + closeSize + bodyGapPx;
+                bodyRight = stripWidth + padXPx + iconBoxSize + bodyGapPx;
+            }
 
             float totalHeight = 0f;
             for (int i = 0; i < count; i++) {
@@ -169,28 +208,37 @@ public static class Toast {
                 float fadeIn = fadePx > 0f ? Mathf.Clamp01(age / fadePx) : 1f;
                 float fadeOut = fadePx > 0f ? Mathf.Clamp01(remaining / fadePx) : 1f;
                 alphas[i] = fadeIn * fadeOut;
+                progressFracs[i] = msg.DurationSeconds > 0f
+                    ? Mathf.Clamp01(remaining / msg.DurationSeconds)
+                    : 0f;
 
-                float textLeft;
-                float textRight;
-                if (dir == Direction.Ltr) {
-                    textLeft = padPx + stripWidth;
-                    textRight = padPx + closeSize + padPx;
+                float bodyWidth = Mathf.Max(0f, widthPx - bodyLeft - bodyRight);
+
+                bool hasTitle = !string.IsNullOrEmpty(msg.Title);
+                bool hasMeta = !string.IsNullOrEmpty(msg.Meta);
+
+                float titleH = hasTitle ? titleStyle.CalcHeight(new GUIContent(msg.Title), bodyWidth) : 0f;
+                float bodyH = string.IsNullOrEmpty(msg.Text) ? 0f : bodyStyle.CalcHeight(new GUIContent(msg.Text), bodyWidth);
+                float metaH = hasMeta ? metaStyle.CalcHeight(new GUIContent(msg.Meta!.ToUpperInvariant()), bodyWidth) : 0f;
+
+                float stack = 0f;
+                if (hasTitle) {
+                    stack += titleH;
+                    if (bodyH > 0f) stack += bodyGapPx;
                 }
-                else {
-                    textLeft = padPx + closeSize + padPx;
-                    textRight = padPx + stripWidth;
+                stack += bodyH;
+                if (hasMeta) {
+                    stack += metaGapPx + metaH;
                 }
 
-                float textWidth = Mathf.Max(0f, widthPx - textLeft - textRight);
-                float textHeight = textStyle.CalcHeight(new GUIContent(msg.Text), textWidth);
-                float rowHeight = Mathf.Max(minHeightPx, textHeight + padPx * 2f);
+                float rowHeight = Mathf.Max(iconBoxSize, stack) + padYPx * 2f + progressHeightPx;
                 heights[i] = rowHeight;
                 totalHeight += rowHeight;
                 if (i < count - 1) {
                     totalHeight += gapPx;
                 }
 
-                if (alphas[i] < 1f) {
+                if (alphas[i] < 1f || progressFracs[i] > 0f) {
                     AnimationClock.RegisterActive(RenderContext.Current.RootId);
                 }
             }
@@ -215,77 +263,131 @@ public static class Toast {
                 cursorY += heights[i] + gapPx;
             }
 
-            RenderContext.Current.PendingOverlays.Enqueue(() => {
+            Action drawToasts = () => {
                 for (int i = 0; i < count; i++) {
                     ToastMessage msg = snapshot[i];
                     float alpha = alphas[i];
+                    float progressFrac = progressFracs[i];
                     Rect toastRect = new Rect(anchorX, positionsY[i], widthPx, heights[i]);
 
                     using (TintScope.Multiply(new Color(1f, 1f, 1f, alpha))) {
-                        BackgroundSpec bg = BackgroundSpec.Of(ThemeSlot.SurfaceRaised);
+                        Color darkBase = theme.GetColor(ThemeSlot.SurfaceSunken);
+                        BackgroundSpec bg = BackgroundSpec.Of(new Color(darkBase.r, darkBase.g, darkBase.b, 0.92f));
                         BorderSpec border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderDefault);
-                        RadiusSpec radius = RadiusSpec.All(RadiusScale.Sm);
-                        PaintBox.Draw(toastRect, bg, border, radius);
+                        PaintBox.Draw(toastRect, bg, border, null);
 
                         ThemeSlot stripSlot = StripSlot(msg.Kind);
+                        Color stripColor = theme.GetColor(stripSlot);
                         float stripX = dir == Direction.Ltr
                             ? toastRect.x
                             : toastRect.xMax - stripWidth;
                         Rect stripRect = new Rect(stripX, toastRect.y, stripWidth, toastRect.height);
-                        PaintBox.Draw(stripRect, BackgroundSpec.Of(stripSlot), null, null);
+                        PaintBox.Draw(stripRect, BackgroundSpec.Of(stripColor), null, null);
 
-                        float textLeft;
-                        float textRight;
-                        if (dir == Direction.Ltr) {
-                            textLeft = padPx + stripWidth;
-                            textRight = padPx + closeSize + padPx;
-                        }
-                        else {
-                            textLeft = padPx + closeSize + padPx;
-                            textRight = padPx + stripWidth;
-                        }
+                        float iconX = dir == Direction.Ltr
+                            ? toastRect.x + stripWidth + padXPx
+                            : toastRect.xMax - stripWidth - padXPx - iconBoxSize;
+                        Rect iconRect = new Rect(iconX, toastRect.y + padYPx, iconBoxSize, iconBoxSize);
 
-                        Rect textRect = new Rect(
-                            toastRect.x + textLeft,
-                            toastRect.y + padPx,
-                            Mathf.Max(0f, toastRect.width - textLeft - textRight),
-                            Mathf.Max(0f, toastRect.height - padPx * 2f)
+                        Color iconBorder = stripColor;
+                        iconBorder.a *= 0.4f;
+                        PaintBox.Draw(
+                            iconRect,
+                            BackgroundSpec.Of(new Color(0f, 0f, 0f, 0f)),
+                            BorderSpec.All(new Rem(1f / 16f), iconBorder),
+                            null
                         );
 
-                        Color textColor = theme.GetColor(ThemeSlot.TextPrimary);
-                        TextDraw.DrawWithStyle(
-                            textRect,
-                            msg.Text,
-                            textStyle,
-                            new Color(textColor.r, textColor.g, textColor.b, textColor.a * alpha)
+                        IconRef iconRef = IconForKind(msg.Kind);
+                        TextDraw.Draw(
+                            iconRect,
+                            iconRef.Glyph,
+                            FontRole.Body,
+                            new Rem(0.75f),
+                            TextAnchor.MiddleCenter,
+                            stripColor,
+                            fontOverride: iconRef.ResolveFont()
                         );
+
+                        float bodyX = dir == Direction.Ltr
+                            ? toastRect.x + bodyLeft
+                            : toastRect.x + bodyRight;
+                        float bodyWidth = Mathf.Max(0f, toastRect.width - bodyLeft - bodyRight);
+
+                        Color titleColor = theme.GetColor(ThemeSlot.TextPrimary);
+                        Color bodyColor = theme.GetColor(ThemeSlot.TextSecondary);
+                        Color metaColor = theme.GetColor(ThemeSlot.TextMuted);
+
+                        float yCursor = toastRect.y + padYPx;
+                        bool hasTitle = !string.IsNullOrEmpty(msg.Title);
+                        bool hasMeta = !string.IsNullOrEmpty(msg.Meta);
+
+                        if (hasTitle) {
+                            float titleH = titleStyle.CalcHeight(new GUIContent(msg.Title), bodyWidth);
+                            Rect titleRect = new Rect(bodyX, yCursor, bodyWidth, titleH);
+                            TextDraw.DrawWithStyle(titleRect, msg.Title, titleStyle, titleColor);
+                            yCursor += titleH;
+                            if (!string.IsNullOrEmpty(msg.Text)) {
+                                yCursor += bodyGapPx;
+                            }
+                        }
+
+                        if (!string.IsNullOrEmpty(msg.Text)) {
+                            float bodyH = bodyStyle.CalcHeight(new GUIContent(msg.Text), bodyWidth);
+                            Rect bodyRect = new Rect(bodyX, yCursor, bodyWidth, bodyH);
+                            TextDraw.DrawWithStyle(bodyRect, msg.Text, bodyStyle, bodyColor);
+                            yCursor += bodyH;
+                        }
+
+                        if (hasMeta) {
+                            yCursor += metaGapPx;
+                            string metaText = msg.Meta!.ToUpperInvariant();
+                            float metaH = metaStyle.CalcHeight(new GUIContent(metaText), bodyWidth);
+                            Rect metaRect = new Rect(bodyX, yCursor, bodyWidth, metaH);
+                            TextDraw.DrawWithStyle(metaRect, metaText, metaStyle, metaColor);
+                        }
 
                         float closeX = dir == Direction.Ltr
-                            ? toastRect.xMax - padPx - closeSize
-                            : toastRect.x + padPx;
-                        Rect closeRect = new Rect(
-                            closeX,
-                            toastRect.y + padPx,
-                            closeSize,
-                            closeSize
-                        );
-
-                        Font closeFont = theme.GetFont(FontRole.BodyBold);
-                        int closePixelSize = Mathf.RoundToInt(new Rem(1f).ToFontPx());
-                        GUIStyle closeStyle = GuiStyleCache.GetOrCreate(closeFont, closePixelSize);
-                        closeStyle.alignment = TextAnchor.MiddleCenter;
+                            ? toastRect.xMax - padXPx - closeSize
+                            : toastRect.x + stripWidth + padXPx;
+                        Rect closeRect = new Rect(closeX, toastRect.y + padYPx, closeSize, closeSize);
 
                         bool closeHovered = Mouse.IsOver(closeRect);
                         if (closeHovered) {
                             MouseoverSounds.DoRegion(closeRect);
                         }
                         Color closeColor = theme.GetColor(closeHovered ? ThemeSlot.TextPrimary : ThemeSlot.TextMuted);
-                        TextDraw.DrawWithStyle(
+                        IconRef xRef = Icons.Phosphor.X;
+                        TextDraw.Draw(
                             closeRect,
-                            "×",
-                            closeStyle,
-                            new Color(closeColor.r, closeColor.g, closeColor.b, closeColor.a * alpha)
+                            xRef.Glyph,
+                            FontRole.Body,
+                            new Rem(0.75f),
+                            TextAnchor.MiddleCenter,
+                            closeColor,
+                            fontOverride: xRef.ResolveFont()
                         );
+
+                        if (progressFrac > 0f && msg.DurationSeconds > 0f) {
+                            Color progressTrack = stripColor;
+                            progressTrack.a *= 0.15f;
+                            Rect trackRect = new Rect(
+                                toastRect.x + stripWidth,
+                                toastRect.yMax - progressHeightPx,
+                                toastRect.width - stripWidth,
+                                progressHeightPx
+                            );
+                            PaintBox.Draw(trackRect, BackgroundSpec.Of(progressTrack), null, null);
+                            Rect fillRect;
+                            if (dir == Direction.Ltr) {
+                                fillRect = new Rect(trackRect.x, trackRect.y, trackRect.width * progressFrac, trackRect.height);
+                            }
+                            else {
+                                float w = trackRect.width * progressFrac;
+                                fillRect = new Rect(trackRect.xMax - w, trackRect.y, w, trackRect.height);
+                            }
+                            PaintBox.Draw(fillRect, BackgroundSpec.Of(stripColor), null, null);
+                        }
 
                         Event e = Event.current;
                         if (e.type == EventType.MouseUp && e.button == 0 && closeRect.Contains(e.mousePosition)) {
@@ -294,10 +396,25 @@ public static class Toast {
                         }
                     }
                 }
+            };
+
+            if (target == ToastTarget.GameWindow) {
+                GlobalOverlayHost.Enqueue(drawToasts, RenderContext.Current);
             }
-            );
+            else {
+                RenderContext.Current.PendingOverlays.Enqueue(drawToasts);
+            }
         };
         return node;
+    }
+
+    private static IconRef IconForKind(ToastKind kind) {
+        switch (kind) {
+            case ToastKind.Success: return Icons.Phosphor.Check;
+            case ToastKind.Warning: return Icons.Phosphor.Warning;
+            case ToastKind.Danger: return Icons.Phosphor.WarningOctagon;
+            default: return Icons.Phosphor.Info;
+        }
     }
 
     private static HorizontalAnchor HorizontalOf(ToastPosition p) {
@@ -355,18 +472,36 @@ public static class Toast {
         Bottom,
     }
 
-    private static LightweaveNode BuildVariantDemo(string buttonKey, string messageKey, ToastKind kind, ButtonVariant buttonVariant) {
+    private static LightweaveNode BuildVariantDemo(
+        IReadOnlyList<(string buttonKey, string messageKey, ToastKind kind, Variant buttonVariant)> triggers,
+        ToastPosition position = ToastPosition.BottomRight,
+        ToastTarget target = ToastTarget.CurrentWindow,
+        float duration = 4f
+    ) {
         StateHandle<List<ToastMessage>> toasts = UseState(new List<ToastMessage>());
         RefHandle<int> counter = UseRef(0);
 
-        void PushToast() {
+        string TitleForKind(ToastKind k) {
+            switch (k) {
+                case ToastKind.Success: return (string)"CL_Playground_toast_Title_Success".Translate();
+                case ToastKind.Warning: return (string)"CL_Playground_toast_Title_Warning".Translate();
+                case ToastKind.Danger: return (string)"CL_Playground_toast_Title_Danger".Translate();
+                default: return (string)"CL_Playground_toast_Title_Info".Translate();
+            }
+        }
+
+        void PushToast(string messageKey, ToastKind kind) {
             counter.Current = counter.Current + 1;
+            DateTime now = DateTime.Now;
+            string metaStamp = $"#{counter.Current:D3} · {now:HH:mm:ss}";
             List<ToastMessage> next = new List<ToastMessage>(toasts.Value) {
                 new ToastMessage(
                     "playground-toast-" + counter.Current,
                     (string)messageKey.Translate(),
                     kind,
-                    3f
+                    duration,
+                    Title: TitleForKind(kind),
+                    Meta: metaStamp
                 ),
             };
             toasts.Set(next);
@@ -383,71 +518,85 @@ public static class Toast {
             toasts.Set(next);
         }
 
-        LightweaveNode toastLayer = Create(toasts.Value, DismissToast);
+        void DismissAll() {
+            toasts.Set(new List<ToastMessage>());
+        }
+
+        LightweaveNode toastLayer = Create(toasts.Value, DismissToast, position: position, target: target);
         toastLayer.PreferredHeight = 0f;
 
         return Stack.Create(
-            new Rem(0f),
+            SpacingScale.Sm,
             s => {
-                s.Add(
-                    Button.Create(
-                        (string)buttonKey.Translate(),
-                        () => PushToast(),
-                        buttonVariant
-                    )
-                );
+                s.Add(HStack.Create(
+                    SpacingScale.Sm,
+                    row => {
+                        for (int i = 0; i < triggers.Count; i++) {
+                            (string buttonKey, string messageKey, ToastKind kind, Variant buttonVariant) trigger = triggers[i];
+                            row.AddHug(Button.Create(
+                                (string)trigger.buttonKey.Translate(),
+                                () => PushToast(trigger.messageKey, trigger.kind),
+                                trigger.buttonVariant
+                            ));
+                        }
+
+                        if (duration <= 0f) {
+                            row.AddHug(Button.Create(
+                                (string)"CL_Playground_Toast_DismissAll".Translate(),
+                                DismissAll,
+                                Variant.Ghost
+                            ));
+                        }
+                    }
+                ));
                 s.Add(toastLayer);
             }
         );
     }
 
-    [DocVariant("CL_Playground_Toast_Info")]
-    public static DocSample DocsInfo() {
-        return new DocSample(() => BuildVariantDemo(
-            "CL_Playground_Toast_Info",
-            "CL_Playground_Toast_Msg_Info",
-            ToastKind.Info,
-            ButtonVariant.Secondary
-        ));
+    [DocVariant("CL_Playground_Toast_Kinds")]
+    public static DocSample DocsKinds() {
+        return new DocSample(() => BuildVariantDemo(new[] {
+            ("CL_Playground_Toast_Info", "CL_Playground_Toast_Msg_Info", ToastKind.Info, Variant.Secondary),
+            ("CL_Playground_Toast_Success", "CL_Playground_Toast_Msg_Success", ToastKind.Success, Variant.Primary),
+            ("CL_Playground_Toast_Warning", "CL_Playground_Toast_Msg_Warning", ToastKind.Warning, Variant.Secondary),
+            ("CL_Playground_Toast_Danger", "CL_Playground_Toast_Msg_Danger", ToastKind.Danger, Variant.Danger),
+        }), helpers: new[] { nameof(BuildVariantDemo) });
     }
 
-    [DocVariant("CL_Playground_Toast_Success")]
-    public static DocSample DocsSuccess() {
-        return new DocSample(() => BuildVariantDemo(
-            "CL_Playground_Toast_Success",
-            "CL_Playground_Toast_Msg_Success",
-            ToastKind.Success,
-            ButtonVariant.Secondary
-        ));
+    [DocVariant("CL_Playground_Toast_PositionTopRight")]
+    public static DocSample DocsPositionTopRight() {
+        return new DocSample(() => BuildVariantDemo(new[] {
+            ("CL_Playground_Toast_Info", "CL_Playground_Toast_Msg_Info", ToastKind.Info, Variant.Secondary),
+            ("CL_Playground_Toast_Success", "CL_Playground_Toast_Msg_Success", ToastKind.Success, Variant.Primary),
+        }, position: ToastPosition.TopRight), helpers: new[] { nameof(BuildVariantDemo) });
     }
 
-    [DocVariant("CL_Playground_Toast_Warning")]
-    public static DocSample DocsWarning() {
-        return new DocSample(() => BuildVariantDemo(
-            "CL_Playground_Toast_Warning",
-            "CL_Playground_Toast_Msg_Warning",
-            ToastKind.Warning,
-            ButtonVariant.Secondary
-        ));
+    [DocVariant("CL_Playground_Toast_PositionTopCenter")]
+    public static DocSample DocsPositionTopCenter() {
+        return new DocSample(() => BuildVariantDemo(new[] {
+            ("CL_Playground_Toast_Warning", "CL_Playground_Toast_Msg_Warning", ToastKind.Warning, Variant.Secondary),
+        }, position: ToastPosition.TopCenter), helpers: new[] { nameof(BuildVariantDemo) });
     }
 
-    [DocVariant("CL_Playground_Toast_Danger")]
-    public static DocSample DocsDanger() {
-        return new DocSample(() => BuildVariantDemo(
-            "CL_Playground_Toast_Danger",
-            "CL_Playground_Toast_Msg_Danger",
-            ToastKind.Danger,
-            ButtonVariant.Danger
-        ));
+    [DocVariant("CL_Playground_Toast_Persistent")]
+    public static DocSample DocsPersistent() {
+        return new DocSample(() => BuildVariantDemo(new[] {
+            ("CL_Playground_Toast_Info", "CL_Playground_Toast_Msg_Persistent", ToastKind.Info, Variant.Primary),
+        }, duration: 0f), helpers: new[] { nameof(BuildVariantDemo) });
+    }
+
+    [DocVariant("CL_Playground_Toast_TargetScreen")]
+    public static DocSample DocsTargetScreen() {
+        return new DocSample(() => BuildVariantDemo(new[] {
+            ("CL_Playground_Toast_Danger", "CL_Playground_Toast_Msg_Danger", ToastKind.Danger, Variant.Danger),
+        }, position: ToastPosition.BottomRight, target: ToastTarget.GameWindow), helpers: new[] { nameof(BuildVariantDemo) });
     }
 
     [DocUsage]
     public static DocSample DocsUsage() {
-        return new DocSample(() => BuildVariantDemo(
-            "CL_Playground_Toast_Info",
-            "CL_Playground_Toast_Msg_Info",
-            ToastKind.Info,
-            ButtonVariant.Secondary
-        ));
+        return new DocSample(() => BuildVariantDemo(new[] {
+            ("CL_Playground_Toast_Info", "CL_Playground_Toast_Msg_Info", ToastKind.Info, Variant.Secondary),
+        }), helpers: new[] { nameof(BuildVariantDemo) });
     }
 }

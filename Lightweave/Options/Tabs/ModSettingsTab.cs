@@ -26,7 +26,11 @@ public static class ModSettingsTab {
             Mod captured = modsWithSettings[i];
             rows[i] = Menu.Item(
                 label: captured.SettingsCategory(),
-                onClick: () => Find.WindowStack.Add(new Dialog_ModSettings(captured))
+                onClick: () => {
+                    Dialog_ModSettings dialog = new Dialog_ModSettings(captured);
+                    dialog.layer = WindowLayer.Super;
+                    Find.WindowStack.Add(dialog);
+                }
             );
         }
 

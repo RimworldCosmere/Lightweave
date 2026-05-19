@@ -10,6 +10,8 @@ namespace Cosmere.Lightweave.Runtime;
 /// </summary>
 public static class AnimationClock {
     private static readonly HashSet<Guid> activeThisFrame = new HashSet<Guid>();
+    private static readonly HashSet<Guid> activeLastFrame = new HashSet<Guid>();
+    private static int lastSeenUnityFrame = -1;
 
     public static void RegisterActive(Guid rootId) {
         activeThisFrame.Add(rootId);
@@ -19,7 +21,19 @@ public static class AnimationClock {
         return activeThisFrame.Contains(rootId);
     }
 
+    public static bool WasActiveLastFrame(Guid rootId) {
+        return activeLastFrame.Contains(rootId);
+    }
+
     public static void ClearFrame() {
-        activeThisFrame.Clear();
+        int frame = UnityEngine.Time.frameCount;
+        if (frame != lastSeenUnityFrame) {
+            activeLastFrame.Clear();
+            foreach (Guid id in activeThisFrame) {
+                activeLastFrame.Add(id);
+            }
+            activeThisFrame.Clear();
+            lastSeenUnityFrame = frame;
+        }
     }
 }

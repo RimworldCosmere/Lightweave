@@ -12,156 +12,210 @@ using Text = Cosmere.Lightweave.Typography.Typography.Text;
 namespace Cosmere.Lightweave.Tokens;
 
 [Doc(
-    Id = "breakpoints",
+    Id = "responsive",
     Summary = "Tailwind-style viewport breakpoints (Xs through Xxl) resolved from the root paint width.",
     WhenToUse = "Read RenderContext.Current.Breakpoint or use Breakpoints.Pick<T> when layout should adapt across window widths.",
-    SourcePath = "Lightweave/Lightweave/Tokens/Breakpoint.cs",
-    Category = "Tokens",
-    PreferredVariantHeight = 96f
+    SourcePath = "Lightweave/Tokens/Breakpoint.cs",
+    Category = "Foundation",
+    PreferredVariantHeight = 96f,
+    HideUsage = true,
+    HideSource = true
 )]
 public static class BreakpointsDoc {
-    private static readonly Breakpoint[] AllBreakpoints = {
-        Breakpoint.Xs,
-        Breakpoint.Sm,
-        Breakpoint.Md,
-        Breakpoint.Lg,
-        Breakpoint.Xl,
-        Breakpoint.Xxl,
-    };
 
-    [DocVariant("CL_Playground_breakpoints_Readout")]
+    [DocVariant("CL_Playground_responsive_Readout")]
     public static DocSample DocsReadout() {
-        return new DocSample(() => 
-            Box.Create(
-                outer => outer.Add(
-                    Box.Create(
-                        inner => inner.Add(BreakpointReadoutNode()),
-                        style: new Style {
-                            Padding = EdgeInsets.Vertical(SpacingScale.Sm),
-                            Background = BackgroundSpec.Of(ThemeSlot.SurfaceAccent),
-                            Radius = RadiusSpec.All(RadiusScale.Sm),
-                        }
-                    )
-                ),
-                style: new Style {
-                    Padding = EdgeInsets.All(new Rem(0.25f)),
-                    Background = BackgroundSpec.Of(ThemeSlot.SurfaceSunken),
-                    Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderSubtle),
-                    Radius = RadiusSpec.All(RadiusScale.Sm),
-                }
-            )
-        );
-    }
-
-    [DocVariant("CL_Playground_breakpoints_Ladder")]
-    public static DocSample DocsLadder() {
-        return new DocSample(() => 
-            Box.Create(
-                outer => outer.Add(BreakpointLadderNode()),
-                style: new Style {
-                    Padding = EdgeInsets.All(new Rem(0.25f)),
-                    Background = BackgroundSpec.Of(ThemeSlot.SurfaceSunken),
-                    Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderSubtle),
-                    Radius = RadiusSpec.All(RadiusScale.Sm),
-                }
-            )
-        );
-    }
-
-    [DocUsage]
-    public static DocSample DocsUsage() {
-        return new DocSample(() => 
-            Box.Create(
-                outer => outer.Add(
-                    Box.Create(
-                        inner => inner.Add(BreakpointReadoutNode()),
-                        style: new Style {
-                            Padding = EdgeInsets.Vertical(SpacingScale.Sm),
-                            Background = BackgroundSpec.Of(ThemeSlot.SurfaceAccent),
-                            Radius = RadiusSpec.All(RadiusScale.Sm),
-                        }
-                    )
-                ),
-                style: new Style {
-                    Padding = EdgeInsets.All(new Rem(0.25f)),
-                    Background = BackgroundSpec.Of(ThemeSlot.SurfaceSunken),
-                    Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderSubtle),
-                    Radius = RadiusSpec.All(RadiusScale.Sm),
-                }
-            )
-        );
-    }
-
-    private static LightweaveNode BreakpointReadoutNode() {
-        LightweaveNode node = NodeBuilder.New("BreakpointsReadout");
-        node.PreferredHeight = new Rem(2f).ToPixels();
-        node.Measure = _ => new Rem(2f).ToPixels();
-        node.Paint = (rect, _) => {
+        return new DocSample(() => {
             Breakpoint bp = RenderContext.Current.Breakpoint;
-            float minPx = MinWidthForBreakpoint(bp);
-            string key = BreakpointLabelKey(bp);
+            float minPx = bp switch {
+                Breakpoint.Sm => Breakpoints.SmMinPx,
+                Breakpoint.Md => Breakpoints.MdMinPx,
+                Breakpoint.Lg => Breakpoints.LgMinPx,
+                Breakpoint.Xl => Breakpoints.XlMinPx,
+                Breakpoint.Xxl => Breakpoints.XxlMinPx,
+                _ => 0f,
+            };
+            string key = bp switch {
+                Breakpoint.Sm => "CL_Playground_Breakpoint_Sm",
+                Breakpoint.Md => "CL_Playground_Breakpoint_Md",
+                Breakpoint.Lg => "CL_Playground_Breakpoint_Lg",
+                Breakpoint.Xl => "CL_Playground_Breakpoint_Xl",
+                Breakpoint.Xxl => "CL_Playground_Breakpoint_Xxl",
+                _ => "CL_Playground_Breakpoint_Xs",
+            };
             string label = $"{(string)key.Translate()} ({Mathf.RoundToInt(minPx)}px+)";
-            Theme.Theme theme = RenderContext.Current.Theme;
-            int pixelSize = Mathf.RoundToInt(new Rem(1f).ToFontPx());
-            GUIStyle style = GuiStyleCache.GetOrCreate(theme.GetFont(FontRole.BodyBold), pixelSize);
-            style.alignment = TextAnchor.MiddleCenter;
-            Color saved = GUI.color;
-            GUI.color = theme.GetColor(ThemeSlot.TextPrimary);
-            GUI.Label(RectSnap.Snap(rect), label, style);
-            GUI.color = saved;
-        };
-        return node;
+            return Box.Create(
+                inner => inner.Add(Text.Create(
+                    label,
+                    style: new Style {
+                        FontFamily = FontRole.BodyBold,
+                        FontSize = new Rem(1f),
+                        TextColor = ThemeSlot.TextPrimary,
+                        TextAlign = TextAlign.Center,
+                    }
+                )),
+                style: new Style {
+                    Padding = EdgeInsets.All(new Rem(0.5f)),
+                }
+            );
+        });
     }
 
-    private static LightweaveNode BreakpointLadderNode() {
-        LightweaveNode node = NodeBuilder.New("BreakpointsLadder");
-        node.PreferredHeight = new Rem(1.5f).ToPixels();
-        node.Measure = _ => new Rem(1.5f).ToPixels();
-        node.Paint = (rect, _) => {
+    [DocVariant("CL_Playground_responsive_Ladder")]
+    public static DocSample DocsLadder() {
+        return new DocSample(() => {
             Breakpoint current = RenderContext.Current.Breakpoint;
-            Theme.Theme theme = RenderContext.Current.Theme;
-            int count = AllBreakpoints.Length;
-            float gap = new Rem(0.25f).ToPixels();
-            float cellWidth = (rect.width - gap * (count - 1)) / count;
-            int pixelSize = Mathf.RoundToInt(new Rem(0.8125f).ToFontPx());
-            GUIStyle style = GuiStyleCache.GetOrCreate(theme.GetFont(FontRole.BodyBold), pixelSize);
-            style.alignment = TextAnchor.MiddleCenter;
+            Rem gap = new Rem(0.25f);
             RadiusSpec radius = RadiusSpec.All(RadiusScale.Sm);
-            for (int i = 0; i < count; i++) {
-                Breakpoint bp = AllBreakpoints[i];
-                bool isActive = bp == current;
-                ThemeSlot bgSlot = isActive ? ThemeSlot.SurfaceAccent : ThemeSlot.SurfaceRaised;
-                ThemeSlot fgSlot = isActive ? ThemeSlot.TextOnAccent : ThemeSlot.TextMuted;
-                Rect cell = new Rect(rect.x + i * (cellWidth + gap), rect.y, cellWidth, rect.height);
-                PaintBox.Draw(cell, BackgroundSpec.Of(bgSlot), null, radius);
-                Color saved = GUI.color;
-                GUI.color = theme.GetColor(fgSlot);
-                GUI.Label(RectSnap.Snap(cell), bp.ToString(), style);
-                GUI.color = saved;
-            }
-        };
-        return node;
+            Breakpoint[] all = {
+                Breakpoint.Xs,
+                Breakpoint.Sm,
+                Breakpoint.Md,
+                Breakpoint.Lg,
+                Breakpoint.Xl,
+                Breakpoint.Xxl,
+            };
+            return HStack.Create(
+                gap: gap,
+                children: row => {
+                    for (int i = 0; i < all.Length; i++) {
+                        Breakpoint bp = all[i];
+                        bool isActive = bp == current;
+                        ThemeSlot bgSlot = isActive ? ThemeSlot.SurfaceAccent : ThemeSlot.SurfaceRaised;
+                        ThemeSlot fgSlot = isActive ? ThemeSlot.TextOnAccent : ThemeSlot.TextMuted;
+                        Style cellStyle = new Style {
+                            Padding = EdgeInsets.Vertical(new Rem(0.375f)),
+                            Background = BackgroundSpec.Of(bgSlot),
+                            Radius = radius,
+                        };
+                        row.AddFlex(Box.Create(
+                            cell => cell.Add(Text.Create(
+                                bp.ToString(),
+                                style: new Style {
+                                    FontFamily = FontRole.BodyBold,
+                                    FontSize = new Rem(0.8125f),
+                                    TextColor = fgSlot,
+                                    TextAlign = TextAlign.Center,
+                                }
+                            )),
+                            style: cellStyle
+                        ));
+                    }
+                }
+            );
+        });
     }
 
-    private static float MinWidthForBreakpoint(Breakpoint bp) {
-        return bp switch {
-            Breakpoint.Sm => Breakpoints.SmMinPx,
-            Breakpoint.Md => Breakpoints.MdMinPx,
-            Breakpoint.Lg => Breakpoints.LgMinPx,
-            Breakpoint.Xl => Breakpoints.XlMinPx,
-            Breakpoint.Xxl => Breakpoints.XxlMinPx,
-            _ => 0f,
-        };
+
+    [DocVariant("CL_Playground_responsive_ResponsivePadding")]
+    public static DocSample DocsResponsivePadding() {
+        return new DocSample(() => {
+            Rem pad = Breakpoints.Pick(
+                xs: new Rem(0.5f),
+                sm: new Rem(0.75f),
+                md: new Rem(1.25f),
+                lg: new Rem(2f),
+                xl: new Rem(3f)
+            );
+            string padLabel = $"Pick = {pad.Value:0.##}rem";
+            return Box.Create(
+                inner => inner.Add(Text.Create(
+                    padLabel,
+                    style: new Style {
+                        FontFamily = FontRole.Mono,
+                        FontSize = new Rem(0.875f),
+                        TextColor = ThemeSlot.TextPrimary,
+                        TextAlign = TextAlign.Center,
+                    }
+                )),
+                style: new Style {
+                    Padding = EdgeInsets.All(pad),
+                    Background = BackgroundSpec.Of(ThemeSlot.SurfaceAccent),
+                    Radius = RadiusSpec.All(RadiusScale.Sm),
+                }
+            );
+        });
     }
 
-    private static string BreakpointLabelKey(Breakpoint bp) {
-        return bp switch {
-            Breakpoint.Sm => "CL_Playground_Breakpoint_Sm",
-            Breakpoint.Md => "CL_Playground_Breakpoint_Md",
-            Breakpoint.Lg => "CL_Playground_Breakpoint_Lg",
-            Breakpoint.Xl => "CL_Playground_Breakpoint_Xl",
-            Breakpoint.Xxl => "CL_Playground_Breakpoint_Xxl",
-            _ => "CL_Playground_Breakpoint_Xs",
-        };
+    [DocVariant("CL_Playground_responsive_ResponsiveColumns")]
+    public static DocSample DocsResponsiveColumns() {
+        return new DocSample(() => {
+            int columnCount = Breakpoints.Pick(
+                xs: 1,
+                sm: 2,
+                md: 3,
+                lg: 4,
+                xl: 5
+            );
+            return HStack.Create(
+                gap: new Rem(0.5f),
+                children: row => {
+                    for (int i = 0; i < columnCount; i++) {
+                        int idx = i + 1;
+                        row.AddFlex(Box.Create(
+                            cell => cell.Add(Text.Create(
+                                (string)"CL_Playground_responsive_Sample_Card".Translate(idx.Named("INDEX")),
+                                style: new Style {
+                                    FontFamily = FontRole.BodyBold,
+                                    FontSize = new Rem(0.9375f),
+                                    TextColor = ThemeSlot.TextOnAccent,
+                                    TextAlign = TextAlign.Center,
+                                }
+                            )),
+                            style: new Style {
+                                Padding = EdgeInsets.All(new Rem(0.75f)),
+                                Background = BackgroundSpec.Of(ThemeSlot.SurfaceAccent),
+                                Radius = RadiusSpec.All(RadiusScale.Sm),
+                            }
+                        ));
+                    }
+                }
+            );
+        });
     }
+
+    [DocVariant("CL_Playground_responsive_ResponsiveFont")]
+    public static DocSample DocsResponsiveFont() {
+        return new DocSample(() => {
+            Rem headingSize = Breakpoints.Pick(
+                xs: new Rem(1f),
+                sm: new Rem(1.125f),
+                md: new Rem(1.375f),
+                lg: new Rem(1.75f),
+                xl: new Rem(2.125f)
+            );
+            return Stack.Create(
+                gap: new Rem(0.5f),
+                children: col => {
+                    col.Add(Text.Create(
+                        (string)"CL_Playground_responsive_Sample_Heading".Translate(),
+                        style: new Style {
+                            FontFamily = FontRole.Display,
+                            FontSize = headingSize,
+                            TextColor = ThemeSlot.TextPrimary,
+                        }
+                    ));
+                    col.Add(Text.Create(
+                        (string)"CL_Playground_responsive_Sample_Body".Translate(),
+                        wrap: true,
+                        style: new Style {
+                            FontFamily = FontRole.Body,
+                            FontSize = new Rem(0.9375f),
+                            TextColor = ThemeSlot.TextSecondary,
+                        }
+                    ));
+                }
+            );
+        });
+    }
+
+    
+
+    
+
+    
+
+    
+
+    
 }

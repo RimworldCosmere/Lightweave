@@ -80,7 +80,8 @@ public static class InterfaceTab {
                         min: 85f,
                         max: 125f,
                         step: 1f,
-                        format: v => Mathf.RoundToInt(v) + "%"
+                        format: v => Mathf.RoundToInt(v) + "%",
+                    variant: Variant.Secondary
                     )
                 ),
                 SettingRow.Create(
@@ -89,7 +90,8 @@ public static class InterfaceTab {
                         if (lwSettings == null) return;
                         lwSettings.ReduceMotion = v;
                         LightweaveMod.Save();
-                    })
+                    },
+                    variant: Variant.Secondary)
                 )
             ));
 
@@ -109,7 +111,8 @@ public static class InterfaceTab {
                         min: 1.0f,
                         max: 2.0f,
                         step: 0.25f,
-                        format: v => v.ToString("0.00", CultureInfo.InvariantCulture) + "x"
+                        format: v => v.ToString("0.00", CultureInfo.InvariantCulture) + "x",
+                    variant: Variant.Secondary
                     )
                 ),
                 SettingRow.Create(
@@ -120,7 +123,7 @@ public static class InterfaceTab {
                         labelFn: m => m.ToStringHuman(),
                         onChange: m => Prefs.TemperatureMode = m,
                         variant: DropdownVariant.Button,
-                        buttonStyle: ButtonVariant.Frosted
+                        buttonStyle: Variant.Frosted
                     )
                 ),
                 SettingRow.Create(
@@ -131,7 +134,7 @@ public static class InterfaceTab {
                         labelFn: m => m.ToStringHuman(),
                         onChange: m => Prefs.ShowWeaponsUnderPortraitMode = m,
                         variant: DropdownVariant.Button,
-                        buttonStyle: ButtonVariant.Frosted
+                        buttonStyle: Variant.Frosted
                     )
                 ),
                 SettingRow.Create(
@@ -142,7 +145,7 @@ public static class InterfaceTab {
                         labelFn: m => m.ToStringHuman(),
                         onChange: m => Prefs.AnimalNameMode = m,
                         variant: DropdownVariant.Button,
-                        buttonStyle: ButtonVariant.Frosted
+                        buttonStyle: Variant.Frosted
                     )
                 )
             ));
@@ -157,7 +160,7 @@ public static class InterfaceTab {
                             labelFn: m => m.ToStringHuman(),
                             onChange: m => Prefs.MechNameMode = m,
                             variant: DropdownVariant.Button,
-                            buttonStyle: ButtonVariant.Frosted
+                            buttonStyle: Variant.Frosted
                         )
                     )
                 ));
@@ -172,7 +175,7 @@ public static class InterfaceTab {
                         labelFn: m => m.ToStringHuman(),
                         onChange: m => Prefs.DotHighlightDisplayMode = m,
                         variant: DropdownVariant.Button,
-                        buttonStyle: ButtonVariant.Frosted
+                        buttonStyle: Variant.Frosted
                     )
                 ),
                 SettingRow.Create(
@@ -184,7 +187,7 @@ public static class InterfaceTab {
                         onChange: m => Prefs.HighlightStyleMode = m,
                         disabled: !dotHighlightOn,
                         variant: DropdownVariant.Button,
-                        buttonStyle: ButtonVariant.Frosted
+                        buttonStyle: Variant.Frosted
                     )
                 )
             ));
@@ -201,7 +204,7 @@ public static class InterfaceTab {
                             labelFn: id => BackgroundLabelForId(id, installedExpansions),
                             onChange: id => ApplyBackgroundChoice(id, installedExpansions),
                             variant: DropdownVariant.Button,
-                            buttonStyle: ButtonVariant.Frosted
+                            buttonStyle: Variant.Frosted
                         )
                     )
                 ));
@@ -210,11 +213,11 @@ public static class InterfaceTab {
             s.Add(SettingRow.Section("CL_Options_Section_Interface",
                 SettingRow.Create(
                     "CL_Options_RealtimeClock".Translate(),
-                    Switch.Create("", Prefs.ShowRealtimeClock, v => Prefs.ShowRealtimeClock = v)
+                    Switch.Create("", Prefs.ShowRealtimeClock, v => Prefs.ShowRealtimeClock = v, variant: Variant.Secondary)
                 ),
                 SettingRow.Create(
                     "CL_Options_TwelveHourClock".Translate(),
-                    Switch.Create("", Prefs.TwelveHourClockMode, v => Prefs.TwelveHourClockMode = v)
+                    Switch.Create("", Prefs.TwelveHourClockMode, v => Prefs.TwelveHourClockMode = v, variant: Variant.Secondary)
                 ),
                 SettingRow.Create(
                     "CL_Options_HatsOnlyOnMap".Translate(),
@@ -223,7 +226,8 @@ public static class InterfaceTab {
                             Prefs.HatsOnlyOnMap = v;
                             PortraitsCache.Clear();
                         }
-                    })
+                    },
+                    variant: Variant.Secondary)
                 ),
                 SettingRow.Create(
                     "CL_Options_DisableTinyText".Translate(),
@@ -236,15 +240,16 @@ public static class InterfaceTab {
                         if (Current.ProgramState == ProgramState.Playing) {
                             Find.ColonistBar.drawer.ClearLabelCache();
                         }
-                    })
+                    },
+                    variant: Variant.Secondary)
                 ),
                 SettingRow.Create(
                     "CL_Options_CustomCursor".Translate(),
-                    Switch.Create("", Prefs.CustomCursorEnabled, v => Prefs.CustomCursorEnabled = v)
+                    Switch.Create("", Prefs.CustomCursorEnabled, v => Prefs.CustomCursorEnabled = v, variant: Variant.Secondary)
                 ),
                 SettingRow.Create(
                     "CL_Options_VisibleMood".Translate(),
-                    Switch.Create("", Prefs.VisibleMood, v => Prefs.VisibleMood = v)
+                    Switch.Create("", Prefs.VisibleMood, v => Prefs.VisibleMood = v, variant: Variant.Secondary)
                 )
             ));
         });

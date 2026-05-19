@@ -19,7 +19,7 @@ namespace Cosmere.Lightweave.Navigation;
     Id = "menu",
     Summary = "Anchored popover with header, search, rows, dividers, hotkeys, and submenus.",
     WhenToUse = "Trigger a list of one-click commands from a button or icon. Optional header (mono uppercase), search input, subtitle text, active checkmark, and hotkey badges.",
-    SourcePath = "Lightweave/Lightweave/Navigation/Menu.cs",
+    SourcePath = "Lightweave/Navigation/Menu.cs",
     ShowRtl = true
 )]
 public static class Menu {
@@ -84,6 +84,8 @@ public static class Menu {
 
         if (!isOpen) {
             LightweaveNode empty = NodeBuilder.New("Menu:closed", line, file);
+            empty.ApplyStyling("menu", style, classes, id);
+            empty.MeasureWidth = () => 0f;
             empty.Paint = (_, _) => { };
             return empty;
         }
@@ -771,7 +773,7 @@ public static class Menu {
             LightweaveNode button = Button.Create(
                 (string)"CL_Playground_Menu_TriggerOpen".Translate(),
                 () => open.Set(!open.Value),
-                ButtonVariant.Secondary
+                Variant.Secondary
             );
             trigger.Children.Add(button);
             trigger.Measure = w => button.Measure?.Invoke(w) ?? button.PreferredHeight ?? 0f;
@@ -828,7 +830,7 @@ public static class Menu {
             LightweaveNode button = Button.Create(
                 "Language",
                 () => open.Set(!open.Value),
-                ButtonVariant.Secondary
+                Variant.Secondary
             );
             trigger.Children.Add(button);
             trigger.Measure = w => button.Measure?.Invoke(w) ?? button.PreferredHeight ?? 0f;

@@ -27,9 +27,7 @@ public abstract class LightweaveWindow : Verse.Window {
     private Rect resizeStartRect;
     private Texture2D? currentCursor;
     private bool wasMouseDown;
-    private bool activeDrag;
-    private Vector2 dragAnchorScreen;
-    private Rect dragStartRect;
+    private bool isWindowDragging;
     private float lastDragClickTime = -1f;
     private Vector2 lastDragClickPos;
     private bool isMaximized;
@@ -38,33 +36,88 @@ public abstract class LightweaveWindow : Verse.Window {
 
     protected LightweaveWindow() {
         doWindowBackground = false;
-        drawShadow = true;
+        drawShadow = false;
         resizeable = false;
+        draggable = false;
         closeOnCancel = true;
-        draggable = true;
+        closeOnAccept = false;
+        closeOnClickedOutside = false;
+        forcePause = true;
+        absorbInputAroundWindow = true;
+        layer = Verse.WindowLayer.Super;
+        doCloseX = false;
+        doCloseButton = false;
     }
 
     protected Guid RootId { get; } = Guid.NewGuid();
 
-    protected virtual Theme.Theme? ThemeOverride => null;
+    protected internal virtual Theme.Theme? ThemeOverride => null;
 
-    protected virtual Direction? DirectionOverride => null;
+    protected internal virtual Direction? DirectionOverride => null;
 
-    [DocOverride("Draw the rounded border + surface fill around the window content.", TypeOverride = "bool", DefaultOverride = "true")]
-    protected virtual bool DrawBorder => true;
+    [DocOverride("Wrap the shell in a Vignette.", TypeOverride = "bool", DefaultOverride = "true")]
+    protected internal virtual bool DrawVignette => true;
 
-    [DocOverride("Corner radius applied to the outer frame. Resolved from the active theme's RadiusScale.Xl token.", TypeOverride = "Rem", DefaultOverride = "RadiusScale.Xl")]
-    protected virtual Rem BorderRadius => Cosmere.Lightweave.Types.RadiusSpec.ResolveRem(Cosmere.Lightweave.Tokens.RadiusScale.Xl);
+    [DocOverride("Vignette falloff shape.", TypeOverride = "VignetteShape", DefaultOverride = "Radial")]
+    protected internal virtual VignetteShape VignetteShape => Cosmere.Lightweave.Rendering.VignetteShape.Radial;
 
-    [DocOverride("Stroke width for the outer border.", TypeOverride = "Rem", DefaultOverride = "0.0625rem")]
-    protected virtual Rem BorderThickness => new Rem(1f / 16f);
+    [DocOverride("Vignette alpha multiplier (0-1).", TypeOverride = "float", DefaultOverride = "0.6")]
+    protected internal virtual float VignetteIntensity => 0.6f;
 
-    [DocOverride("Inner padding inside the body region (in addition to the border thickness).", TypeOverride = "EdgeInsets", DefaultOverride = "All(0)")]
-    protected virtual EdgeInsets BorderPadding => EdgeInsets.All(new Rem(0f));
+    [DocOverride("Vignette coverage multiplier. >1 = darker/wider, <1 = lighter/narrower.", TypeOverride = "float", DefaultOverride = "1.4")]
+    protected internal virtual float VignetteScale => 1.4f;
+
+    [DocOverride("Vignette color. Defaults to ThemeSlot.OverlayDim.", TypeOverride = "ColorRef?", DefaultOverride = "null")]
+    protected internal virtual ColorRef? VignetteColor => null;
+
+    [DocOverride("Full-screen scrim drawn behind the card to block click-through.", TypeOverride = "bool", DefaultOverride = "true")]
+    protected internal virtual bool DrawScrim => true;
+
+    [DocOverride("Scrim fill color. Defaults to theme ScrimDefault with alpha 0.55.", TypeOverride = "Color?", DefaultOverride = "null")]
+    protected internal virtual Color? ScrimColor => null;
+
+    [DocOverride("Vertical accent gradient layered inside the card.", TypeOverride = "bool", DefaultOverride = "true")]
+    protected virtual bool DrawAccentGradient => true;
+
+    [DocOverride("Top color of the accent gradient. Defaults to rgba(0.831, 0.659, 0.341, 0.10).", TypeOverride = "Color?", DefaultOverride = "null")]
+    protected virtual Color? GradientTopColor => null;
+
+    [DocOverride("Bottom color of the accent gradient. Defaults to fully-transparent gold.", TypeOverride = "Color?", DefaultOverride = "null")]
+    protected virtual Color? GradientBottomColor => null;
+
+    [DocOverride("Card background. Defaults to BackgroundSpec.Blur(rgba(0,0,0,0.85), 10px).", TypeOverride = "BackgroundSpec?", DefaultOverride = "null")]
+    protected virtual BackgroundSpec? CardBackground => null;
+
+    [DocOverride("Card border. Defaults to 1/16rem BorderDefault on all sides.", TypeOverride = "BorderSpec?", DefaultOverride = "null")]
+    protected virtual BorderSpec? CardBorder => null;
+
+    [DocOverride("Card padding between border and content. Defaults to 1/16rem on all sides.", TypeOverride = "EdgeInsets?", DefaultOverride = "null")]
+    protected virtual EdgeInsets? CardPadding => null;
+
+    [DocOverride("Card corner radius. Defaults to RadiusScale.Xl on all sides.", TypeOverride = "RadiusSpec?", DefaultOverride = "null")]
+    protected virtual RadiusSpec? CardRadius => null;
+
+    [DocOverride("Absolute card width in pixels. Takes priority over WidthFraction when set.", TypeOverride = "float?", DefaultOverride = "null")]
+    protected virtual float? CardWidth => null;
+
+    [DocOverride("Absolute card height in pixels. Takes priority over HeightFraction when set.", TypeOverride = "float?", DefaultOverride = "null")]
+    protected virtual float? CardHeight => null;
+
+    [DocOverride("Fraction of screen width occupied by the card.", TypeOverride = "float", DefaultOverride = "0.66")]
+    protected virtual float WidthFraction => 0.66f;
+
+    [DocOverride("Fraction of screen height occupied by the card.", TypeOverride = "float", DefaultOverride = "0.82")]
+    protected virtual float HeightFraction => 0.82f;
+
+    [DocOverride("Hard upper bound for card width.", TypeOverride = "float", DefaultOverride = "1800")]
+    protected virtual float MaxCardWidth => 1800f;
+
+    [DocOverride("Hard upper bound for card height.", TypeOverride = "float", DefaultOverride = "1300")]
+    protected virtual float MaxCardHeight => 1300f;
 
     protected override float Margin => 0f;
 
-    [DocOverride("Allow the user to drag any window edge to resize.", TypeOverride = "bool", DefaultOverride = "true")]
+    [DocOverride("Allow the user to drag any window edge to resize.", TypeOverride = "bool", DefaultOverride = "false")]
     protected virtual bool EdgeResizable => true;
 
     protected virtual float EdgeResizeThickness => 8f;
@@ -72,8 +125,8 @@ public abstract class LightweaveWindow : Verse.Window {
     [DocOverride("Minimum allowed window dimensions when edge-resizing.", TypeOverride = "Vector2", DefaultOverride = "(360, 240)")]
     protected virtual Vector2 MinWindowSize => new Vector2(360f, 240f);
 
-    [DocOverride("Toggle maximize when the header is double-clicked.", TypeOverride = "bool", DefaultOverride = "true")]
-    protected virtual bool EnableDoubleClickMaximize => true;
+    [DocOverride("Toggle maximize when the header is double-clicked.", TypeOverride = "bool", DefaultOverride = "false")]
+    protected virtual bool EnableDoubleClickMaximize => false;
 
     [DocOverride("Per-savegame Scribe key for persisting window position. Null disables persistence.", TypeOverride = "string?", DefaultOverride = "null")]
     protected virtual string? PersistPositionKey => null;
@@ -91,11 +144,14 @@ public abstract class LightweaveWindow : Verse.Window {
         return null;
     }
 
-    [DocOverride("Theme slot used to fill the rounded outer frame between header / body / footer.", TypeOverride = "ThemeSlot", DefaultOverride = "SurfaceRaised")]
-    protected virtual ThemeSlot OuterFillSlot => ThemeSlot.SurfaceRaised;
+    public override Vector2 InitialSize {
+        get {
+            float w = CardWidth ?? Mathf.Min(Verse.UI.screenWidth * WidthFraction, MaxCardWidth);
+            float h = CardHeight ?? Mathf.Min(Verse.UI.screenHeight * HeightFraction, MaxCardHeight);
+            return new Vector2(w, h);
+        }
+    }
 
-    [DocOverride("Theme slot used as the body backdrop when no WindowBody is supplied.", TypeOverride = "ThemeSlot", DefaultOverride = "SurfacePrimary")]
-    protected virtual ThemeSlot BodyFillSlot => ThemeSlot.SurfacePrimary;
 
     [DocOverride("Drag-grab region resolved each frame. Default reads the rect that WindowHeader publishes.", TypeOverride = "Rect?", DefaultOverride = "WindowHeader rect")]
     protected virtual Rect? DragRegion(Rect inRect) {
@@ -112,6 +168,9 @@ public abstract class LightweaveWindow : Verse.Window {
         drawOwnCloseX |= doCloseX;
         doCloseX = false;
         TryRestorePersistedPosition();
+        if (DrawScrim || DrawVignette) {
+            Patch.LightweaveBackdropRegistry.Register(this);
+        }
     }
 
     private void TryRestorePersistedPosition() {
@@ -141,10 +200,36 @@ public abstract class LightweaveWindow : Verse.Window {
         windowRect = saved;
     }
 
+    public override void WindowOnGUI() {
+        bool selfActive = isWindowDragging || activeResize != ResizeEdge.None;
+        if (!selfActive && ActiveDragRegistry.IsActive) {
+            EventType et = Event.current.type;
+            if (et == EventType.MouseDrag || et == EventType.Used) {
+                return;
+            }
+        }
+        base.WindowOnGUI();
+    }
+
     public override void DoWindowContents(Rect inRect) {
+        bool selfActive = isWindowDragging || activeResize != ResizeEdge.None;
+        EventType et = Event.current.type;
+        bool isHotEvent = et == EventType.Layout
+            || et == EventType.MouseDrag
+            || et == EventType.Used;
+
+        if (!selfActive && ActiveDragRegistry.IsActive && isHotEvent) {
+            return;
+        }
+
         if (EdgeResizable) {
             HandleEdgeResize(inRect);
             UpdateEdgeAbsorb(inRect);
+        }
+
+        if (selfActive && isHotEvent) {
+            HandleWindowDrag(inRect);
+            return;
         }
 
         LightweaveWindowContext.Reset();
@@ -157,72 +242,62 @@ public abstract class LightweaveWindow : Verse.Window {
     }
 
     private LightweaveNode BuildRoot() {
-        Rem innerR = new Rem(Mathf.Max(0f, BorderRadius.Value - BorderThickness.Value));
+        Theme.Theme theme = RenderContext.Current.Theme;
 
-        if (DrawBorder) {
-            LightweaveWindowContext.RequestHeaderRadius(RadiusSpec.Top(innerR));
-            LightweaveWindowContext.RequestFooterRadius(RadiusSpec.Bottom(innerR));
-        }
-        else {
-            LightweaveWindowContext.RequestHeaderRadius(null);
-            LightweaveWindowContext.RequestFooterRadius(null);
-        }
+        BackgroundSpec resolvedCardBg = CardBackground ?? BackgroundSpec.Blur(new Color(0f, 0f, 0f, 0.95f), 10f);
+        BorderSpec resolvedCardBorder = CardBorder ?? BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderDefault);
+        EdgeInsets resolvedCardPadding = CardPadding ?? EdgeInsets.All(new Rem(1f / 16f));
+        RadiusSpec resolvedCardRadius = CardRadius ?? RadiusSpec.All(RadiusScale.Xl);
+        Color resolvedGradientTop = GradientTopColor ?? new Color(0.831f, 0.659f, 0.341f, 0.10f);
+        Color resolvedGradientBottom = GradientBottomColor ?? new Color(0.831f, 0.659f, 0.341f, 0.0f);
+
+        Rem innerR = RadiusSpec.ResolveRem(RadiusScale.Xl);
+        LightweaveWindowContext.RequestHeaderRadius(RadiusSpec.Top(innerR));
+        LightweaveWindowContext.RequestFooterRadius(RadiusSpec.Bottom(innerR));
 
         LightweaveNode? header = Header();
         LightweaveNode body = Body();
         LightweaveNode? footer = Footer();
 
-        RadiusSpec? bodyRadius = null;
-        if (DrawBorder) {
-            bool roundTop = header == null;
-            bool roundBottom = footer == null;
-            if (roundTop && roundBottom) {
-                bodyRadius = RadiusSpec.All(innerR);
-            }
-            else if (roundTop) {
-                bodyRadius = RadiusSpec.Top(innerR);
-            }
-            else if (roundBottom) {
-                bodyRadius = RadiusSpec.Bottom(innerR);
-            }
-        }
-
-        LightweaveNode bodyBacked = Layout.Box.Create(
-            children: c => c.Add(body),
-            style: new Style {
-                Padding = BorderPadding,
-                Background = BackgroundSpec.Of(BodyFillSlot),
-                Radius = bodyRadius,
-            }
-        );
-
-        LightweaveNode stack = Layout.Stack.Create(
+        LightweaveNode contentStack = Layout.Stack.Create(
+            SpacingScale.None,
             children: s => {
                 if (header != null) {
                     s.Add(header);
                 }
-
-                s.AddFlex(bodyBacked);
-
+                s.AddFlex(body);
                 if (footer != null) {
                     s.Add(footer);
                 }
             }
         );
 
-        if (!DrawBorder) {
-            return stack;
-        }
-
-        return Layout.Box.Create(
-            children: c => c.Add(stack),
+        LightweaveNode card = Layout.Box.Create(
+            children: c => {
+                if (DrawAccentGradient) {
+                    c.Add(Layout.Box.Create(style: new Style {
+                        Position = Position.Absolute,
+                        Top = new Rem(0f),
+                        Right = new Rem(0f),
+                        Bottom = new Rem(0f),
+                        Left = new Rem(0f),
+                        Background = new BackgroundSpec.Gradient(
+                            GradientTextureCache.Vertical(resolvedGradientTop, resolvedGradientBottom)
+                        ),
+                    }));
+                }
+                c.Add(contentStack);
+            },
             style: new Style {
-                Padding = EdgeInsets.All(BorderThickness),
-                Background = BackgroundSpec.Of(OuterFillSlot),
-                Border = BorderSpec.All(BorderThickness, ThemeSlot.BorderSubtle),
-                Radius = RadiusSpec.All(BorderRadius),
+                Position = Position.Relative,
+                Background = resolvedCardBg,
+                Border = resolvedCardBorder,
+                Padding = resolvedCardPadding,
+                Radius = resolvedCardRadius,
             }
         );
+
+        return card;
     }
 
     private void AfterContent() {
@@ -234,79 +309,68 @@ public abstract class LightweaveWindow : Verse.Window {
         DrawCloseX(header ?? new Rect(0f, 0f, 0f, 0f));
     }
 
-    private void HandleWindowDrag(Rect inRect) {
-        if (!draggable) {
-            activeDrag = false;
-            return;
-        }
+    
 
+    private void HandleWindowDrag(Rect inRect) {
         if (activeResize != ResizeEdge.None) {
-            activeDrag = false;
             return;
         }
 
         Rect? dragRectOpt = DragRegion(inRect);
         if (!dragRectOpt.HasValue) {
-            activeDrag = false;
+            if (isWindowDragging) {
+                isWindowDragging = false;
+                ActiveDragRegistry.Release();
+            }
             return;
         }
 
         Rect dragRect = dragRectOpt.Value;
         Event e = Event.current;
-        bool mouseDownNow = UnityEngine.Input.GetMouseButton(0);
+        EventType raw = e.rawType;
 
         Vector2 screenTL = new Vector2(
             UnityEngine.Input.mousePosition.x,
             Verse.UI.screenHeight - UnityEngine.Input.mousePosition.y
         );
+        Vector2 windowLocal = screenTL - new Vector2(windowRect.x, windowRect.y);
 
-        if (!activeDrag) {
-            if (e.type == EventType.MouseDown
-                && e.button == 0
-                && dragRect.Contains(e.mousePosition)
-                && !LightweaveHitTracker.IsOver(e.mousePosition)) {
-                float now = Time.realtimeSinceStartup;
-                bool isDoubleClick = EnableDoubleClickMaximize
-                    && lastDragClickTime > 0f
-                    && now - lastDragClickTime < 0.3f
-                    && (e.mousePosition - lastDragClickPos).sqrMagnitude < 25f;
+        if (isWindowDragging && raw == EventType.MouseUp && e.button == 0) {
+            isWindowDragging = false;
+            ActiveDragRegistry.Release();
+        }
 
-                if (isDoubleClick) {
-                    ToggleMaximized();
-                    lastDragClickTime = -1f;
+        if (!isWindowDragging
+            && raw == EventType.MouseDown
+            && e.button == 0
+            && dragRect.Contains(windowLocal)
+            && !LightweaveHitTracker.IsOver(windowLocal)) {
+            float now = Time.realtimeSinceStartup;
+            bool isDoubleClick = EnableDoubleClickMaximize
+                && lastDragClickTime > 0f
+                && now - lastDragClickTime < 0.3f
+                && (windowLocal - lastDragClickPos).sqrMagnitude < 25f;
+
+            if (isDoubleClick) {
+                ToggleMaximized();
+                lastDragClickTime = -1f;
+                if (e.type == EventType.MouseDown && e.button == 0) {
                     e.Use();
-                    return;
                 }
-
-                lastDragClickTime = now;
-                lastDragClickPos = e.mousePosition;
-                activeDrag = true;
-                dragAnchorScreen = screenTL;
-                dragStartRect = windowRect;
-                e.Use();
+                return;
             }
 
+            lastDragClickTime = now;
+            lastDragClickPos = windowLocal;
+            isWindowDragging = true;
+            ActiveDragRegistry.Acquire();
+        }
+
+        if (LightweaveHitTracker.IsOver(windowLocal)) {
             return;
         }
 
-        if (!mouseDownNow) {
-            activeDrag = false;
-            if (e.type == EventType.MouseUp) {
-                e.Use();
-            }
-
-            return;
-        }
-
-        Vector2 delta = screenTL - dragAnchorScreen;
-        Rect next = dragStartRect;
-        next.x = Mathf.Clamp(dragStartRect.x + delta.x, 0f, Verse.UI.screenWidth - dragStartRect.width);
-        next.y = Mathf.Clamp(dragStartRect.y + delta.y, 0f, Verse.UI.screenHeight - dragStartRect.height);
-        windowRect = next;
-
-        if (e.type == EventType.MouseDrag) {
-            e.Use();
-        }
+        GUI.DragWindow(dragRect);
     }
 
     private void ToggleMaximized() {
@@ -361,6 +425,7 @@ public abstract class LightweaveWindow : Verse.Window {
                     activeResize = edge;
                     resizeAnchorScreen = screenTL;
                     resizeStartRect = windowRect;
+                    ActiveDragRegistry.Acquire();
                     if (e.type == EventType.MouseDown && e.button == 0) {
                         e.Use();
                     }
@@ -417,6 +482,7 @@ public abstract class LightweaveWindow : Verse.Window {
 
         if (!mouseDownNow) {
             activeResize = ResizeEdge.None;
+            ActiveDragRegistry.Release();
         }
 
         if (e.type == EventType.MouseDrag || e.type == EventType.MouseUp) {
@@ -522,8 +588,8 @@ public abstract class LightweaveWindow : Verse.Window {
     }
 
     private void DrawCloseX(Rect anchor) {
-        const float padding = 12f;
-        const float size = 18f;
+        float padding = SpacingScale.Sm.ToPixels();
+        float size = new Rem(1.125f).ToPixels();
         Rect closeRect = new Rect(
             anchor.xMax - size - padding,
             anchor.y + padding,
@@ -532,7 +598,7 @@ public abstract class LightweaveWindow : Verse.Window {
         );
         LightweaveHitTracker.Track(closeRect);
 
-        Theme.Theme theme = ThemeOverride ?? ThemeRegistry.Default;
+        Theme.Theme theme = ThemeOverride ?? ThemeRegistry.Active;
         Color accent = theme.GetColor(ThemeSlot.SurfaceAccent);
         accent.a = 1f;
         Color baseColor = theme.GetColor(ThemeSlot.TextPrimary);
@@ -547,12 +613,24 @@ public abstract class LightweaveWindow : Verse.Window {
 
 
     public override void PostClose() {
+        if (isWindowDragging) {
+            isWindowDragging = false;
+            ActiveDragRegistry.Release();
+        }
+
+        if (activeResize != ResizeEdge.None) {
+            activeResize = ResizeEdge.None;
+            ActiveDragRegistry.Release();
+        }
+
         if (currentCursor != null) {
             CursorOverrides.RestoreDefault();
             currentCursor = null;
         }
 
         TryPersistPosition();
+
+        Patch.LightweaveBackdropRegistry.Unregister(this);
 
         LightweaveRoot.Release(RootId);
         base.PostClose();

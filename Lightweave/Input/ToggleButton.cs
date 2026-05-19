@@ -14,7 +14,7 @@ namespace Cosmere.Lightweave.Input;
     Id = "togglebutton",
     Summary = "Two-state button driven by a boolean value.",
     WhenToUse = "Toggle a sticky on/off state where the label conveys the action.",
-    SourcePath = "Lightweave/Lightweave/Input/ToggleButton.cs"
+    SourcePath = "Lightweave/Input/ToggleButton.cs"
 )]
 public static class ToggleButton {
     public static LightweaveNode Create(
@@ -32,14 +32,24 @@ public static class ToggleButton {
         node.ApplyStyling("toggle-button", style, classes, id);
         node.PreferredHeight = new Rem(1.75f).ToPixels();
 
+        node.MeasureWidth = () => {
+            Theme.Theme theme = RenderContext.Current.Theme;
+            Font font = theme.GetFont(FontRole.BodyBold);
+            int pixelSize = Mathf.RoundToInt(new Rem(0.875f).ToFontPx());
+            GUIStyle gs = GuiStyleCache.GetOrCreate(font, pixelSize);
+            float labelW = string.IsNullOrEmpty(label) ? 0f : gs.CalcSize(new GUIContent(label)).x;
+            float padPx = SpacingScale.Md.ToPixels();
+            return Mathf.Ceil(labelW + padPx * 2f);
+        };
+
         node.Paint = (rect, paintChildren) => {
             Theme.Theme theme = RenderContext.Current.Theme;
             InteractionState state = InteractionState.Resolve(rect, null, disabled);
-            ButtonVariant variant = value ? ButtonVariant.Primary : ButtonVariant.Ghost;
+            Variant variant = value ? Variant.Primary : Variant.Ghost;
 
-            ThemeSlot? bgSlot = ButtonVariants.Background(variant, state);
-            ThemeSlot fgSlot = ButtonVariants.Foreground(variant, state);
-            ThemeSlot? borderSlot = ButtonVariants.Border(variant, state);
+            ThemeSlot? bgSlot = VariantPalette.Background(variant, state);
+            ThemeSlot fgSlot = VariantPalette.Foreground(variant, state);
+            ThemeSlot? borderSlot = VariantPalette.Border(variant, state);
 
             BackgroundSpec? bg = bgSlot.HasValue ? BackgroundSpec.Of(bgSlot.Value) : null;
             BorderSpec? border = borderSlot.HasValue
@@ -49,7 +59,7 @@ public static class ToggleButton {
 
             PaintBox.Draw(rect, bg, border, radius);
 
-            float overlay = ButtonVariants.OverlayAlpha(state);
+            float overlay = VariantPalette.OverlayAlpha(state);
             if (overlay > 0f) {
                 Color overlayColor = InteractionFeedback.OverlayColor(theme, state, overlay);
                 PaintBox.Draw(rect, BackgroundSpec.Of(overlayColor), null, radius);

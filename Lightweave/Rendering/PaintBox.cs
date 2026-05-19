@@ -73,8 +73,9 @@ public static class PaintBox {
                          border.Value.Color != null &&
                          (bw.x > 0f || bw.y > 0f || bw.z > 0f || bw.w > 0f);
         bool rounded = rad.x > 0f || rad.y > 0f || rad.z > 0f || rad.w > 0f;
+        bool bgVisible = IsBgVisible(bg);
 
-        if (hasBorder && rounded && bg != null) {
+        if (hasBorder && rounded && bgVisible) {
             Color bc = ResolveColor(border!.Value.Color!);
             DrawSolidRounded(r, bc, rad);
 
@@ -94,10 +95,17 @@ public static class PaintBox {
             DrawRoundedBorderEdges(r, bw, rad, bc);
         }
         else {
-            DrawFill(r, bg, rad);
+            if (bgVisible) {
+                DrawFill(r, bg, rad);
+            }
             if (hasBorder) {
                 Color bc = ResolveColor(border!.Value.Color!);
-                DrawRectStroke(r, bw, bc);
+                if (rounded) {
+                    DrawRoundedBorderEdges(r, bw, rad, bc);
+                }
+                else {
+                    DrawRectStroke(r, bw, bc);
+                }
             }
         }
     }
@@ -224,5 +232,17 @@ public static class PaintBox {
             ColorRef.Token t => RenderContext.Current.Theme.GetColor(t.Slot),
             _ => throw new InvalidOperationException($"Unknown ColorRef subtype: {cref?.GetType().Name ?? "null"}"),
         };
+    }
+
+
+    private static bool IsBgVisible(BackgroundSpec? bg) {
+        if (bg == null) {
+            return false;
+        }
+        if (bg is BackgroundSpec.Solid solid) {
+            Color c = ResolveColor(solid.Color);
+            return c.a > 0f;
+        }
+        return true;
     }
 }

@@ -11,7 +11,7 @@ namespace Cosmere.Lightweave.Playground;
     Id = "sidenav",
     Summary = "Vertical category rail with hover-expand and pinned selection.",
     WhenToUse = "Browse a flat list of categorized primitives or sections in a wide window.",
-    SourcePath = "Lightweave/Lightweave/Playground/PlaygroundRail.cs",
+    SourcePath = "Lightweave/Playground/PlaygroundRail.cs",
     PreferredVariantHeight = 340f
 )]
 public static class SideNavDoc {
@@ -58,7 +58,9 @@ public static class SideNavDoc {
 
     [DocVariant("CL_Playground_Label_Default")]
     public static DocSample DocsDefault() {
-        return new DocSample(() => {
+        return new DocSample(
+            helpers: new[] { nameof(BuildDemoCategories) },
+            build: () => {
             Hooks.Hooks.StateHandle<string> selectedHandle = Hooks.Hooks.UseState<string>("stack");
 
             LightweaveNode rail = PlaygroundRail.Create(BuildDemoCategories(), selectedHandle);
@@ -84,8 +86,17 @@ public static class SideNavDoc {
     [DocUsage]
     public static DocSample DocsUsage() {
         return new DocSample(() => {
+            List<PlaygroundCategory> categories = new List<PlaygroundCategory> {
+                new PlaygroundCategory("layout", "CL_Playground_Category_Layout", "CL_Playground_Category_Layout_Desc",
+                    new[] { "stack", "column", "row", "grid" }),
+                new PlaygroundCategory("typography", "CL_Playground_Category_Typography", "CL_Playground_Category_Typography_Desc",
+                    new[] { "heading", "text", "caption" }),
+                new PlaygroundCategory("inputs", "CL_Playground_Category_Inputs", "CL_Playground_Category_Inputs_Desc",
+                    new[] { "textfield", "checkbox", "slider", "switch" }),
+            };
+
             Hooks.Hooks.StateHandle<string> selected = Hooks.Hooks.UseState<string>("stack");
-            LightweaveNode rail = PlaygroundRail.Create(BuildDemoCategories(), selected);
+            LightweaveNode rail = PlaygroundRail.Create(categories, selected);
             return Container.Create(
                 Box.Create(
                     c => c.Add(ScrollArea.Create(rail)),

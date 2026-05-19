@@ -190,7 +190,7 @@ public static class ModDetailPane {
                 s.Add(Button.Create(
                     label: "CL_ModsConfig_Conflict_AutoResolve".Translate(),
                     onClick: () => AutoResolve(mod),
-                    variant: ButtonVariant.Secondary
+                    variant: Variant.Secondary
                 ));
             })),
             style: new Style {
@@ -290,7 +290,7 @@ public static class ModDetailPane {
                 s.Add(Button.Create(
                     label: enableLabel,
                     onClick: () => Verse.ModsConfig.SetActive(mod, !active),
-                    variant: ButtonVariant.Secondary,
+                    variant: Variant.Secondary,
                     disabled: toggleLocked,
                     style: new Style { Width = Length.Stretch }
                 ));
@@ -298,7 +298,7 @@ public static class ModDetailPane {
                     s.Add(Button.Create(
                         label: ((string)"CL_ModsConfig_Action_Workshop".Translate()).ToUpperInvariant(),
                         onClick: () => SteamUtility.OpenWorkshopPage(new Steamworks.PublishedFileId_t(mod.GetPublishedFileId().m_PublishedFileId)),
-                        variant: ButtonVariant.Secondary,
+                        variant: Variant.Secondary,
                         style: new Style { Width = Length.Stretch }
                     ));
                 }
@@ -306,7 +306,7 @@ public static class ModDetailPane {
                     s.Add(Button.Create(
                         label: ((string)"CL_ModsConfig_Action_Url".Translate()).ToUpperInvariant(),
                         onClick: () => Application.OpenURL(mod.Url),
-                        variant: ButtonVariant.Secondary,
+                        variant: Variant.Secondary,
                         style: new Style { Width = Length.Stretch }
                     ));
                 }
@@ -318,7 +318,7 @@ public static class ModDetailPane {
                     s.Add(Button.Create(
                         label: removalLabel,
                         onClick: () => ConfirmRemoval(mod, isWorkshopMod),
-                        variant: ButtonVariant.Secondary,
+                        variant: Variant.Secondary,
                         style: new Style { Width = Length.Stretch, TextColor = ThemeSlot.StatusDanger }
                     ));
                 }

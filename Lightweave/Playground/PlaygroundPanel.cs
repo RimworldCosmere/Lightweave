@@ -6,6 +6,7 @@ using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
+using UnityEngine;
 using Verse;
 
 namespace Cosmere.Lightweave.Playground;
@@ -14,7 +15,9 @@ public sealed record PlaygroundVariant(
     string LabelKey,
     Func<LightweaveNode> Demo,
     [CallerArgumentExpression("Demo")] string Code = ""
-);
+) {
+    public bool HideCode { get; init; }
+}
 
 public sealed record PlaygroundState(
     string LabelKey,
@@ -50,7 +53,8 @@ public static class PlaygroundPanel {
     ) {
         bool hasVariants = variants != null && variants.Count > 0;
         bool hasStates = states != null && states.Count > 0;
-        bool hasUsage = !string.IsNullOrEmpty(docs?.UsageCode);
+        bool hasUsage = !string.IsNullOrEmpty(docs?.UsageCode) && docs?.HideUsage != true;
+        bool hasSource = docs?.HideSource != true;
         bool hasComposition = docs?.Composition != null && docs.Composition.Count > 0;
         bool hasRtl = docs?.ShowRtl == true && hasVariants;
         bool hasApi = docs?.ApiReference != null && docs.ApiReference.Count > 0;
@@ -92,12 +96,12 @@ public static class PlaygroundPanel {
 
                 if (hasVariants) {
                     tocEntries.Add(new TocEntry(ExamplesAnchor, (string)"CL_Playground_Panel_Examples".Translate(), 2));
-                    s.Add(BuildExamplesSection(variants!, ctx, tocEntries, variantMinHeight));
+                    s.Add(BuildExamplesSection(variants!, ctx, tocEntries, variantMinHeight, sourcePath));
                 }
 
                 if (hasStates) {
                     tocEntries.Add(new TocEntry(StatesAnchor, (string)"CL_Playground_Panel_States".Translate(), 2));
-                    s.Add(BuildStatesSection(states!, ctx, tocEntries, variantMinHeight));
+                    s.Add(BuildStatesSection(states!, ctx, tocEntries, variantMinHeight, sourcePath));
                 }
 
                 if (hasUsage) {
@@ -120,8 +124,10 @@ public static class PlaygroundPanel {
                     s.Add(BuildApiSection(docs!.ApiReference!, ctx));
                 }
 
-                tocEntries.Add(new TocEntry(SourceAnchor, (string)"CL_Playground_Panel_Source".Translate(), 2));
-                s.Add(BuildSourceSection(sourcePath, ctx));
+                if (hasSource) {
+                    tocEntries.Add(new TocEntry(SourceAnchor, (string)"CL_Playground_Panel_Source".Translate(), 2));
+                    s.Add(BuildSourceSection(sourcePath, ctx));
+                }
             }
         );
 
@@ -132,7 +138,8 @@ public static class PlaygroundPanel {
         IReadOnlyList<PlaygroundVariant> variants,
         DocContext ctx,
         List<TocEntry> tocEntries,
-        float? variantMinHeight
+        float? variantMinHeight,
+        string sourcePath
     ) {
         LightweaveNode heading = Typography.Typography.Heading.Create(2, (string)"CL_Playground_Panel_Examples".Translate(), style: new Style { TextColor = ThemeSlot.TextPrimary });
 
@@ -145,7 +152,9 @@ public static class PlaygroundPanel {
                     string label = (string)v.LabelKey.Translate();
                     tocEntries.Add(new TocEntry(anchor, label, 3));
                     LightweaveNode demo = BuildSaltedDemo(anchor, v.Demo);
-                    s.Add(BuildExampleItem(anchor, label, demo, ctx, variantMinHeight, NormalizeCode(v.Code)));
+                    string? code = v.HideCode ? null : NormalizeCode(v.Code);
+                    string itemSourcePath = v.HideCode ? "" : sourcePath;
+                    s.Add(BuildExampleItem(anchor, label, demo, ctx, variantMinHeight, code, itemSourcePath));
                 }
             }
         );
@@ -157,7 +166,8 @@ public static class PlaygroundPanel {
         IReadOnlyList<PlaygroundState> states,
         DocContext ctx,
         List<TocEntry> tocEntries,
-        float? variantMinHeight
+        float? variantMinHeight,
+        string sourcePath
     ) {
         LightweaveNode heading = Typography.Typography.Heading.Create(2, (string)"CL_Playground_Panel_States".Translate(), style: new Style { TextColor = ThemeSlot.TextPrimary });
 
@@ -169,8 +179,9 @@ public static class PlaygroundPanel {
                     string anchor = StatesAnchor + "-" + SlugifyLabel(st.LabelKey);
                     string label = (string)st.LabelKey.Translate();
                     tocEntries.Add(new TocEntry(anchor, label, 3));
-                    LightweaveNode demo = BuildSaltedDemo(anchor, st.Demo);
-                    s.Add(BuildExampleItem(anchor, label, demo, ctx, variantMinHeight, NormalizeCode(st.Code)));
+                    Func<LightweaveNode> stateDemo = WrapWithStateFlag(st.LabelKey, st.Demo);
+                    LightweaveNode demo = BuildSaltedDemo(anchor, stateDemo);
+                    s.Add(BuildExampleItem(anchor, label, demo, ctx, variantMinHeight, NormalizeCode(st.Code), sourcePath));
                 }
             }
         );
@@ -287,15 +298,73 @@ public static class PlaygroundPanel {
         }
     }
 
+
+    private static Func<LightweaveNode> WrapWithStateFlag(string labelKey, Func<LightweaveNode> demo) {
+        bool forceHover = false;
+        bool forcePressed = false;
+        bool forceDisabled = false;
+        switch (labelKey) {
+            case "CL_Playground_Label_Hover":
+                forceHover = true;
+                break;
+            case "CL_Playground_Label_Pressed":
+            case "CL_Playground_Label_Active":
+                forceHover = true;
+                forcePressed = true;
+                break;
+            case "CL_Playground_Label_Disabled":
+                forceDisabled = true;
+                break;
+        }
+
+        if (!forceHover && !forcePressed && !forceDisabled) {
+            return demo;
+        }
+
+        return () => {
+            LightweaveNode inner = demo();
+            LightweaveNode wrapper = NodeBuilder.New($"StateFlag:{labelKey}", 0, "");
+            wrapper.Children.Add(inner);
+            wrapper.PreferredHeight = inner.PreferredHeight;
+            wrapper.MeasureWidth = () => inner.MeasureWidth?.Invoke() ?? 0f;
+            wrapper.Paint = (rect, paintChildren) => {
+                RenderContext rc = RenderContext.Current;
+                bool prevHover = rc.ForceHovered;
+                bool prevPressed = rc.ForcePressed;
+                bool prevDisabled = rc.ForceDisabled;
+                rc.ForceHovered = forceHover;
+                rc.ForcePressed = forcePressed;
+                rc.ForceDisabled = forceDisabled;
+                try {
+                    inner.MeasuredRect = rect;
+                    paintChildren();
+                }
+                finally {
+                    rc.ForceHovered = prevHover;
+                    rc.ForcePressed = prevPressed;
+                    rc.ForceDisabled = prevDisabled;
+                }
+            };
+            return wrapper;
+        };
+    }
+
     private static LightweaveNode BuildExampleItem(
         string anchorId,
         string label,
         LightweaveNode demo,
         DocContext ctx,
         float? variantMinHeight,
-        string? code
+        string? code,
+        string? sourcePath
     ) {
-        LightweaveNode heading = Typography.Typography.Heading.Create(3, label, style: new Style { TextColor = ThemeSlot.TextPrimary });
+        LightweaveNode headingText = Typography.Typography.Heading.Create(3, label, style: new Style { TextColor = ThemeSlot.TextPrimary });
+        LightweaveNode heading = (!string.IsNullOrEmpty(sourcePath) && SourceLink.SourceFileExists(sourcePath!))
+            ? Layout.HStack.Create(SpacingScale.Md, h => {
+                h.AddFlex(headingText);
+                h.AddHug(SourceLink.Create(sourcePath!));
+            })
+            : headingText;
 
         LightweaveNode body = code != null
             ? BuildPreviewWithCodeFrame(demo, variantMinHeight, code, anchorId)
@@ -306,7 +375,7 @@ public static class PlaygroundPanel {
 
     private static LightweaveNode BuildPreviewFrame(LightweaveNode demo, float? minHeight) {
         LightweaveNode content = minHeight.HasValue
-            ? Layout.Stack.Create(new Rem(0f), s => s.Add(demo, minHeight.Value))
+            ? WrapMinHeight(demo, minHeight.Value)
             : demo;
 
         return Layout.Box.Create(
@@ -327,7 +396,7 @@ public static class PlaygroundPanel {
         string anchorId
     ) {
         LightweaveNode content = minHeight.HasValue
-            ? Layout.Stack.Create(new Rem(0f), s => s.Add(demo, minHeight.Value))
+            ? WrapMinHeight(demo, minHeight.Value)
             : demo;
 
         LightweaveNode previewSection = Layout.Box.Create(
@@ -357,6 +426,21 @@ public static class PlaygroundPanel {
                 Radius = RadiusSpec.All(RadiusScale.Lg),
             }
         );
+    }
+
+    private static LightweaveNode WrapMinHeight(LightweaveNode demo, float min) {
+        LightweaveNode wrap = NodeBuilder.New("PreviewMinHeight");
+        wrap.Children.Add(demo);
+        wrap.Measure = w => {
+            float natural = demo.Measure?.Invoke(w) ?? demo.PreferredHeight ?? 0f;
+            return Mathf.Max(natural, min);
+        };
+        wrap.MeasureWidth = () => demo.MeasureWidth?.Invoke() ?? 0f;
+        wrap.Paint = (rect, paintChildren) => {
+            demo.MeasuredRect = rect;
+            paintChildren();
+        };
+        return wrap;
     }
 
     private static LightweaveNode BuildUsageSection(string usageCode, DocContext ctx) {

@@ -25,7 +25,7 @@ namespace Cosmere.Lightweave.Overlay;
     Id = "popover",
     Summary = "Floating panel anchored to a trigger, dismissed on outside click.",
     WhenToUse = "Reveal contextual options or details next to the element that opened them.",
-    SourcePath = "Lightweave/Lightweave/Overlay/Popover.cs"
+    SourcePath = "Lightweave/Overlay/Popover.cs"
 )]
 public static class Popover {
     public static LightweaveNode Create(
@@ -49,12 +49,26 @@ public static class Popover {
     ) {
         if (!isOpen) {
             LightweaveNode empty = NodeBuilder.New("Popover:closed", line, file);
+            empty.ApplyStyling("popover", style, classes, id);
+            empty.MeasureWidth = () => 0f;
             empty.Paint = (_, _) => { };
             return empty;
         }
 
         LightweaveNode node = NodeBuilder.New($"Popover:{placement}", line, file);
         node.ApplyStyling("popover", style, classes, id);
+        node.MeasureWidth = () => {
+            Vector2 size = preferredSize ?? new Vector2(new Rem(15f).ToPixels(), -1f);
+            return Mathf.Ceil(size.x > 0f ? size.x : new Rem(15f).ToPixels());
+        };
+        node.Measure = _ => {
+            Vector2 size = preferredSize ?? new Vector2(new Rem(15f).ToPixels(), -1f);
+            float w = size.x > 0f ? size.x : new Rem(15f).ToPixels();
+            if (size.y > 0f) {
+                return size.y;
+            }
+            return content.Measure?.Invoke(w) ?? content.PreferredHeight ?? new Rem(10f).ToPixels();
+        };
         node.Paint = (rect, paintChildren) => {
             Vector2 size = preferredSize ?? new Vector2(new Rem(15f).ToPixels(), -1f);
             if (size.x <= 0f) {
@@ -82,17 +96,26 @@ public static class Popover {
 
                 using (TintScope.Replace(Color.white)) {
                     Rect shadowRect = new Rect(
-                        popoverRect.x + 2f,
-                        popoverRect.y + 3f,
-                        popoverRect.width,
-                        popoverRect.height
+                        popoverRect.x - 2f,
+                        popoverRect.y + 6f,
+                        popoverRect.width + 4f,
+                        popoverRect.height + 4f
                     );
-                    BackgroundSpec shadowBg = BackgroundSpec.Of(ThemeSlot.SurfaceShadow);
-                    PaintBox.Draw(shadowRect, shadowBg, null, RadiusSpec.All(RadiusScale.Lg));
+                    PaintBox.Draw(
+                        shadowRect,
+                        BackgroundSpec.Of(new Color(0f, 0f, 0f, 0.55f)),
+                        null,
+                        null
+                    );
 
-                    BackgroundSpec bg = BackgroundSpec.Of(ThemeSlot.SurfaceRaised);
-                    RadiusSpec radius = RadiusSpec.All(RadiusScale.Lg);
-                    PaintBox.Draw(popoverRect, bg, null, radius);
+                    BackdropBlur.Draw(popoverRect, 14f);
+
+                    PaintBox.Draw(
+                        popoverRect,
+                        BackgroundSpec.Of(new Color(0.0588f, 0.047f, 0.0314f, 0.96f)),
+                        null,
+                        null
+                    );
 
                     RenderContext.Current.OverlayContentDepth++;
                     try {
@@ -102,9 +125,22 @@ public static class Popover {
                         RenderContext.Current.OverlayContentDepth--;
                     }
 
-                    BorderSpec border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderSubtle);
-                    BackgroundSpec clearBg = BackgroundSpec.Of(Color.clear);
-                    PaintBox.Draw(popoverRect, clearBg, border, radius);
+                    float hairline = new Rem(1f / 16f).ToPixels();
+                    Rect goldInset = new Rect(
+                        popoverRect.x + hairline,
+                        popoverRect.y + hairline,
+                        popoverRect.width - hairline * 2f,
+                        hairline
+                    );
+                    PaintBox.Draw(
+                        goldInset,
+                        BackgroundSpec.Of(new Color(1.0f, 0.902f, 0.706f, 0.10f)),
+                        null,
+                        null
+                    );
+
+                    BorderSpec border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderDefault);
+                    PaintBox.Draw(popoverRect, null, border, null);
                 }
 
                 Event e = Event.current;
@@ -136,7 +172,7 @@ public static class Popover {
         LightweaveNode button = Button.Create(
             (string)"CL_Playground_Popover_TriggerOpen".Translate(),
             () => open.Set(!open.Value),
-            ButtonVariant.Secondary
+            Variant.Secondary
         );
 
         LightweaveNode trigger = NodeBuilder.New("PopoverTrigger", 0, nameof(Popover));
@@ -200,7 +236,7 @@ public static class Popover {
         LightweaveNode button = Button.Create(
             (string)"CL_Playground_Overlay_Popover_PawnCard_Trigger".Translate(),
             () => open.Set(!open.Value),
-            ButtonVariant.Secondary
+            Variant.Secondary
         );
 
         LightweaveNode trigger = NodeBuilder.New("PopoverTrigger:PawnCard", 0, nameof(Popover));
@@ -270,7 +306,7 @@ public static class Popover {
                     Button.Create(
                         (string)"CL_Playground_Overlay_Popover_PawnCard_AbilityLashing".Translate(),
                         () => { },
-                        ButtonVariant.Primary,
+                        Variant.Primary,
                         style: new Style { Width = Length.Stretch }
                     )
                 );
@@ -278,7 +314,7 @@ public static class Popover {
                     Button.Create(
                         (string)"CL_Playground_Overlay_Popover_PawnCard_AbilityAdhesion".Translate(),
                         () => { },
-                        ButtonVariant.Secondary,
+                        Variant.Secondary,
                         style: new Style { Width = Length.Stretch }
                     )
                 );

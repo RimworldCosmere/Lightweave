@@ -11,6 +11,7 @@ public static class FootStrip {
         return Box.Create(
             children: c => c.Add(HStack.Create(SpacingScale.Md, h => {
                 h.AddFlex(Spacer.Flex());
+                h.AddHug(ThemeButton.Create());
                 h.AddHug(LangButton.Create());
                 h.AddHug(FootLink.Create(
                     label: "CL_MainMenu_Credits".Translate(),

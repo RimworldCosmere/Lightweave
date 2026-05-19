@@ -20,29 +20,25 @@ public static class OptionsRoot {
     public static LightweaveNode Build(Dialog_Options dialog, Action onClose) {
         Hooks.Hooks.StateHandle<OptionsTab> tab = Hooks.Hooks.UseState(OptionsTab.General);
 
-        LightweaveNode card = Box.Create(
-            children: c => c.Add(Stack.Create(SpacingScale.None, root => {
-                root.Add(DialogHeader.Create(
-                    title: "CL_Options_Title".Translate(),
-                    trailingActionLabel: "CL_Options_ResetCategory".Translate(),
-                    onTrailingAction: null,
-                    onClose: () => {
-                        Prefs.Save();
-                        onClose?.Invoke();
-                    },
-                    drawDivider: true
-                ));
-                root.AddFlex(HStack.Create(SpacingScale.None, h => {
-                    h.Add(BuildSidebar(tab), new Rem(14f).ToPixels());
-                    h.AddFlex(BuildContent(tab.Value, dialog));
-                }));
-            }))
-        );
-
-        return Dialog.Create(
-            content: () => card,
-            cardBackground: BackgroundSpec.Blur(new Color(0f, 0f, 0f, 0.95f), 10f)
-        );
+        return Stack.Create(SpacingScale.None, root => {
+            root.Add(WindowHeader.Create(
+                title: "CL_Options_Title".Translate(),
+                actions: Button.Create(
+                    (string)"CL_Options_ResetCategory".Translate(),
+                    null,
+                    Variant.Ghost
+                ),
+                onClose: () => {
+                    Prefs.Save();
+                    onClose?.Invoke();
+                },
+                drawDivider: true
+            ));
+            root.AddFlex(HStack.Create(SpacingScale.None, h => {
+                h.Add(BuildSidebar(tab), new Rem(14f).ToPixels());
+                h.AddFlex(BuildContent(tab.Value, dialog));
+            }));
+        });
     }
 
     private static LightweaveNode BuildSidebar(Hooks.Hooks.StateHandle<OptionsTab> tab) {
@@ -78,11 +74,13 @@ public static class OptionsRoot {
             InteractionState state = InteractionState.Resolve(rect, null, false);
 
             if (isActive) {
-                Color warmBg = new Color(0.157f, 0.125f, 0.086f, 0.4f);
+                Color ghostBase = RenderContext.Current.Theme.GetColor(ThemeSlot.SurfaceGhostHover);
+                Color warmBg = new Color(ghostBase.r, ghostBase.g, ghostBase.b, 0.4f);
                 PaintBox.Draw(rect, BackgroundSpec.Of(warmBg), null, null);
             }
             else if (state.Hovered) {
-                Color hoverBg = new Color(0.157f, 0.125f, 0.086f, 0.2f);
+                Color ghostBase = RenderContext.Current.Theme.GetColor(ThemeSlot.SurfaceGhostHover);
+                Color hoverBg = new Color(ghostBase.r, ghostBase.g, ghostBase.b, 0.2f);
                 PaintBox.Draw(rect, BackgroundSpec.Of(hoverBg), null, null);
             }
 

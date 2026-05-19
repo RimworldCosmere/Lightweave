@@ -14,7 +14,7 @@ namespace Cosmere.Lightweave.Feedback;
     Id = "spinner",
     Summary = "Animated indeterminate progress indicator.",
     WhenToUse = "Show that work is in progress when duration is unknown.",
-    SourcePath = "Lightweave/Lightweave/Feedback/Spinner.cs"
+    SourcePath = "Lightweave/Feedback/Spinner.cs"
 )]
 public static class Spinner {
     public static LightweaveNode Create(
@@ -36,6 +36,7 @@ public static class Spinner {
         LightweaveNode node = NodeBuilder.New("Spinner", line, file);
         node.ApplyStyling("spinner", style, classes, id);
         node.PreferredHeight = resolvedSize.ToPixels();
+        node.MeasureWidth = () => Mathf.Ceil(resolvedSize.ToPixels());
 
         node.Paint = (rect, paintChildren) => {
             AnimationClock.RegisterActive(RenderContext.Current.RootId);

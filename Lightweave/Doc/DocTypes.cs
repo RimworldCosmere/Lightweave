@@ -10,5 +10,7 @@ public sealed record PlaygroundDocs(
     string? UsageCode = null,
     IReadOnlyList<CompositionLine>? Composition = null,
     IReadOnlyList<ApiGroup>? ApiReference = null,
-    bool ShowRtl = false
+    bool ShowRtl = false,
+    bool HideUsage = false,
+    bool HideSource = false
 );

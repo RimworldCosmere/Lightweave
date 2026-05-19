@@ -39,7 +39,7 @@ public static class GeneralTab {
                         labelFn: FormatAutosaveInterval,
                         onChange: v => Prefs.AutosaveIntervalDays = v,
                         variant: DropdownVariant.Button,
-                        buttonStyle: ButtonVariant.Frosted
+                        buttonStyle: Variant.Frosted
                     ),
                     caption: (string)"CL_Options_Autosave_Interval_Hint".Translate()
                 ),
@@ -51,13 +51,14 @@ public static class GeneralTab {
                         min: 1f,
                         max: 25f,
                         step: 1f,
-                        format: v => Mathf.RoundToInt(v).ToString(CultureInfo.InvariantCulture)
+                        format: v => Mathf.RoundToInt(v).ToString(CultureInfo.InvariantCulture),
+                    variant: Variant.Secondary
                     ),
                     caption: (string)"CL_Options_Autosave_Slots_Hint".Translate()
                 ),
                 SettingRow.Create(
                     "CL_Options_RunInBackground".Translate(),
-                    Switch.Create("", Prefs.RunInBackground, v => Prefs.RunInBackground = v),
+                    Switch.Create("", Prefs.RunInBackground, v => Prefs.RunInBackground = v, variant: Variant.Secondary),
                     caption: (string)"CL_Options_RunInBackground_Hint".Translate()
                 )
             ));
@@ -66,7 +67,7 @@ public static class GeneralTab {
                 s.Add(SettingRow.Section("CL_Options_Section_General",
                     SettingRow.Create(
                         "CL_Options_DevMode".Translate(),
-                        Switch.Create("", Prefs.DevMode, v => Prefs.DevMode = v),
+                        Switch.Create("", Prefs.DevMode, v => Prefs.DevMode = v, variant: Variant.Secondary),
                         caption: (string)"CL_Options_DevMode_Hint".Translate()
                     )
                 ));
@@ -78,7 +79,7 @@ public static class GeneralTab {
                     Button.Create(
                         label: "CL_Options_SaveFolder_Action".Translate(),
                         onClick: () => OpenOrShowFolder(GenFilePaths.SaveDataFolderPath, isWindows),
-                        variant: ButtonVariant.Secondary
+                        variant: Variant.Secondary
                     ),
                     caption: GenFilePaths.SaveDataFolderPath
                 ),
@@ -87,7 +88,7 @@ public static class GeneralTab {
                     Button.Create(
                         label: "CL_Options_LogFolder_Action".Translate(),
                         onClick: () => OpenOrShowFolder(Application.persistentDataPath, isWindows),
-                        variant: ButtonVariant.Secondary
+                        variant: Variant.Secondary
                     ),
                     caption: Application.persistentDataPath
                 )
@@ -104,7 +105,7 @@ public static class GeneralTab {
                             buttonAText: "Yes".Translate(),
                             buttonBText: "No".Translate()
                         )),
-                        variant: ButtonVariant.Danger
+                        variant: Variant.Danger
                     ),
                     caption: (string)"CL_Options_RestoreDefaults_Hint".Translate()
                 )

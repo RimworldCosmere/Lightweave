@@ -1,7 +1,7 @@
-using System;
 using System.Runtime.CompilerServices;
-using UnityEngine;
+using System;
 using Cosmere.Lightweave.Input;
+using Cosmere.Lightweave.Layout;
 using Cosmere.Lightweave.Navigation;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
@@ -18,7 +18,7 @@ public enum PlaygroundTheme {
 }
 
 public static class PlaygroundHeader {
-    private static readonly IReadOnlyList<PlaygroundTheme> ThemeOptions = new List<PlaygroundTheme> {
+    private static readonly PlaygroundTheme[] ThemeOptions = {
         PlaygroundTheme.Default,
         PlaygroundTheme.Cosmere,
         PlaygroundTheme.Scadrial,
@@ -27,84 +27,40 @@ public static class PlaygroundHeader {
 
     public static LightweaveNode Create(
         Hooks.Hooks.StateHandle<PlaygroundTheme> theme,
-        Hooks.Hooks.StateHandle<bool> forceDisabled,
+        Action? onClose = null,
         Style? style = null,
         string[]? classes = null,
         string? id = null,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = ""
     ) {
-        LightweaveNode brand = BuildBrand();
-        LightweaveNode controls = BuildControls(theme, forceDisabled);
+        LightweaveNode controls = BuildControls(theme);
 
-        LightweaveNode row = Layout.HStack.Create(
-            SpacingScale.Md,
-            r => {
-                r.AddFlex(brand);
-                r.Add(controls, 610f);
-            }
-        );
-
-        Style baseStyle = new Style {
-            Padding = new EdgeInsets(
-                SpacingScale.Xs,
-                Bottom: SpacingScale.Xs,
-                Left: SpacingScale.Md,
-                Right: SpacingScale.Xl
-            ),
-            Background = BackgroundSpec.Of(ThemeSlot.SurfaceRaised),
-            Radius = RadiusSpec.Top(RadiusScale.Xl),
-        };
-        Style merged = style.HasValue ? Style.Merge(baseStyle, style.Value) : baseStyle;
-
-        LightweaveNode surface = Layout.Box.Create(
-            children: s => s.Add(row),
-            style: merged,
-            classes: StyleExtensions.PrependClass("playground-header", classes),
+        return WindowHeader.Create(
+            title: (string)"CL_Playground_Header_Brand".Translate(),
+            subtitle: (string)"CL_Playground_Header_Subtitle".Translate(),
+            actions: controls,
+            onClose: onClose,
+            draggable: true,
+            drawDivider: true,
+            style: style,
+            classes: classes,
             id: id,
             line: line,
             file: file
         );
-
-        Action<Rect, Action>? innerPaint = surface.Paint;
-        surface.Paint = (rect, paintChildren) => {
-            Runtime.LightweaveWindowContext.PublishHeader(rect, draggable: true, ownsClose: false);
-            innerPaint?.Invoke(rect, paintChildren);
-        };
-
-        return surface;
-    }
-
-    private static LightweaveNode BuildBrand() {
-        LightweaveNode title = Typography.Typography.Heading.Create(2, (string)"CL_Playground_Header_Brand".Translate(), style: new Style { TextColor = ThemeSlot.BorderFocus });
-
-        LightweaveNode subtitle = Typography.Typography.Caption.Create((string)"CL_Playground_Header_Subtitle".Translate());
-
-        return Layout.Stack.Create(
-            SpacingScale.Xxs,
-            s => {
-                s.Add(title);
-                s.Add(subtitle);
-            }
-        );
     }
 
     private static LightweaveNode BuildControls(
-        Hooks.Hooks.StateHandle<PlaygroundTheme> theme,
-        Hooks.Hooks.StateHandle<bool> forceDisabled
+        Hooks.Hooks.StateHandle<PlaygroundTheme> theme
     ) {
-        LightweaveNode themeSegmented = Segmented.Create(
-            theme.Value,
-            ThemeOptions,
-            ThemeLabel,
-            next => theme.Set(next)
-        );
-
-        LightweaveNode disabledToggle = Checkbox.Create(
-            (string)"CL_Playground_Header_ForceDisabled".Translate(),
-            forceDisabled.Value,
-            next => forceDisabled.Set(next),
-            tooltipKey: "CL_Playground_Header_ForceDisabled_Tooltip"
+        LightweaveNode themeDropdown = Dropdown.Create<PlaygroundTheme>(
+            value: theme.Value,
+            options: ThemeOptions,
+            labelFn: ThemeLabel,
+            onChange: next => theme.Set(next),
+            variant: DropdownVariant.Input,
+            inputVariant: Variant.Secondary
         );
 
         bool tourActive = PlaygroundTour.IsActive;
@@ -119,15 +75,14 @@ public static class PlaygroundHeader {
                     PlaygroundTour.Start();
                 }
             },
-            tourActive ? ButtonVariant.Danger : ButtonVariant.Secondary
+            tourActive ? Variant.Danger : Variant.Secondary
         );
 
         return Layout.HStack.Create(
             SpacingScale.Sm,
             r => {
-                r.Add(themeSegmented, 280f);
-                r.Add(disabledToggle, 180f);
-                r.Add(tourButton, 110f);
+                r.Add(themeDropdown, 240f);
+                r.Add(tourButton, 130f);
             }
         );
     }

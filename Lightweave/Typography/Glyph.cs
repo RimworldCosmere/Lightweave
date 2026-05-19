@@ -14,7 +14,7 @@ namespace Cosmere.Lightweave.Typography;
     Id = "glyph",
     Summary = "Single-character glyph rendered centered (both axes) inside its rect via TextAnchor.MiddleCenter.",
     WhenToUse = "Close X, expand/collapse chevrons, dropdown carets, status dots, any short symbolic mark that must sit pixel-perfect in the middle of a sized box. For body copy use Text; for hero text use Display.",
-    SourcePath = "Lightweave/Lightweave/Typography/Glyph.cs",
+    SourcePath = "Lightweave/Typography/Glyph.cs",
     ShowRtl = false
 )]
 public static class Glyph {

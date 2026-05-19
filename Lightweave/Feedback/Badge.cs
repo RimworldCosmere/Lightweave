@@ -16,7 +16,7 @@ namespace Cosmere.Lightweave.Feedback;
     Id = "badge",
     Summary = "Small status pill with a label and optional glyphs.",
     WhenToUse = "Tag rows or cards with a state, count, or category.",
-    SourcePath = "Lightweave/Lightweave/Feedback/Badge.cs"
+    SourcePath = "Lightweave/Feedback/Badge.cs"
 )]
 public static class Badge {
     public static LightweaveNode Create(
@@ -52,6 +52,26 @@ public static class Badge {
         // NOTE: Small-caps is approximated via uppercasing; fine for Latin, may need revisiting for non-Latin scripts.
         string display = text.ToUpperInvariant();
 
+        node.MeasureWidth = () => {
+            Theme.Theme theme = RenderContext.Current.Theme;
+            Font font = theme.GetFont(FontRole.BodyBold);
+            int pixelSize = Mathf.RoundToInt(new Rem(0.75f).ToFontPx());
+            GUIStyle gs = GuiStyleCache.GetOrCreate(font, pixelSize);
+            float padPx = new Rem(0.5f).ToPixels();
+            float gapPx = new Rem(0.25f).ToPixels();
+            float iconSize = new Rem(0.875f).ToPixels();
+            float trailingHitSize = new Rem(1f).ToPixels();
+            float textW = string.IsNullOrEmpty(display) ? 0f : gs.CalcSize(new GUIContent(display)).x;
+            float w = padPx + textW + padPx;
+            if (leading != null) {
+                w += iconSize + gapPx;
+            }
+            if (trailing != null) {
+                w += trailingHitSize + gapPx;
+            }
+            return Mathf.Ceil(w);
+        };
+
         node.Paint = (outerRect, paintChildren) => {
             Theme.Theme theme = RenderContext.Current.Theme;
             Direction dir = RenderContext.Current.Direction;
@@ -77,10 +97,13 @@ public static class Badge {
                 naturalWidth += trailingHitSize + gapPx;
             }
 
+            float naturalHeight = new Rem(1.25f).ToPixels();
             float width = Mathf.Min(outerRect.width, naturalWidth);
+            float height = Mathf.Min(outerRect.height, naturalHeight);
+            float yOffset = (outerRect.height - height) / 2f;
             Rect rect = rtl
-                ? new Rect(outerRect.xMax - width, outerRect.y, width, outerRect.height)
-                : new Rect(outerRect.x, outerRect.y, width, outerRect.height);
+                ? new Rect(outerRect.xMax - width, outerRect.y + yOffset, width, height)
+                : new Rect(outerRect.x, outerRect.y + yOffset, width, height);
 
             BackgroundSpec bg = BackgroundSpec.Of(BadgeVariants.Background(variant));
             ThemeSlot? borderSlot = BadgeVariants.Border(variant);

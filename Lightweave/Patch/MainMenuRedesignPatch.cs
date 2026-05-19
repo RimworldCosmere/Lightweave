@@ -26,6 +26,14 @@ public static class MainMenuRedesignPatch {
             return true;
         }
 
+        EventType et = Event.current?.type ?? EventType.Used;
+        bool isHotEvent = et == EventType.Layout
+            || et == EventType.MouseDrag
+            || et == EventType.Used;
+        if (Runtime.ActiveDragRegistry.IsActive && isHotEvent) {
+            return false;
+        }
+
         try {
             Rect screen = new Rect(0f, 0f, UI.screenWidth, UI.screenHeight);
             bool anyMapFiles = AnyMapFilesField?.GetValue(null) is bool b && b;

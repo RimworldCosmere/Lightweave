@@ -16,7 +16,7 @@ public static partial class Typography {
         Id = "heading",
         Summary = "Bold heading text rendered with the theme heading font.",
         WhenToUse = "Section titles, panel headers, and other prominent labels in a hierarchy.",
-        SourcePath = "Lightweave/Lightweave/Typography/Heading.cs",
+        SourcePath = "Lightweave/Typography/Heading.cs",
         ShowRtl = true
     )]
     public static class Heading {

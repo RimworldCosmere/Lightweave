@@ -360,7 +360,7 @@ public static class SaveDetailPane {
         return Button.Create(
             label: label.ToUpperInvariant(),
             onClick: onClick,
-            variant: ButtonVariant.Secondary,
+            variant: Variant.Secondary,
             style: style
         );
     }

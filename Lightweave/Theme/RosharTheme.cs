@@ -3,12 +3,13 @@ using UnityEngine;
 
 namespace Cosmere.Lightweave.Theme;
 
+[LightweaveTheme("roshar", "CL_Theme_Roshar", Order = 30)]
 public static class RosharTheme {
     public static Theme Build(Font body, Font bodyBold, Font heading, Font display, Font mono) {
         Dictionary<ThemeSlot, Color> colors = new Dictionary<ThemeSlot, Color> {
             [ThemeSlot.SurfacePrimary] = new Color(0.940f, 0.935f, 0.905f, 0.97f),
             [ThemeSlot.SurfaceRaised] = new Color(0.980f, 0.975f, 0.945f, 1.00f),
-            [ThemeSlot.SurfaceSunken] = new Color(0.880f, 0.870f, 0.840f, 0.97f),
+            [ThemeSlot.SurfaceSunken] = new Color(0.880f, 0.870f, 0.840f, 1f),
             [ThemeSlot.SurfaceTranslucent] = new Color(0.940f, 0.930f, 0.900f, 0.35f),
             [ThemeSlot.SurfaceAccent] = new Color(0.175f, 0.470f, 0.515f, 1.00f),
             [ThemeSlot.SurfaceShadow] = new Color(0.090f, 0.105f, 0.130f, 0.20f),
@@ -34,6 +35,11 @@ public static class RosharTheme {
             [ThemeSlot.OverlayDim] = new Color(0.070f, 0.085f, 0.105f, 0.55f),
             [ThemeSlot.MapPreviewTint] = new Color(0.820f, 0.810f, 0.780f, 1.00f),
             [ThemeSlot.MetadataLabel] = new Color(0.600f, 0.615f, 0.640f),
+            [ThemeSlot.SurfaceTranslucentDark] = new Color(0.140f, 0.155f, 0.180f, 1.00f),
+            [ThemeSlot.SurfaceGhostHover] = new Color(0.700f, 0.700f, 0.685f, 1.00f),
+            [ThemeSlot.ScrimDefault] = new Color(0.090f, 0.105f, 0.130f, 1.00f),
+            [ThemeSlot.SurfaceTooltip] = new Color(0.030f, 0.040f, 0.058f, 1.00f),
+            [ThemeSlot.BorderTooltip] = new Color(0.500f, 0.700f, 0.820f, 0.32f),
         };
         return BaseTheme.Compose(colors, body, bodyBold, heading, display, mono);
     }

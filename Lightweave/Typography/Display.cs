@@ -14,7 +14,7 @@ namespace Cosmere.Lightweave.Typography;
     Id = "display",
     Summary = "Oversized display text rendered with the theme display font. Supports letter-spacing for wordmarks.",
     WhenToUse = "Wordmarks, hero titles, and other top-of-hierarchy moments. Use sparingly — one per surface.",
-    SourcePath = "Lightweave/Lightweave/Typography/Display.cs",
+    SourcePath = "Lightweave/Typography/Display.cs",
     ShowRtl = false
 )]
 public static class Display {
@@ -40,23 +40,18 @@ public static class Display {
             3 => "display-3",
             _ => "display-4",
         };
-        string[] basedClasses = classes == null
-            ? new[] { "display", sizeClass }
-            : ConcatClasses(new[] { "display", sizeClass }, classes);
+        string[] sizedClasses = classes == null
+            ? new[] { sizeClass }
+            : ConcatClasses(new[] { sizeClass }, classes);
+        string[] textDelegateClasses = ConcatClasses(new[] { "display" }, sizedClasses);
 
         Tracking? styleTracking = style?.LetterSpacing;
         if (wrap || !styleTracking.HasValue || Mathf.Approximately(styleTracking.Value.Em, 0f)) {
-            return Text.Create(content, wrap: wrap, style: style, classes: basedClasses, id: id, line: line, file: file);
+            return Text.Create(content, wrap: wrap, style: style, classes: textDelegateClasses, id: id, line: line, file: file);
         }
 
         LightweaveNode node = NodeBuilder.New($"Display:{content}", line, file);
-        node.Classes = basedClasses;
-        if (style.HasValue) {
-            node.Style = style.Value;
-        }
-        if (id != null) {
-            node.Id = id;
-        }
+        node.ApplyStyling("display", style, sizedClasses, id);
 
         int ResolveLetterSpacing() {
             Style s = node.GetResolvedStyle();

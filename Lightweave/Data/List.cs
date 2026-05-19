@@ -21,7 +21,7 @@ namespace Cosmere.Lightweave.Data;
     Id = "list",
     Summary = "Vertical scrolling list of items rendered through a row builder.",
     WhenToUse = "Show a homogenous, potentially long sequence of rows that benefits from virtualization.",
-    SourcePath = "Lightweave/Lightweave/Data/List.cs",
+    SourcePath = "Lightweave/Data/List.cs",
     PreferredVariantHeight = 200f,
     ShowRtl = true
 )]
@@ -52,6 +52,22 @@ public static class List {
         if (rowHeight.HasValue && items != null) {
             node.PreferredHeight = items.Count * rowHeight.Value;
         }
+
+        node.MeasureWidth = () => {
+            if (items == null || items.Count == 0) {
+                return 0f;
+            }
+            float maxW = 0f;
+            int sampleCount = Math.Min(items.Count, 8);
+            for (int i = 0; i < sampleCount; i++) {
+                LightweaveNode row = rowBuilder(items[i], i);
+                float w = row.MeasureWidth?.Invoke() ?? 0f;
+                if (w > maxW) {
+                    maxW = w;
+                }
+            }
+            return Mathf.Ceil(maxW + LightweaveScrollView.GutterPixels(true));
+        };
 
         node.Paint = (rect, paintChildren) => {
             if (items == null) {
@@ -101,45 +117,65 @@ public static class List {
         return node;
     }
 
-    private static string[] BuildSampleItems() {
-        return new[] {
-            (string)"CL_Playground_DemoItem_Highstorm".Translate(),
-            (string)"CL_Playground_DemoItem_Stormlight".Translate(),
-            (string)"CL_Playground_DemoItem_Radiant".Translate(),
-            (string)"CL_Playground_DemoItem_Emotion".Translate(),
-            (string)"CL_Playground_DemoItem_Alpha".Translate(),
-            (string)"CL_Playground_DemoItem_Beta".Translate(),
-            (string)"CL_Playground_DemoItem_Gamma".Translate(),
-            (string)"CL_Playground_DemoItem_Delta".Translate(),
-        };
-    }
+    
 
-    private static LightweaveNode BuildSampleList() {
-        string[] items = BuildSampleItems();
-        return List.Create(
-            items,
-            (item, _) => Box.Create(
-                k => k.Add(
-                    Text.Create(
-                        item,
-                        style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.9375f), TextColor = ThemeSlot.TextPrimary }
-                    )
-                ),
-                style: new Style {
-                    Padding = new EdgeInsets(SpacingScale.Sm, Bottom: SpacingScale.Sm, Left: SpacingScale.Md, Right: SpacingScale.Md),
-                }
-            ),
-            new Rem(2.25f).ToPixels()
-        );
-    }
+    
 
     [DocVariant("CL_Playground_Label_Default")]
     public static DocSample DocsDefault() {
-        return new DocSample(() => BuildSampleList());
+        return new DocSample(() => {
+            string[] items = new[] {
+                (string)"CL_Playground_DemoItem_Highstorm".Translate(),
+                (string)"CL_Playground_DemoItem_Stormlight".Translate(),
+                (string)"CL_Playground_DemoItem_Radiant".Translate(),
+                (string)"CL_Playground_DemoItem_Emotion".Translate(),
+                (string)"CL_Playground_DemoItem_Alpha".Translate(),
+                (string)"CL_Playground_DemoItem_Beta".Translate(),
+                (string)"CL_Playground_DemoItem_Gamma".Translate(),
+                (string)"CL_Playground_DemoItem_Delta".Translate(),
+            };
+            return List.Create(
+                items,
+                (item, _) => Box.Create(
+                    k => k.Add(
+                        Text.Create(
+                            item,
+                            style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.9375f), TextColor = ThemeSlot.TextPrimary }
+                        )
+                    ),
+                    style: new Style {
+                        Padding = new EdgeInsets(SpacingScale.Sm, Bottom: SpacingScale.Sm, Left: SpacingScale.Md, Right: SpacingScale.Md),
+                    }
+                ),
+                rowHeight: new Rem(2.25f).ToPixels()
+            );
+        });
     }
 
     [DocUsage]
     public static DocSample DocsUsage() {
-        return new DocSample(() => BuildSampleList());
+        return new DocSample(() => {
+            string[] items = new[] {
+                "Highstorm",
+                "Stormlight",
+                "Radiant",
+                "Spren bond",
+            };
+            return List.Create(
+                items,
+                (item, _) => Box.Create(
+                    k => k.Add(
+                        Text.Create(
+                            item,
+                            style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.9375f), TextColor = ThemeSlot.TextPrimary }
+                        )
+                    ),
+                    style: new Style {
+                        Padding = new EdgeInsets(SpacingScale.Sm, Bottom: SpacingScale.Sm, Left: SpacingScale.Md, Right: SpacingScale.Md),
+                    }
+                ),
+                rowHeight: new Rem(2.25f).ToPixels()
+            );
+        });
     }
 }

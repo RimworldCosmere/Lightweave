@@ -10,6 +10,55 @@ namespace Cosmere.Lightweave.Runtime;
 
 public static class LightweaveRoot {
     private static readonly Dictionary<Guid, HookStore> stores = new Dictionary<Guid, HookStore>();
+    private static readonly Dictionary<Guid, BuildCache> buildCache = new Dictionary<Guid, BuildCache>();
+
+    private struct BuildCache {
+        public int FrameCount;
+        public int HookVersion;
+        public Rect InRect;
+        public LightweaveNode Root;
+    }
+
+    public static bool DiagnosticsEnabled = false;
+    private static readonly int[] diagEventCounts = new int[16];
+    private static int diagBuildHits;
+    private static int diagBuildMisses;
+    private static long diagTotalRenderTicks;
+    private static long diagBuildTicks;
+    private static long diagPaintTicks;
+    private static float diagNextReportTime = -1f;
+
+    private static void DiagReport() {
+        float msPerTick = 1000f / System.Diagnostics.Stopwatch.Frequency;
+        int totalCalls = diagBuildHits + diagBuildMisses;
+        if (totalCalls == 0) {
+            return;
+        }
+        float hitRate = totalCalls > 0 ? (diagBuildHits * 100f / totalCalls) : 0f;
+        double totalMs = diagTotalRenderTicks * msPerTick;
+        double buildMs = diagBuildTicks * msPerTick;
+        double paintMs = diagPaintTicks * msPerTick;
+        double perCallMs = totalMs / totalCalls;
+        string evtBreakdown = "";
+        for (int i = 0; i < diagEventCounts.Length; i++) {
+            if (diagEventCounts[i] > 0) {
+                evtBreakdown += $" {((EventType)i).ToString()}={diagEventCounts[i]}";
+            }
+        }
+        Verse.Log.Message(
+            $"[Lightweave/diag] {totalCalls} calls/s ({hitRate:0.0}% cache hit) "
+            + $"total={totalMs:0.0}ms build={buildMs:0.0}ms paint={paintMs:0.0}ms "
+            + $"perCall={perCallMs:0.00}ms events:{evtBreakdown}"
+        );
+        for (int i = 0; i < diagEventCounts.Length; i++) {
+            diagEventCounts[i] = 0;
+        }
+        diagBuildHits = 0;
+        diagBuildMisses = 0;
+        diagTotalRenderTicks = 0;
+        diagBuildTicks = 0;
+        diagPaintTicks = 0;
+    }
 
     public static void Render(
         Rect inRect,
@@ -19,6 +68,15 @@ public static class LightweaveRoot {
         Theme.Theme? themeOverride = null,
         Action? afterContent = null
     ) {
+        long renderStart = DiagnosticsEnabled ? System.Diagnostics.Stopwatch.GetTimestamp() : 0L;
+        if (DiagnosticsEnabled) {
+            EventType evt = Event.current?.type ?? EventType.Used;
+            int evtIdx = (int)evt;
+            if (evtIdx >= 0 && evtIdx < diagEventCounts.Length) {
+                diagEventCounts[evtIdx]++;
+            }
+        }
+
         if (!stores.TryGetValue(rootId, out HookStore store)) {
             store = new HookStore();
             stores[rootId] = store;
@@ -32,12 +90,46 @@ public static class LightweaveRoot {
         ctx.Breakpoint = Breakpoints.For(inRect.width);
         ctx.PointerPos = Event.current?.mousePosition ?? Vector2.zero;
         RenderContext.Push(ctx);
+        bool didBuild = false;
         try {
             try {
-                LightweaveNode root = build();
+                int frame = Time.frameCount;
+                int version = store.Version;
+                LightweaveNode root;
+                long buildStart = DiagnosticsEnabled ? System.Diagnostics.Stopwatch.GetTimestamp() : 0L;
+                bool animating = AnimationClock.WasActiveLastFrame(rootId);
+                if (!animating
+                    && buildCache.TryGetValue(rootId, out BuildCache cached)
+                    && cached.HookVersion == version
+                    && cached.InRect == inRect) {
+                    root = cached.Root;
+                    if (DiagnosticsEnabled) {
+                        diagBuildHits++;
+                    }
+                }
+                else {
+                    root = build();
+                    didBuild = true;
+                    buildCache[rootId] = new BuildCache {
+                        FrameCount = frame,
+                        HookVersion = version,
+                        InRect = inRect,
+                        Root = root,
+                    };
+                    if (DiagnosticsEnabled) {
+                        diagBuildMisses++;
+                    }
+                }
+                if (DiagnosticsEnabled) {
+                    diagBuildTicks += System.Diagnostics.Stopwatch.GetTimestamp() - buildStart;
+                }
                 root.MeasuredRect = inRect;
                 root.ContentRect = inRect;
+                long paintStart = DiagnosticsEnabled ? System.Diagnostics.Stopwatch.GetTimestamp() : 0L;
                 Paint(root);
+                if (DiagnosticsEnabled) {
+                    diagPaintTicks += System.Diagnostics.Stopwatch.GetTimestamp() - paintStart;
+                }
                 afterContent?.Invoke();
                 ctx.FlushHotkeys();
                 ctx.PendingOverlays.Flush();
@@ -45,11 +137,24 @@ public static class LightweaveRoot {
             }
             finally {
                 ctx.PendingOverlays.Clear();
-                store.RetireUntouched();
+                if (didBuild) {
+                    store.RetireUntouched();
+                }
             }
         }
         finally {
             RenderContext.Clear();
+            if (DiagnosticsEnabled) {
+                diagTotalRenderTicks += System.Diagnostics.Stopwatch.GetTimestamp() - renderStart;
+                float now = Time.realtimeSinceStartup;
+                if (diagNextReportTime < 0f) {
+                    diagNextReportTime = now + 1f;
+                }
+                else if (now >= diagNextReportTime) {
+                    DiagReport();
+                    diagNextReportTime = now + 1f;
+                }
+            }
         }
     }
 
@@ -58,10 +163,11 @@ public static class LightweaveRoot {
             store.ReleaseAll();
             stores.Remove(rootId);
         }
+        buildCache.Remove(rootId);
     }
 
     private static Theme.Theme GetBaseTheme() {
-        return ThemeRegistry.Default;
+        return ThemeRegistry.Active;
     }
 
     private static Direction DetectDirection() {

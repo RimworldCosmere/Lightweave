@@ -8,7 +8,7 @@ namespace Cosmere.Lightweave.Input;
 
 internal static class InputSurface {
     public static readonly Rem PaddingY = new Rem(0.25f);
-    public static readonly Rem PaddingX = new Rem(0.625f);
+    public static readonly Rem PaddingX = SelectorTrigger.PaddingX;
 
     private static GUIStyle? chromelessTextFieldStyle;
     private static GUIStyle? chromelessTextAreaStyle;
@@ -99,23 +99,33 @@ internal static class InputSurface {
         return ThemeSlot.BorderOff;
     }
 
-    public static ThemeSlot ResolveSurfaceSlot(InteractionState state) {
-        return state.Disabled ? ThemeSlot.SurfaceDisabled : ThemeSlot.SurfaceInput;
+    public static ThemeSlot? ResolveSurfaceSlot(InteractionState state, Variant variant = default) {
+        if (variant == Variant.Primary) {
+            return state.Disabled ? ThemeSlot.SurfaceDisabled : ThemeSlot.SurfaceInput;
+        }
+        return VariantPalette.Background(variant, state);
     }
 
-    public static void Draw(Rect rect, InteractionState state) {
+    public static void Draw(Rect rect, InteractionState state, Variant variant = default) {
         ThemeSlot borderSlot = ResolveBorderSlot(state);
-        ThemeSlot surfaceSlot = ResolveSurfaceSlot(state);
+        ThemeSlot? surfaceSlot = ResolveSurfaceSlot(state, variant);
 
-        BackgroundSpec bg = BackgroundSpec.Of(surfaceSlot);
+        BackgroundSpec? bg = surfaceSlot.HasValue ? BackgroundSpec.Of(surfaceSlot.Value) : null;
         BorderSpec border = BorderSpec.All(new Rem(1f / 16f), borderSlot);
         RadiusSpec radius = RadiusSpec.All(RadiusScale.Sm);
         PaintBox.Draw(rect, bg, border, radius);
     }
 
-    public static void DrawBackground(Rect rect, InteractionState state) {
-        ThemeSlot surfaceSlot = ResolveSurfaceSlot(state);
-        BackgroundSpec bg = BackgroundSpec.Of(surfaceSlot);
+    public static void DrawInputChrome(Rect rect, InteractionState state, Variant variant = default) {
+        if (variant.Id == null) {
+            variant = Variant.Secondary;
+        }
+        Draw(rect, state, variant);
+    }
+
+    public static void DrawBackground(Rect rect, InteractionState state, Variant variant = default) {
+        ThemeSlot? surfaceSlot = ResolveSurfaceSlot(state, variant);
+        BackgroundSpec? bg = surfaceSlot.HasValue ? BackgroundSpec.Of(surfaceSlot.Value) : null;
         RadiusSpec radius = RadiusSpec.All(RadiusScale.Sm);
         PaintBox.Draw(rect, bg, null, radius);
     }

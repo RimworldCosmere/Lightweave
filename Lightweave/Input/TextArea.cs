@@ -15,7 +15,7 @@ namespace Cosmere.Lightweave.Input;
     Id = "textarea",
     Summary = "Multi-line editable text input that grows with content.",
     WhenToUse = "Capture longer prose: notes, descriptions, multi-line input.",
-    SourcePath = "Lightweave/Lightweave/Input/TextArea.cs"
+    SourcePath = "Lightweave/Input/TextArea.cs"
 )]
 public static class TextArea {
     public static LightweaveNode Create(
@@ -35,6 +35,7 @@ public static class TextArea {
         bool disabled = false,
         [DocParam("Optional key disambiguating multiple instances declared on the same line.")]
         object? instanceKey = null,
+        Variant variant = default,
         Style? style = null,
         string[]? classes = null,
         string? id = null,
@@ -54,7 +55,12 @@ public static class TextArea {
             Mathf.Max(1, minRows),
             Mathf.Max(minRows, maxRows)
         );
-        node.PreferredHeight = initialRows * lineHeightPx;
+        node.PreferredHeight = SelectorTrigger.Height.ToPixels() + (initialRows - 1) * lineHeightPx;
+
+        node.MeasureWidth = () => {
+            float padX = InputSurface.PaddingX.ToPixels();
+            return Mathf.Ceil(new Rem(20f).ToPixels() + padX * 2f);
+        };
 
         node.Paint = (rect, paintChildren) => {
             Theme.Theme theme = RenderContext.Current.Theme;
@@ -72,19 +78,19 @@ public static class TextArea {
             float lineHeight = new Rem(1.5f).ToPixels();
             int contentRows = CountRows(buffer.Value ?? string.Empty);
             int clampedRows = Mathf.Clamp(contentRows, Mathf.Max(1, minRows), Mathf.Max(minRows, maxRows));
-            float resolvedHeight = clampedRows * lineHeight;
+            float resolvedHeight = SelectorTrigger.Height.ToPixels() + (clampedRows - 1) * lineHeight;
             Rect surfaceRect = new Rect(rect.x, rect.y, rect.width, resolvedHeight);
 
             InteractionState state = InteractionState.Resolve(surfaceRect, focusName, disabled);
-            InputSurface.Draw(surfaceRect, state);
+            InputSurface.DrawInputChrome(surfaceRect, state, variant);
 
             float padX = InputSurface.PaddingX.ToPixels();
-            float padY = InputSurface.PaddingY.ToPixels();
+            float topPad = (SelectorTrigger.Height.ToPixels() - lineHeight) / 2f;
             Rect inner = new Rect(
                 surfaceRect.x + padX,
-                surfaceRect.y + padY,
+                surfaceRect.y + topPad,
                 surfaceRect.width - padX * 2f,
-                surfaceRect.height - padY * 2f
+                clampedRows * lineHeight
             );
 
             bool showPlaceholder =
@@ -146,6 +152,81 @@ public static class TextArea {
         }
 
         return rows;
+    }
+
+[DocVariant("CL_Playground_Label_Primary")]
+    public static DocSample DocsPrimary() {
+        bool forced = RenderContext.Current.ForceDisabled;
+        StateHandle<string> s = UseState("Multi-line sample.");
+        return new DocSample(() => Create(
+            s.Value,
+            v => s.Set(v),
+            (string)"CL_Playground_Controls_TextArea_Placeholder".Translate(),
+            2,
+            3,
+            disabled: forced,
+            variant: Variant.Primary
+        ));
+    }
+
+    [DocVariant("CL_Playground_Label_Secondary")]
+    public static DocSample DocsSecondary() {
+        bool forced = RenderContext.Current.ForceDisabled;
+        StateHandle<string> s = UseState("Multi-line sample.");
+        return new DocSample(() => Create(
+            s.Value,
+            v => s.Set(v),
+            (string)"CL_Playground_Controls_TextArea_Placeholder".Translate(),
+            2,
+            3,
+            disabled: forced,
+            variant: Variant.Secondary
+        ));
+    }
+
+    [DocVariant("CL_Playground_Label_Ghost")]
+    public static DocSample DocsGhost() {
+        bool forced = RenderContext.Current.ForceDisabled;
+        StateHandle<string> s = UseState("Multi-line sample.");
+        return new DocSample(() => Create(
+            s.Value,
+            v => s.Set(v),
+            (string)"CL_Playground_Controls_TextArea_Placeholder".Translate(),
+            2,
+            3,
+            disabled: forced,
+            variant: Variant.Ghost
+        ));
+    }
+
+    [DocVariant("CL_Playground_Label_Danger")]
+    public static DocSample DocsDanger() {
+        bool forced = RenderContext.Current.ForceDisabled;
+        StateHandle<string> s = UseState("Multi-line sample.");
+        return new DocSample(() => Create(
+            s.Value,
+            v => s.Set(v),
+            (string)"CL_Playground_Controls_TextArea_Placeholder".Translate(),
+            2,
+            3,
+            disabled: forced,
+            variant: Variant.Danger
+        ));
+    }
+
+    [DocVariant("CL_Playground_Label_Frosted")]
+    public static DocSample DocsFrosted() {
+        bool forced = RenderContext.Current.ForceDisabled;
+        StateHandle<string> s = UseState("Multi-line sample.");
+        return new DocSample(() => Create(
+            s.Value,
+            v => s.Set(v),
+            (string)"CL_Playground_Controls_TextArea_Placeholder".Translate(),
+            2,
+            3,
+            disabled: forced,
+            variant: Variant.Frosted
+        ));
     }
 
     [DocVariant("CL_Playground_Label_Filled")]

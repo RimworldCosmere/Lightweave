@@ -45,9 +45,10 @@ public static class Hooks {
         [CallerFilePath] string file = ""
     ) {
         HookKey hookKey = Key(line, file);
-        HookSlot slot = RenderContext.Current.Hooks.Acquire(hookKey);
+        HookStore store = RenderContext.Current.Hooks;
+        HookSlot slot = store.Acquire(hookKey);
         slot.Value ??= initial;
-        return new StateHandle<T>(slot);
+        return new StateHandle<T>(slot, store);
     }
 
     public static RefHandle<T> UseRef<T>(
@@ -148,18 +149,24 @@ public static class Hooks {
 
     public readonly struct StateHandle<T> {
         private readonly HookSlot slot;
+        private readonly HookStore store;
 
-        public StateHandle(HookSlot slot) {
+        public StateHandle(HookSlot slot, HookStore store) {
             this.slot = slot;
+            this.store = store;
         }
 
         public T Value {
             get => (T)slot.Value!;
-            set => slot.Value = value;
+            set {
+                slot.Value = value;
+                store.Invalidate();
+            }
         }
 
         public void Set(T v) {
             slot.Value = v;
+            store.Invalidate();
         }
     }
 

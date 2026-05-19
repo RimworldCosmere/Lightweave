@@ -29,7 +29,7 @@ public static class GameplayTab {
                                     Find.WindowStack.Add(new Page_SelectStorytellerInGame());
                                 }
                             },
-                            variant: ButtonVariant.Secondary
+                            variant: Variant.Secondary
                         )
                     )
                 ));
@@ -43,13 +43,14 @@ public static class GameplayTab {
                         min: 1f,
                         max: 5f,
                         step: 1f,
-                        format: v => Mathf.RoundToInt(v).ToString(CultureInfo.InvariantCulture)
+                        format: v => Mathf.RoundToInt(v).ToString(CultureInfo.InvariantCulture),
+                    variant: Variant.Secondary
                     ),
                     caption: (string)"CL_Options_MaxSettlements_Hint".Translate()
                 ),
                 SettingRow.Create(
                     "CL_Options_PauseOnLoad".Translate(),
-                    Switch.Create("", Prefs.PauseOnLoad, v => Prefs.PauseOnLoad = v),
+                    Switch.Create("", Prefs.PauseOnLoad, v => Prefs.PauseOnLoad = v, variant: Variant.Secondary),
                     caption: (string)"CL_Options_PauseOnLoad_Hint".Translate()
                 ),
                 SettingRow.Create(
@@ -60,13 +61,13 @@ public static class GameplayTab {
                         labelFn: m => m.ToStringHuman(),
                         onChange: m => Prefs.AutomaticPauseMode = m,
                         variant: DropdownVariant.Button,
-                        buttonStyle: ButtonVariant.Frosted
+                        buttonStyle: Variant.Frosted
                     ),
                     caption: (string)"CL_Options_AutoPauseMode_Hint".Translate()
                 ),
                 SettingRow.Create(
                     "CL_Options_AdaptiveTraining".Translate(),
-                    Switch.Create("", Prefs.AdaptiveTrainingEnabled, v => Prefs.AdaptiveTrainingEnabled = v),
+                    Switch.Create("", Prefs.AdaptiveTrainingEnabled, v => Prefs.AdaptiveTrainingEnabled = v, variant: Variant.Secondary),
                     caption: (string)"CL_Options_AdaptiveTraining_Hint".Translate()
                 ),
                 SettingRow.Create(
@@ -81,7 +82,7 @@ public static class GameplayTab {
                             },
                             destructive: true
                         )),
-                        variant: ButtonVariant.Secondary
+                        variant: Variant.Secondary
                     )
                 )
             ));
@@ -91,7 +92,7 @@ public static class GameplayTab {
                     Button.Create(
                         label: "CL_Options_PreferredNames_Action".Translate(),
                         onClick: () => Find.WindowStack.Add(new Dialog_AddPreferredName()),
-                        variant: ButtonVariant.Secondary,
+                        variant: Variant.Secondary,
                         disabled: Prefs.PreferredNames.Count >= 6
                     ),
                     caption: PreferredNamesCaption()

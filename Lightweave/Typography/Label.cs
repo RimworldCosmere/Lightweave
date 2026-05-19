@@ -14,7 +14,7 @@ public static partial class Typography {
         Id = "label",
         Summary = "Compact label text using the Label font role and TextSecondary color.",
         WhenToUse = "Form field labels, toolbar captions, and other compact descriptors.",
-        SourcePath = "Lightweave/Lightweave/Typography/Label.cs",
+        SourcePath = "Lightweave/Typography/Label.cs",
         ShowRtl = true
     )]
     public static class Label {

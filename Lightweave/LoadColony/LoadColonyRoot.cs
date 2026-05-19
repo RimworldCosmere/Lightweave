@@ -24,12 +24,6 @@ public static class LoadColonyRoot {
             ? SaveStatusInspector.Inspect(activeFile)
             : null;
 
-        List<DialogHeaderTab> tabs = new List<DialogHeaderTab> {
-            new DialogHeaderTab("CL_LoadColony_Filter_All".Translate(), filter.Value == "all", () => filter.Set("all")),
-            new DialogHeaderTab("CL_LoadColony_Filter_Manual".Translate(), filter.Value == "manual", () => filter.Set("manual")),
-            new DialogHeaderTab("CL_LoadColony_Filter_Auto".Translate(), filter.Value == "auto", () => filter.Set("auto")),
-        };
-
         Action onAfterMutate = () => {
             string? activePath = activeFile?.FileInfo.FullName;
             if (activePath is { Length: > 0 }) {
@@ -38,18 +32,19 @@ public static class LoadColonyRoot {
             onReloadFiles?.Invoke();
         };
 
-        LightweaveNode modalContent = Stack.Create(SpacingScale.None, root => {
-            root.Add(DialogHeader.Create(
+        return Stack.Create(SpacingScale.None, root => {
+            root.Add(WindowHeader.Create(
                 title: "CL_LoadColony_Title".Translate(),
                 onClose: onClose,
-                drawDivider: true,
-                tabs: tabs
+                drawDivider: true
             ));
             root.AddFlex(HStack.Create(SpacingScale.None, h => {
                 h.Add(SaveListPane.Create(
                     filteredFiles,
                     selected.Value,
-                    name => selected.Set(name)
+                    name => selected.Set(name),
+                    filter.Value,
+                    f => filter.Set(f)
                 ), new Rem(30f).ToPixels());
                 h.AddFlex(SaveDetailPane.Create(
                     activeFile,
@@ -59,11 +54,6 @@ public static class LoadColonyRoot {
                 ));
             }));
         });
-
-        return Dialog.Create(
-            content: () => modalContent,
-            cardBackground: BackgroundSpec.Blur(new Color(0f, 0f, 0f, 0.95f), 10f)
-        );
     }
 
     private static List<SaveFileInfo> ApplyFilter(List<SaveFileInfo> files, string filter) {

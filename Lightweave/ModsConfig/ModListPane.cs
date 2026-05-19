@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Cosmere.Lightweave.Input;
 using Cosmere.Lightweave.Layout;
+using Cosmere.Lightweave.Navigation;
 using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
@@ -24,14 +25,14 @@ public static class ModListPane {
 
 
     private static string? dragPressedPackageId;
+    private static string? dragSourcePackageId;
     private static float dragPressedY;
     private static bool dragActive;
-    private static string? dragHoverPackageId;
-    private static int dragHoverInsertOffset;
+    private static int dragHoverInsertSlot = -1;
 
     private static readonly Rem ColOrder = new Rem(2.5f);
     private static readonly Rem ColCheck = new Rem(1.75f);
-    private static readonly Rem ColAuthor = new Rem(8.75f);
+    private static readonly Rem ColAuthor = new Rem(13f);
     private static readonly Rem ColVersion = new Rem(5.625f);
     private static readonly Rem ColStatus = new Rem(5.625f);
 
@@ -41,12 +42,13 @@ public static class ModListPane {
         Action<string> onSelect,
         RimWorld.Page_ModsConfig page,
         ModsTab tab,
+        Action<ModsTab> onTabChange,
         string query,
         Action<string> onQueryChange
     ) {
         return Box.Create(
             children: c => c.Add(Stack.Create(SpacingScale.None, s => {
-                s.Add(BuildSearchBar(query, onQueryChange, mods.Count));
+                s.Add(BuildSearchBar(query, onQueryChange, mods.Count, tab, onTabChange));
                 s.Add(BuildColumnHeader());
                 s.AddFlex(ScrollArea.Create(content: BuildList(mods, selected, onSelect, query)));
             })),
@@ -57,38 +59,49 @@ public static class ModListPane {
         );
     }
 
-    private static LightweaveNode BuildSearchBar(string query, Action<string> onQueryChange, int matchCount) {
+    private static LightweaveNode BuildSearchBar(string query, Action<string> onQueryChange, int matchCount, ModsTab tab, Action<ModsTab> onTabChange) {
         bool hasQuery = !string.IsNullOrEmpty(query);
         bool showWorkshop = SteamManager.Initialized;
+        ModsTab[] tabs = new[] { ModsTab.Installed, ModsTab.LoadOrder };
         return Box.Create(
-            children: c => c.Add(HStack.Create(SpacingScale.Sm, h => {
-                h.AddFlex(SearchField.Create(
-                    value: query,
-                    onChange: onQueryChange,
-                    placeholder: "CL_ModsConfig_Search_Placeholder".Translate(),
-                    variant: SearchFieldVariant.Borderless
-                ));
-                if (hasQuery) {
-                    string matchText = (matchCount == 1
-                        ? "CL_ModsConfig_Search_MatchCount".Translate(matchCount.Named("COUNT"))
-                        : "CL_ModsConfig_Search_MatchCountPlural".Translate(matchCount.Named("COUNT"))).Resolve();
-                    h.AddHug(Text.Create(
-                        matchText,
-                        style: new Style {
-                            FontFamily = FontRole.Mono,
-                            FontSize = new Rem(0.65f),
-                            LetterSpacing = Tracking.Of(0.14f),
-                            TextColor = ThemeSlot.TextMuted,
-                        }
+            children: c => c.Add(Stack.Create(SpacingScale.Sm, s => {
+                s.Add(HStack.Create(SpacingScale.Sm, h => {
+                    h.AddFlex(SearchField.Create(
+                        value: query,
+                        onChange: onQueryChange,
+                        placeholder: "CL_ModsConfig_Search_Placeholder".Translate(),
+                        variant: SearchFieldVariant.Borderless
                     ));
-                }
-                if (showWorkshop) {
-                    h.AddHug(Button.Create(
-                        label: ((string)"CL_ModsConfig_Workshop_Button".Translate()).ToUpperInvariant(),
-                        onClick: () => SteamUtility.OpenSteamWorkshopPage(),
-                        variant: ButtonVariant.Secondary
+                    if (hasQuery) {
+                        string matchText = (matchCount == 1
+                            ? "CL_ModsConfig_Search_MatchCount".Translate(matchCount.Named("COUNT"))
+                            : "CL_ModsConfig_Search_MatchCountPlural".Translate(matchCount.Named("COUNT"))).Resolve();
+                        h.AddHug(Text.Create(
+                            matchText,
+                            style: new Style {
+                                FontFamily = FontRole.Mono,
+                                FontSize = new Rem(0.65f),
+                                LetterSpacing = Tracking.Of(0.14f),
+                                TextColor = ThemeSlot.TextMuted,
+                            }
+                        ));
+                    }
+                    h.AddHug(Segmented.Create<ModsTab>(
+                        value: tab,
+                        items: tabs,
+                        labelFn: t => t == ModsTab.Installed
+                            ? (string)"CL_ModsConfig_Tab_Installed".Translate()
+                            : (string)"CL_ModsConfig_Tab_LoadOrder".Translate(),
+                        onChange: onTabChange
                     ));
-                }
+                    if (showWorkshop) {
+                        h.AddHug(Button.Create(
+                            label: ((string)"CL_ModsConfig_Workshop_Button".Translate()).ToUpperInvariant(),
+                            onClick: () => SteamUtility.OpenSteamWorkshopPage(),
+                            variant: Variant.Secondary
+                        ));
+                    }
+                }));
             })),
             style: new Style {
                 Padding = new EdgeInsets(Top: SpacingScale.Sm, Right: SpacingScale.Md, Bottom: SpacingScale.Sm, Left: SpacingScale.Md),
@@ -126,34 +139,119 @@ public static class ModListPane {
         Action<string> onSelect,
         string query
     ) {
-        return Stack.Create(SpacingScale.None, s => {
-            if (mods == null || mods.Count == 0) {
+        if (mods == null || mods.Count == 0) {
+            return Stack.Create(SpacingScale.None, s => {
                 if (!string.IsNullOrEmpty(query)) {
                     s.Add(BuildSearchEmptyState(query));
                 }
                 else {
                     s.Add(BuildEmptyState());
                 }
-                return;
+            });
+        }
+
+        float rowH = RowHeight.ToPixels();
+        int count = mods.Count;
+        LightweaveNode node = NodeBuilder.New("ModList");
+
+        for (int i = 0; i < count; i++) {
+            ModMetaData mod = mods[i];
+            int loadOrder = i + 1;
+            bool zebra = (i % 2) == 1;
+            bool isSelected = string.Equals(mod.PackageId, selected, StringComparison.OrdinalIgnoreCase);
+            bool isDragSource = dragActive
+                && dragSourcePackageId != null
+                && string.Equals(mod.PackageId, dragSourcePackageId, StringComparison.OrdinalIgnoreCase);
+            node.Children.Add(BuildRow(mod, loadOrder, isSelected, zebra, isDragSource));
+        }
+
+        float totalHeight = count * rowH;
+        node.PreferredHeight = totalHeight;
+        node.Measure = _ => totalHeight;
+
+        node.Paint = (rect, paintChildren) => {
+            for (int i = 0; i < count; i++) {
+                node.Children[i].MeasuredRect = new Rect(rect.x, rect.y + i * rowH, rect.width, rowH);
             }
-            for (int i = 0; i < mods.Count; i++) {
-                ModMetaData mod = mods[i];
-                bool isSelected = string.Equals(mod.PackageId, selected, StringComparison.OrdinalIgnoreCase);
-                int loadOrder = i + 1;
-                bool zebra = (i % 2) == 1;
-                s.Add(BuildRow(mod, loadOrder, isSelected, zebra, () => onSelect(mod.PackageId)));
+
+            Event e = Event.current;
+            bool inList = rect.Contains(e.mousePosition);
+            int hoverIdx = -1;
+            if (inList) {
+                hoverIdx = Mathf.Clamp(Mathf.FloorToInt((e.mousePosition.y - rect.y) / rowH), 0, count - 1);
             }
-        });
+
+            if (inList && e.type == EventType.MouseDown && e.button == 0 && hoverIdx >= 0) {
+                ModMetaData hovMod = mods[hoverIdx];
+                Rect rowR = new Rect(rect.x, rect.y + hoverIdx * rowH, rect.width, rowH);
+                ColumnRects cols = ComputeColumns(rowR);
+                if (!cols.Check.Contains(e.mousePosition)) {
+                    dragPressedPackageId = hovMod.PackageId;
+                    dragSourcePackageId = hovMod.PackageId;
+                    dragPressedY = e.mousePosition.y;
+                    if (dragActive) {
+                        ActiveDragRegistry.Release();
+                    }
+                    dragActive = false;
+                    dragHoverInsertSlot = -1;
+                }
+            }
+
+            if (e.type == EventType.MouseDrag && !dragActive
+                && dragPressedPackageId != null
+                && Mathf.Abs(e.mousePosition.y - dragPressedY) > 4f) {
+                ModMetaData? src = mods.Find(m => string.Equals(m.PackageId, dragPressedPackageId, StringComparison.OrdinalIgnoreCase));
+                if (src != null && src.Active && !ModKindResolver.IsLocked(src)) {
+                    dragActive = true;
+                    ActiveDragRegistry.Acquire();
+                }
+            }
+
+            if (dragActive && inList) {
+                float localY = e.mousePosition.y - rect.y;
+                dragHoverInsertSlot = Mathf.Clamp(Mathf.RoundToInt(localY / rowH), 0, count);
+            }
+
+            paintChildren();
+
+            if (e.type == EventType.Repaint && dragActive && dragHoverInsertSlot >= 0) {
+                float indY = rect.y + dragHoverInsertSlot * rowH - 1f;
+                Rect indicator = new Rect(
+                    rect.x + StripeWidth.ToPixels(),
+                    indY,
+                    rect.width - StripeWidth.ToPixels(),
+                    2f
+                );
+                PaintBox.Draw(indicator, BackgroundSpec.Of(ThemeSlot.SurfaceAccent), null, null);
+            }
+
+            if (e.type == EventType.MouseUp && e.button == 0) {
+                if (dragActive && dragSourcePackageId != null && dragHoverInsertSlot >= 0) {
+                    TryReorderToSlot(dragSourcePackageId, dragHoverInsertSlot);
+                    ResetDragState();
+                    e.Use();
+                }
+                else if (dragPressedPackageId != null && inList && hoverIdx >= 0) {
+                    string clickedPid = mods[hoverIdx].PackageId;
+                    ResetDragState();
+                    onSelect(clickedPid);
+                    e.Use();
+                }
+                else {
+                    ResetDragState();
+                }
+            }
+        };
+
+        return node;
     }
 
-    private static LightweaveNode BuildRow(ModMetaData mod, int loadOrder, bool isSelected, bool zebra, Action onClick) {
+    private static LightweaveNode BuildRow(ModMetaData mod, int loadOrder, bool isSelected, bool zebra, bool isDragSource) {
         LightweaveNode node = NodeBuilder.New("ModListRow:" + mod.PackageId);
         node.PreferredHeight = RowHeight.ToPixels();
-        bool draggable = mod.Active && !ModKindResolver.IsLocked(mod);
         node.Paint = (rect, _) => {
             Theme.Theme theme = RenderContext.Current.Theme;
             InteractionState state = InteractionState.Resolve(rect, null, false);
-            bool isDragSource = draggable && dragActive && string.Equals(dragPressedPackageId, mod.PackageId, StringComparison.OrdinalIgnoreCase);
 
             if (isSelected) {
                 PaintBox.Draw(rect, BackgroundSpec.Of(ThemeSlot.SurfaceRaised), null, null);
@@ -162,8 +260,9 @@ public static class ModListPane {
                 PaintBox.Draw(rect, BackgroundSpec.Of(ThemeSlot.SurfaceTranslucent), null, null);
             }
 
-            if (state.Hovered && !dragActive) {
-                Color hoverWash = new Color(20f / 255f, 16f / 255f, 11f / 255f, 0.35f);
+            if (state.Hovered && !ActiveDragRegistry.IsActive) {
+                Color hoverWashBase = theme.GetColor(ThemeSlot.SurfaceTranslucentDark);
+                Color hoverWash = new Color(hoverWashBase.r, hoverWashBase.g, hoverWashBase.b, 0.35f);
                 PaintBox.Draw(rect, BackgroundSpec.Of(hoverWash), null, null);
             }
 
@@ -200,75 +299,29 @@ public static class ModListPane {
                 DrawStatus(cols.Status, mod, theme);
             }
 
-            Event e = Event.current;
-
-            if (draggable && dragActive && !isDragSource && rect.Contains(e.mousePosition)) {
-                dragHoverPackageId = mod.PackageId;
-                dragHoverInsertOffset = e.mousePosition.y < rect.y + rect.height / 2f ? 0 : 1;
-                float indicatorY = dragHoverInsertOffset == 0 ? rect.y : rect.yMax - 2f;
-                Rect indicator = new Rect(rect.x + StripeWidth.ToPixels(), indicatorY, rect.width - StripeWidth.ToPixels(), 2f);
-                PaintBox.Draw(indicator, BackgroundSpec.Of(ThemeSlot.SurfaceAccent), null, null);
-            }
-
-            if (draggable && e.type == EventType.MouseDown && e.button == 0 && rect.Contains(e.mousePosition)
-                && !cols.Check.Contains(e.mousePosition)) {
-                dragPressedPackageId = mod.PackageId;
-                dragPressedY = e.mousePosition.y;
-                dragActive = false;
-                dragHoverPackageId = null;
-            }
-
-            if (draggable && e.type == EventType.MouseDrag && !dragActive
-                && string.Equals(dragPressedPackageId, mod.PackageId, StringComparison.OrdinalIgnoreCase)
-                && Mathf.Abs(e.mousePosition.y - dragPressedY) > 4f) {
-                dragActive = true;
-            }
-
-            InteractionFeedback.Apply(rect, true, true);
-
-            if (e.type == EventType.MouseUp && e.button == 0 && rect.Contains(e.mousePosition)) {
-                if (dragActive && dragPressedPackageId != null) {
-                    string fromPkg = dragPressedPackageId;
-                    string toPkg = dragHoverPackageId ?? mod.PackageId;
-                    int insertOffset = dragHoverPackageId != null ? dragHoverInsertOffset
-                        : (e.mousePosition.y < rect.y + rect.height / 2f ? 0 : 1);
-                    TryReorderByPackageId(fromPkg, toPkg, insertOffset);
-                    ResetDragState();
-                    e.Use();
-                }
-                else {
-                    ResetDragState();
-                    onClick?.Invoke();
-                    e.Use();
-                }
+            if (!ActiveDragRegistry.IsActive) {
+                InteractionFeedback.Apply(rect, true, true);
             }
         };
         return node;
     }
 
     private static void ResetDragState() {
+        if (dragActive) {
+            ActiveDragRegistry.Release();
+        }
         dragPressedPackageId = null;
+        dragSourcePackageId = null;
         dragActive = false;
-        dragHoverPackageId = null;
-        dragHoverInsertOffset = 0;
+        dragHoverInsertSlot = -1;
     }
 
-    private static void TryReorderByPackageId(string fromPkg, string toPkg, int insertOffset) {
-        if (string.Equals(fromPkg, toPkg, StringComparison.OrdinalIgnoreCase)) return;
+    private static void TryReorderToSlot(string fromPkg, int slot) {
         List<ModMetaData> active = Verse.ModsConfig.ActiveModsInLoadOrder.ToList();
         int fromIdx = active.FindIndex(m => string.Equals(m.PackageId, fromPkg, StringComparison.OrdinalIgnoreCase));
-        int toIdx = active.FindIndex(m => string.Equals(m.PackageId, toPkg, StringComparison.OrdinalIgnoreCase));
-        if (fromIdx < 0 || toIdx < 0 || fromIdx == toIdx) return;
-        int finalPos;
-        if (toIdx > fromIdx) {
-            finalPos = insertOffset == 0 ? toIdx - 1 : toIdx;
-        }
-        else {
-            finalPos = insertOffset == 0 ? toIdx : toIdx + 1;
-        }
-        if (finalPos == fromIdx) return;
-        int newIndex = finalPos > fromIdx ? finalPos + 1 : finalPos;
-        ForceReorderActive(fromIdx, newIndex);
+        if (fromIdx < 0) return;
+        if (slot == fromIdx || slot == fromIdx + 1) return;
+        ForceReorderActive(fromIdx, slot);
     }
 
     private static void ForceReorderActive(int modIndex, int newIndex) {

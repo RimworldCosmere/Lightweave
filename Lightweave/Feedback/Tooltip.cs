@@ -37,7 +37,7 @@ public enum TooltipAlign {
     Id = "tooltip",
     Summary = "Hover-delayed contextual hint anchored to a trigger element.",
     WhenToUse = "Reveal short clarifying text on hover without claiming layout space.",
-    SourcePath = "Lightweave/Lightweave/Feedback/Tooltip.cs"
+    SourcePath = "Lightweave/Feedback/Tooltip.cs"
 )]
 public static class Tooltip {
     private const float DefaultDelaySeconds = 0.5f;
@@ -46,7 +46,7 @@ public static class Tooltip {
     [DocVariant("CL_Playground_Label_Default")]
     public static DocSample DocsDefault() {
         return new DocSample(() => Tooltip.Create(
-            Button.Create("Hover me", () => { }, ButtonVariant.Secondary),
+            Button.Create("Hover me", () => { }, Variant.Secondary),
             "A single-line tooltip."
         ));
     }
@@ -60,17 +60,17 @@ public static class Tooltip {
                     gap: SpacingScale.Lg,
                     children: row => {
                         row.AddFlex(Tooltip.Create(
-                            Button.Create("TopStart", () => { }, ButtonVariant.Secondary),
+                            Button.Create("TopStart", () => { }, Variant.Secondary),
                             "Anchored top, start-aligned.",
                             side: TooltipSide.TopStart
                         ));
                         row.AddFlex(Tooltip.Create(
-                            Button.Create("Top", () => { }, ButtonVariant.Secondary),
+                            Button.Create("Top", () => { }, Variant.Secondary),
                             "Anchored top, centered.",
                             side: TooltipSide.Top
                         ));
                         row.AddFlex(Tooltip.Create(
-                            Button.Create("TopEnd", () => { }, ButtonVariant.Secondary),
+                            Button.Create("TopEnd", () => { }, Variant.Secondary),
                             "Anchored top, end-aligned.",
                             side: TooltipSide.TopEnd
                         ));
@@ -80,13 +80,13 @@ public static class Tooltip {
                     gap: SpacingScale.Lg,
                     children: row => {
                         row.AddFlex(Tooltip.Create(
-                            Button.Create("Left", () => { }, ButtonVariant.Secondary),
+                            Button.Create("Left", () => { }, Variant.Secondary),
                             "Anchored to the left.",
                             side: TooltipSide.Left
                         ));
                         row.AddFlex(Box.Create());
                         row.AddFlex(Tooltip.Create(
-                            Button.Create("Right", () => { }, ButtonVariant.Secondary),
+                            Button.Create("Right", () => { }, Variant.Secondary),
                             "Anchored to the right.",
                             side: TooltipSide.Right
                         ));
@@ -96,17 +96,17 @@ public static class Tooltip {
                     gap: SpacingScale.Lg,
                     children: row => {
                         row.AddFlex(Tooltip.Create(
-                            Button.Create("BottomStart", () => { }, ButtonVariant.Secondary),
+                            Button.Create("BottomStart", () => { }, Variant.Secondary),
                             "Anchored bottom, start-aligned.",
                             side: TooltipSide.BottomStart
                         ));
                         row.AddFlex(Tooltip.Create(
-                            Button.Create("Bottom", () => { }, ButtonVariant.Secondary),
+                            Button.Create("Bottom", () => { }, Variant.Secondary),
                             "Anchored bottom, centered.",
                             side: TooltipSide.Bottom
                         ));
                         row.AddFlex(Tooltip.Create(
-                            Button.Create("BottomEnd", () => { }, ButtonVariant.Secondary),
+                            Button.Create("BottomEnd", () => { }, Variant.Secondary),
                             "Anchored bottom, end-aligned.",
                             side: TooltipSide.BottomEnd
                         ));
@@ -119,7 +119,7 @@ public static class Tooltip {
     [DocVariant("CL_Playground_Tooltip_Variant_LongDelay")]
     public static DocSample DocsLongDelay() {
         return new DocSample(() => Tooltip.Create(
-            Button.Create("Patient", () => { }, ButtonVariant.Secondary),
+            Button.Create("Patient", () => { }, Variant.Secondary),
             "Two-second delay before this appears.",
             delayDuration: 2f
         ));
@@ -128,7 +128,7 @@ public static class Tooltip {
     [DocVariant("CL_Playground_Tooltip_Variant_NoDelay")]
     public static DocSample DocsNoDelay() {
         return new DocSample(() => Tooltip.Create(
-            Button.Create("Instant", () => { }, ButtonVariant.Secondary),
+            Button.Create("Instant", () => { }, Variant.Secondary),
             "Appears immediately on hover.",
             delayDuration: 0f
         ));
@@ -137,7 +137,7 @@ public static class Tooltip {
     [DocVariant("CL_Playground_Tooltip_Variant_LargeOffset")]
     public static DocSample DocsLargeOffset() {
         return new DocSample(() => Tooltip.Create(
-            Button.Create("Far", () => { }, ButtonVariant.Secondary),
+            Button.Create("Far", () => { }, Variant.Secondary),
             "20px offset from the trigger.",
             sideOffset: 20f
         ));
@@ -145,7 +145,7 @@ public static class Tooltip {
 
     public static DocSample DocsWrapping() {
         return new DocSample(() => Tooltip.Create(
-            Button.Create("Long body", () => { }, ButtonVariant.Secondary),
+            Button.Create("Long body", () => { }, Variant.Secondary),
             "This tooltip body wraps onto multiple lines because it exceeds the maximum width that the Style.MaxWidth constrains it to.",
             style: new Style { MaxWidth = new Rem(12f) }
         ));
@@ -154,7 +154,7 @@ public static class Tooltip {
     [DocVariant("CL_Playground_Tooltip_Variant_Disabled")]
     public static DocSample DocsOnDisabled() {
         return new DocSample(() => Tooltip.Create(
-            Button.Create("Disabled", () => { }, ButtonVariant.Secondary, disabled: true),
+            Button.Create("Disabled", () => { }, Variant.Secondary, disabled: true),
             "Disabled triggers still surface their tooltip on hover."
         ));
     }
@@ -164,7 +164,7 @@ public static class Tooltip {
         return new DocSample(() => {
             Hooks.Hooks.StateHandle<int> ticks = Hooks.Hooks.UseState(0);
             return Tooltip.Create(
-                Button.Create("Tick", () => ticks.Set(ticks.Value + 1), ButtonVariant.Secondary),
+                Button.Create("Tick", () => ticks.Set(ticks.Value + 1), Variant.Secondary),
                 () => $"Clicked {ticks.Value} time(s).",
                 side: TooltipSide.Bottom
             );
@@ -174,7 +174,7 @@ public static class Tooltip {
     [DocVariant("CL_Playground_Tooltip_Variant_RichContent")]
     public static DocSample DocsRichContent() {
         return new DocSample(() => Tooltip.Create(
-            Button.Create("Rich", () => { }, ButtonVariant.Secondary),
+            Button.Create("Rich", () => { }, Variant.Secondary),
             BuildRichBody(),
             new Vector2(new Rem(14f).ToPixels(), new Rem(4.5f).ToPixels())
         ));
@@ -196,7 +196,7 @@ public static class Tooltip {
     [DocUsage]
     public static DocSample DocsUsage() {
         return new DocSample(() => Tooltip.Create(
-            Button.Create("Hover me", () => { }, ButtonVariant.Secondary),
+            Button.Create("Hover me", () => { }, Variant.Secondary),
             "Hint shown after a brief hover."
         ));
     }
@@ -351,6 +351,47 @@ public static class Tooltip {
         );
     }
 
+
+    public static LightweaveNode Create(
+        [DocParam("Element the tooltip is anchored to.")]
+        LightweaveNode children,
+        [DocParam("Delegate building the tooltip body. Rebuilt each frame the tooltip is visible. Size is auto-measured from the node's Measure callbacks.")]
+        Func<LightweaveNode> content,
+        [DocParam("Anchor side. Suffix overrides align.")]
+        TooltipSide side = TooltipSide.Bottom,
+        [DocParam("Cross-axis alignment for cardinal sides.")]
+        TooltipAlign align = TooltipAlign.Center,
+        [DocParam("Hover seconds before the tooltip appears.")]
+        float delayDuration = DefaultDelaySeconds,
+        [DocParam("Pixel gap between trigger and tooltip.")]
+        float sideOffset = DefaultSideOffsetPx,
+        [DocParam("Max content width in rem before wrapping. Default 20rem.")]
+        float maxWidthRem = 20f,
+        [DocParam("Optional dynamic anchor rect for positioning. When set, hover still uses the children rect, but the tooltip is placed relative to this rect.")]
+        Func<Rect>? anchor = null,
+        Style? style = null,
+        string[]? classes = null,
+        string? id = null,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath] string file = ""
+    ) {
+        return CreateInternal(
+            children,
+            content,
+            () => MeasureContent(content(), maxWidthRem),
+            side,
+            align,
+            delayDuration,
+            sideOffset,
+            style,
+            classes,
+            id,
+            line,
+            file,
+            anchor
+        );
+    }
+
     private static LightweaveNode CreateInternal(
         LightweaveNode children,
         Func<LightweaveNode> contentFactory,
@@ -398,34 +439,35 @@ public static class Tooltip {
 
             Rect anchorRect = anchorOverride?.Invoke() ?? hoverRect;
             Vector2 size = sizeFactory();
-            Rect tooltipScreenRect = ResolveScreenRect(anchorRect, size, side, align, sideOffset);
+            (Rect tooltipScreenRect, TooltipSide resolvedSide, Rect anchorScreenRect) = ResolvePlacement(anchorRect, size, side, align, sideOffset);
             LightweaveNode content = contentFactory();
 
             RenderContext.Current.PendingOverlays.Enqueue(() => {
                 Vector2 local = GUIUtility.ScreenToGUIPoint(new Vector2(tooltipScreenRect.x, tooltipScreenRect.y));
                 Rect tooltipRect = new Rect(local.x, local.y, tooltipScreenRect.width, tooltipScreenRect.height);
 
-                Rect shadowRect = new Rect(
-                    tooltipRect.x + 2f,
-                    tooltipRect.y + 3f,
-                    tooltipRect.width,
-                    tooltipRect.height
-                );
-                PaintBox.Draw(shadowRect, BackgroundSpec.Of(ThemeSlot.SurfaceShadow), null, null);
+                Vector2 anchorLocal = GUIUtility.ScreenToGUIPoint(new Vector2(anchorScreenRect.x, anchorScreenRect.y));
+                Rect anchorLocalRect = new Rect(anchorLocal.x, anchorLocal.y, anchorScreenRect.width, anchorScreenRect.height);
+
+                DrawSoftShadow(tooltipRect);
+                DrawArrow(tooltipRect, anchorLocalRect, resolvedSide);
 
                 PaintBox.Draw(
                     tooltipRect,
-                    BackgroundSpec.Of(ThemeSlot.SurfaceRaised),
-                    BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderDefault),
+                    BackgroundSpec.Of(ThemeSlot.SurfaceTooltip),
+                    BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderTooltip),
                     RadiusSpec.All(RadiusScale.Sm)
                 );
 
-                float pad = new Rem(0.5f).ToPixels();
+                EraseArrowJoin(tooltipRect, anchorLocalRect, resolvedSide);
+
+                float padX = new Rem(0.75f).ToPixels();
+                float padY = new Rem(0.5f).ToPixels();
                 Rect innerRect = new Rect(
-                    tooltipRect.x + pad,
-                    tooltipRect.y + pad,
-                    tooltipRect.width - pad * 2f,
-                    tooltipRect.height - pad * 2f
+                    tooltipRect.x + padX,
+                    tooltipRect.y + padY,
+                    tooltipRect.width - padX * 2f,
+                    tooltipRect.height - padY * 2f
                 );
 
                 LightweaveRoot.PaintSubtree(content, innerRect);
@@ -439,31 +481,154 @@ public static class Tooltip {
         return Typography.Typography.Text.Create(
             text,
             wrap: true,
-            style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.875f), TextColor = ThemeSlot.TextPrimary }
+            richText: true,
+            style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.8125f), TextColor = ThemeSlot.TextPrimary }
         );
     }
 
+    private static void DrawSoftShadow(Rect tooltipRect) {
+        Color shadowBase = RenderContext.Current.Theme.GetColor(ThemeSlot.SurfaceShadow);
+        DrawShadowLayer(tooltipRect, 1f, 2f, shadowBase.a);
+        DrawShadowLayer(tooltipRect, 2f, 4f, shadowBase.a * 0.66f);
+        DrawShadowLayer(tooltipRect, 3f, 6f, shadowBase.a * 0.33f);
+    }
+
+    private static void DrawShadowLayer(Rect tooltipRect, float dx, float dy, float alpha) {
+        Color baseColor = RenderContext.Current.Theme.GetColor(ThemeSlot.SurfaceShadow);
+        Color layer = new Color(baseColor.r, baseColor.g, baseColor.b, alpha);
+        Rect shadowRect = new Rect(
+            tooltipRect.x + dx,
+            tooltipRect.y + dy,
+            tooltipRect.width,
+            tooltipRect.height
+        );
+        PaintBox.Draw(shadowRect, BackgroundSpec.Of(layer), null, RadiusSpec.All(RadiusScale.Sm));
+    }
+
+    private static void DrawArrow(Rect tooltipRect, Rect anchorRect, TooltipSide resolvedSide) {
+        float arrowFill = new Rem(0.5f).ToPixels();
+        float arrowOutline = arrowFill + 2f;
+        float corner = RadiusSpec.ResolveRem(RadiusScale.Sm).ToPixels() + arrowOutline * 0.5f;
+
+        Vector2 center;
+        switch (resolvedSide) {
+            case TooltipSide.Top: {
+                float x = Mathf.Clamp(anchorRect.center.x, tooltipRect.x + corner, tooltipRect.xMax - corner);
+                center = new Vector2(x, tooltipRect.yMax);
+                break;
+            }
+            case TooltipSide.Bottom: {
+                float x = Mathf.Clamp(anchorRect.center.x, tooltipRect.x + corner, tooltipRect.xMax - corner);
+                center = new Vector2(x, tooltipRect.y);
+                break;
+            }
+            case TooltipSide.Left: {
+                float y = Mathf.Clamp(anchorRect.center.y, tooltipRect.y + corner, tooltipRect.yMax - corner);
+                center = new Vector2(tooltipRect.xMax, y);
+                break;
+            }
+            case TooltipSide.Right: {
+                float y = Mathf.Clamp(anchorRect.center.y, tooltipRect.y + corner, tooltipRect.yMax - corner);
+                center = new Vector2(tooltipRect.x, y);
+                break;
+            }
+            default:
+                return;
+        }
+
+        Color borderColor = RenderContext.Current.Theme.GetColor(ThemeSlot.BorderTooltip);
+        Color fillColor = RenderContext.Current.Theme.GetColor(ThemeSlot.SurfaceTooltip);
+
+        using (RotateScope.Around(45f, center)) {
+            Rect outlineRect = new Rect(
+                center.x - arrowOutline * 0.5f,
+                center.y - arrowOutline * 0.5f,
+                arrowOutline,
+                arrowOutline
+            );
+            PaintBox.Fill(outlineRect, borderColor);
+
+            Rect fillRect = new Rect(
+                center.x - arrowFill * 0.5f,
+                center.y - arrowFill * 0.5f,
+                arrowFill,
+                arrowFill
+            );
+            PaintBox.Fill(fillRect, fillColor);
+        }
+    }
+
+    private static void EraseArrowJoin(Rect tooltipRect, Rect anchorRect, TooltipSide resolvedSide) {
+        float arrowFill = new Rem(0.5f).ToPixels();
+        float arrowOutline = arrowFill + 2f;
+        float corner = RadiusSpec.ResolveRem(RadiusScale.Sm).ToPixels() + arrowOutline * 0.5f;
+        float halfDiag = arrowOutline * 0.5f * Mathf.Sqrt(2f);
+        float strip = 2f;
+
+        Color fillColor = RenderContext.Current.Theme.GetColor(ThemeSlot.SurfaceTooltip);
+
+        Rect eraseRect;
+        switch (resolvedSide) {
+            case TooltipSide.Top: {
+                float x = Mathf.Clamp(anchorRect.center.x, tooltipRect.x + corner, tooltipRect.xMax - corner);
+                eraseRect = new Rect(x - halfDiag, tooltipRect.yMax - strip + 1f, halfDiag * 2f, strip);
+                break;
+            }
+            case TooltipSide.Bottom: {
+                float x = Mathf.Clamp(anchorRect.center.x, tooltipRect.x + corner, tooltipRect.xMax - corner);
+                eraseRect = new Rect(x - halfDiag, tooltipRect.y - 1f, halfDiag * 2f, strip);
+                break;
+            }
+            case TooltipSide.Left: {
+                float y = Mathf.Clamp(anchorRect.center.y, tooltipRect.y + corner, tooltipRect.yMax - corner);
+                eraseRect = new Rect(tooltipRect.xMax - strip + 1f, y - halfDiag, strip, halfDiag * 2f);
+                break;
+            }
+            case TooltipSide.Right: {
+                float y = Mathf.Clamp(anchorRect.center.y, tooltipRect.y + corner, tooltipRect.yMax - corner);
+                eraseRect = new Rect(tooltipRect.x - 1f, y - halfDiag, strip, halfDiag * 2f);
+                break;
+            }
+            default:
+                return;
+        }
+
+        PaintBox.Fill(eraseRect, fillColor);
+    }
+
     private static Vector2 MeasureText(string text, Length? maxWidth) {
+        float padX = new Rem(0.75f).ToPixels() * 2f;
+        float padY = new Rem(0.5f).ToPixels() * 2f;
         if (string.IsNullOrEmpty(text)) {
             return new Vector2(new Rem(12f).ToPixels(), new Rem(1.75f).ToPixels());
         }
 
-        float pad = new Rem(0.5f).ToPixels() * 2f;
         float maxOuter = maxWidth.HasValue && maxWidth.Value.Mode == Length.Kind.Rem
             ? maxWidth.Value.Value * Spacing.BaseUnit
             : new Rem(20f).ToPixels();
-        float maxInner = maxOuter - pad;
+        float maxInner = maxOuter - padX;
         GameFont saved = Text.Font;
         Text.Font = GameFont.Small;
         float h = Text.CalcHeight(text, maxInner);
         Vector2 size = Text.CalcSize(text);
         Text.Font = saved;
-        float width = Mathf.Min(size.x, maxInner) + pad;
-        float height = h + pad;
+        float width = Mathf.Min(size.x, maxInner) + padX;
+        float height = h + padY;
         return new Vector2(width, height);
     }
 
-    private static Rect ResolveScreenRect(
+    private static Vector2 MeasureContent(LightweaveNode content, float maxWidthRem) {
+        float padX = new Rem(0.75f).ToPixels() * 2f;
+        float padY = new Rem(0.5f).ToPixels() * 2f;
+        float maxOuter = maxWidthRem * Spacing.BaseUnit;
+        float maxInner = Mathf.Max(0f, maxOuter - padX);
+        float w = content.MeasureWidth?.Invoke() ?? maxInner;
+        w = Mathf.Min(w, maxInner);
+        float h = content.Measure?.Invoke(w) ?? content.PreferredHeight ?? 0f;
+        return new Vector2(w + padX, h + padY);
+    }
+
+    private static (Rect Tooltip, TooltipSide ResolvedSide, Rect AnchorScreen) ResolvePlacement(
         Rect anchorGuiRect,
         Vector2 size,
         TooltipSide side,
@@ -483,16 +648,16 @@ public static class Tooltip {
 
         Rect candidate = PlaceTooltip(anchorScreen, size, cardinal, effective, sideOffset);
         if (FitsOnScreen(candidate)) {
-            return candidate;
+            return (candidate, cardinal, anchorScreen);
         }
 
         TooltipSide opposite = OppositeSide(cardinal);
         Rect flipped = PlaceTooltip(anchorScreen, size, opposite, effective, sideOffset);
         if (FitsOnScreen(flipped)) {
-            return flipped;
+            return (flipped, opposite, anchorScreen);
         }
 
-        return ClampToScreen(candidate);
+        return (ClampToScreen(candidate), cardinal, anchorScreen);
     }
 
     private static (TooltipSide cardinal, TooltipAlign align) ResolveSide(TooltipSide side, TooltipAlign align) {
@@ -550,10 +715,10 @@ public static class Tooltip {
 
     private static float ResolveCrossAxis(float anchorStart, float anchorSize, float size, TooltipAlign align) {
         return align switch {
-            TooltipAlign.Start => anchorStart,
+            TooltipAlign.Start => anchorStart + anchorSize - size,
             TooltipAlign.Center => anchorStart + (anchorSize - size) / 2f,
-            TooltipAlign.End => anchorStart + anchorSize - size,
-            _ => anchorStart,
+            TooltipAlign.End => anchorStart,
+            _ => anchorStart + (anchorSize - size) / 2f,
         };
     }
 

@@ -17,7 +17,7 @@ public static partial class Typography {
         Id = "richtext",
         Summary = "Wrapped text that honors Unity rich-text tags (<b>, <i>, <color=...>).",
         WhenToUse = "Body copy that needs inline emphasis or color without composing multiple Text nodes.",
-        SourcePath = "Lightweave/Lightweave/Typography/RichText.cs",
+        SourcePath = "Lightweave/Typography/RichText.cs",
         ShowRtl = true
     )]
     public static class RichText {
@@ -61,6 +61,16 @@ public static partial class Typography {
 
                 GUIStyle gs = ResolveStyle();
                 return gs.CalcHeight(new GUIContent(resolved), availableWidth);
+            };
+
+            node.MeasureWidth = () => {
+                string resolved = content.Resolve();
+                if (string.IsNullOrEmpty(resolved)) {
+                    return 0f;
+                }
+
+                GUIStyle gs = ResolveStyle();
+                return Mathf.Ceil(gs.CalcSize(new GUIContent(resolved)).x);
             };
 
             node.Paint = (rect, _) => {

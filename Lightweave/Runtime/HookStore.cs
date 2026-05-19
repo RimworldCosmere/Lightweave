@@ -3,6 +3,12 @@ namespace Cosmere.Lightweave.Runtime;
 public sealed class HookStore {
     private readonly Dictionary<HookKey, HookSlot> slots = new Dictionary<HookKey, HookSlot>();
 
+    public int Version { get; private set; }
+
+    public void Invalidate() {
+        Version++;
+    }
+
     public HookSlot Acquire(HookKey key) {
         if (!slots.TryGetValue(key, out HookSlot slot)) {
             slot = new HookSlot();
@@ -33,10 +39,9 @@ public sealed class HookStore {
     }
 
     public void ReleaseAll() {
-        foreach (HookSlot s in slots.Values) {
-            s.Cleanup?.Invoke();
+        foreach (KeyValuePair<HookKey, HookSlot> kv in slots) {
+            kv.Value.Cleanup?.Invoke();
         }
-
         slots.Clear();
     }
 }

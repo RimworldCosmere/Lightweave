@@ -15,13 +15,13 @@ namespace Cosmere.Lightweave.Input;
     Id = "iconbutton",
     Summary = "Compact square button hosting a single icon.",
     WhenToUse = "Trigger an action where space is tight or the icon is unambiguous.",
-    SourcePath = "Lightweave/Lightweave/Input/IconButton.cs"
+    SourcePath = "Lightweave/Input/IconButton.cs"
 )]
 public static class IconButton {
     public static LightweaveNode Create(
         LightweaveNode icon,
         Action? onClick,
-        ButtonVariant variant = ButtonVariant.Ghost,
+        Variant variant = default,
         Rem? iconSize = null,
         bool disabled = false,
         string? tooltipKey = null,
@@ -32,6 +32,10 @@ public static class IconButton {
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = ""
     ) {
+        if (variant.Id == null) {
+            variant = Variant.Ghost;
+        }
+
         LightweaveNode node = NodeBuilder.New("IconButton", line, file);
         node.ApplyStyling("icon-button", style, classes, id);
         node.Children.Add(icon);
@@ -40,6 +44,7 @@ public static class IconButton {
         float padPx = SpacingScale.Xs.ToPixels();
         float squareSize = iconPx + padPx * 2f;
         node.PreferredHeight = squareSize;
+        node.MeasureWidth = () => squareSize;
 
         node.Paint = (rect, paintChildren) => {
             float size = Mathf.Min(squareSize, Mathf.Min(rect.width, rect.height));
@@ -56,8 +61,8 @@ public static class IconButton {
 
             InteractionState state = InteractionState.Resolve(square, null, disabled);
 
-            ThemeSlot? bgSlot = ButtonVariants.Background(variant, state);
-            ThemeSlot? borderSlot = ButtonVariants.Border(variant, state);
+            ThemeSlot? bgSlot = VariantPalette.Background(variant, state);
+            ThemeSlot? borderSlot = VariantPalette.Border(variant, state);
 
             BackgroundSpec? bg = bgSlot.HasValue ? BackgroundSpec.Of(bgSlot.Value) : null;
             BorderSpec? border = borderSlot.HasValue
@@ -67,7 +72,7 @@ public static class IconButton {
 
             PaintBox.Draw(square, bg, border, radius);
 
-            float overlay = ButtonVariants.OverlayAlpha(state);
+            float overlay = VariantPalette.OverlayAlpha(state);
             if (overlay > 0f) {
                 Color overlayColor = InteractionFeedback.OverlayColor(RenderContext.Current.Theme, state, overlay);
                 PaintBox.Draw(square, BackgroundSpec.Of(overlayColor), null, radius);
@@ -111,13 +116,13 @@ public static class IconButton {
     [DocVariant("CL_Playground_Label_Primary")]
     public static DocSample DocsPrimary() {
         bool forced = RenderContext.Current.ForceDisabled;
-        return new DocSample(() => Create(Icon.Create(TexButton.NewItem, new Rem(1f), style: new Style { TextColor = ThemeSlot.TextPrimary }), () => { }, ButtonVariant.Primary, disabled: forced));
+        return new DocSample(() => Create(Icon.Create(TexButton.NewItem, new Rem(1f), style: new Style { TextColor = ThemeSlot.TextPrimary }), () => { }, Variant.Primary, disabled: forced));
     }
 
     [DocVariant("CL_Playground_Label_Secondary")]
     public static DocSample DocsSecondary() {
         bool forced = RenderContext.Current.ForceDisabled;
-        return new DocSample(() => Create(Icon.Create(TexButton.Search, new Rem(1f), style: new Style { TextColor = ThemeSlot.TextPrimary }), () => { }, ButtonVariant.Secondary, disabled: forced));
+        return new DocSample(() => Create(Icon.Create(TexButton.Search, new Rem(1f), style: new Style { TextColor = ThemeSlot.TextPrimary }), () => { }, Variant.Secondary, disabled: forced));
     }
 
     [DocState("CL_Playground_Label_Default")]

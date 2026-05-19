@@ -15,7 +15,7 @@ namespace Cosmere.Lightweave.Navigation;
     Id = "contextmenu",
     Summary = "Right-click target that opens a Menu at the cursor.",
     WhenToUse = "Expose secondary actions on a region without consuming bar space.",
-    SourcePath = "Lightweave/Lightweave/Navigation/ContextMenu.cs"
+    SourcePath = "Lightweave/Navigation/ContextMenu.cs"
 )]
 public static class ContextMenu {
     public static LightweaveNode Create(
@@ -41,6 +41,7 @@ public static class ContextMenu {
         else if (child.PreferredHeight.HasValue) {
             node.PreferredHeight = child.PreferredHeight.Value;
         }
+        node.MeasureWidth = () => child.MeasureWidth?.Invoke() ?? 0f;
 
         node.Paint = (rect, _) => {
             child.MeasuredRect = rect;
@@ -74,48 +75,52 @@ public static class ContextMenu {
 
     [DocVariant("CL_Playground_Label_Default")]
     public static DocSample DocsDefault() {
-        List<MenuEntry> items = new List<MenuEntry> {
-            MenuEntry.Of((string)"CL_Playground_ContextMenu_Inspect".Translate(), () => { }),
-            MenuEntry.Of((string)"CL_Playground_ContextMenu_Rename".Translate(), () => { }),
-            MenuEntry.Of((string)"CL_Playground_ContextMenu_Duplicate".Translate(), () => { }),
-            MenuEntry.Divider(),
-            MenuEntry.Of((string)"CL_Playground_ContextMenu_Delete".Translate(), () => { }),
-        };
+        return new DocSample(() => {
+            List<MenuEntry> items = new List<MenuEntry> {
+                MenuEntry.Of((string)"CL_Playground_ContextMenu_Inspect".Translate(), () => { }),
+                MenuEntry.Of((string)"CL_Playground_ContextMenu_Rename".Translate(), () => { }),
+                MenuEntry.Of((string)"CL_Playground_ContextMenu_Duplicate".Translate(), () => { }),
+                MenuEntry.Divider(),
+                MenuEntry.Of((string)"CL_Playground_ContextMenu_Delete".Translate(), () => { }),
+            };
 
-        LightweaveNode target = Box.Create(
-            c => c.Add(
-                Caption.Create((string)"CL_Playground_ContextMenu_RightClick".Translate())
-            ),
-            style: new Style {
-                Padding = EdgeInsets.All(SpacingScale.Sm),
-                Background = BackgroundSpec.Of(ThemeSlot.SurfaceRaised),
-                Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderDefault),
-                Radius = RadiusSpec.All(RadiusScale.Sm),
-            }
-        );
+            LightweaveNode target = Box.Create(
+                c => c.Add(
+                    Caption.Create((string)"CL_Playground_ContextMenu_RightClick".Translate())
+                ),
+                style: new Style {
+                    Padding = EdgeInsets.All(SpacingScale.Sm),
+                    Background = BackgroundSpec.Of(ThemeSlot.SurfaceRaised),
+                    Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderDefault),
+                    Radius = RadiusSpec.All(RadiusScale.Sm),
+                }
+            );
 
-        return new DocSample(() => ContextMenu.Create(target, items));
+            return ContextMenu.Create(target, items);
+        });
     }
 
     [DocUsage]
     public static DocSample DocsUsage() {
-        List<MenuEntry> items = new List<MenuEntry> {
-            MenuEntry.Of("Inspect", () => { }),
-            MenuEntry.Of("Rename", () => { }),
-            MenuEntry.Divider(),
-            MenuEntry.Of("Delete", () => { }),
-        };
+        return new DocSample(() => {
+            List<MenuEntry> items = new List<MenuEntry> {
+                MenuEntry.Of("Inspect", () => { }),
+                MenuEntry.Of("Rename", () => { }),
+                MenuEntry.Divider(),
+                MenuEntry.Of("Delete", () => { }),
+            };
 
-        LightweaveNode target = Box.Create(
-            c => c.Add(Caption.Create("Right-click here")),
-            style: new Style {
-                Padding = EdgeInsets.All(SpacingScale.Sm),
-                Background = BackgroundSpec.Of(ThemeSlot.SurfaceRaised),
-                Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderDefault),
-                Radius = RadiusSpec.All(RadiusScale.Sm),
-            }
-        );
+            LightweaveNode target = Box.Create(
+                c => c.Add(Caption.Create("Right-click here")),
+                style: new Style {
+                    Padding = EdgeInsets.All(SpacingScale.Sm),
+                    Background = BackgroundSpec.Of(ThemeSlot.SurfaceRaised),
+                    Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderDefault),
+                    Radius = RadiusSpec.All(RadiusScale.Sm),
+                }
+            );
 
-        return new DocSample(() => ContextMenu.Create(target, items));
+            return ContextMenu.Create(target, items);
+        });
     }
 }

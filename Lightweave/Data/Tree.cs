@@ -20,7 +20,7 @@ public sealed record TreeNode(
     Id = "tree",
     Summary = "Hierarchical, expandable list of nodes with chevron toggles.",
     WhenToUse = "Browse nested data such as locations, categories, or org structure.",
-    SourcePath = "Lightweave/Lightweave/Data/Tree.cs",
+    SourcePath = "Lightweave/Data/Tree.cs",
     PreferredVariantHeight = 200f,
     ShowRtl = true
 )]
@@ -58,6 +58,8 @@ public static class Tree {
         LightweaveNode node = NodeBuilder.New("Tree", line, file);
         node.ApplyStyling("tree", style, classes, id);
 
+        List<(TreeNode Node, int Depth)> visibleScratch = new List<(TreeNode, int)>(64);
+
         node.Measure = _ => {
             if (roots == null || roots.Count == 0) {
                 return 0f;
@@ -72,13 +74,43 @@ public static class Tree {
             return visibleCount * RowHeight.ToPixels();
         };
 
+        node.MeasureWidth = () => {
+            if (roots == null || roots.Count == 0) {
+                return 0f;
+            }
+            HashSet<TreeNode> expanded = expandedState.Value;
+            List<(TreeNode Node, int Depth)> visible = visibleScratch;
+            visible.Clear();
+            for (int i = 0; i < roots.Count; i++) {
+                Flatten(roots[i], 0, expanded, visible);
+            }
+            Theme.Theme theme = RenderContext.Current.Theme;
+            Font labelFont = theme.GetFont(FontRole.Body);
+            int labelPx = Mathf.RoundToInt(new Rem(0.875f).ToFontPx());
+            GUIStyle gs = GuiStyleCache.GetOrCreate(labelFont, labelPx);
+            float indent = IndentPerLevel.ToPixels();
+            float chevron = ChevronWidth.ToPixels();
+            float pad = SpacingScale.Xs.ToPixels();
+            float maxW = 0f;
+            for (int i = 0; i < visible.Count; i++) {
+                string label = visible[i].Node.Label ?? string.Empty;
+                float labelW = gs.CalcSize(new GUIContent(label)).x;
+                float w = visible[i].Depth * indent + chevron + pad + labelW + pad;
+                if (w > maxW) {
+                    maxW = w;
+                }
+            }
+            return Mathf.Ceil(maxW + LightweaveScrollView.GutterPixels(true));
+        };
+
         node.Paint = (rect, _) => {
             if (roots == null || roots.Count == 0) {
                 return;
             }
 
             HashSet<TreeNode> expanded = expandedState.Value;
-            List<(TreeNode Node, int Depth)> visible = new List<(TreeNode, int)>();
+            List<(TreeNode Node, int Depth)> visible = visibleScratch;
+            visible.Clear();
             for (int i = 0; i < roots.Count; i++) {
                 Flatten(roots[i], 0, expanded, visible);
             }

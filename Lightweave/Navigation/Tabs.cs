@@ -17,7 +17,7 @@ namespace Cosmere.Lightweave.Navigation;
     Id = "tabs",
     Summary = "Horizontal tab bar that switches the body region.",
     WhenToUse = "Move between sibling views inside one window.",
-    SourcePath = "Lightweave/Lightweave/Navigation/Tabs.cs",
+    SourcePath = "Lightweave/Navigation/Tabs.cs",
     ShowRtl = true
 )]
 public static class Tabs {
@@ -61,6 +61,27 @@ public static class Tabs {
         else if (bodyNode.PreferredHeight.HasValue) {
             node.PreferredHeight = chromeHeight + padPx * 2f + bodyNode.PreferredHeight.Value;
         }
+
+        node.MeasureWidth = () => {
+            int count = items.Count;
+            Theme.Theme theme = RenderContext.Current.Theme;
+            Font font = theme.GetFont(FontRole.BodyBold);
+            int pixelSize = Mathf.RoundToInt(new Rem(0.875f).ToFontPx());
+            GUIStyle gs = GuiStyleCache.GetOrCreate(font, pixelSize);
+            float tabPadding = SpacingScale.Md.ToPixels();
+            float tabGap = new Rem(0.25f).ToPixels();
+            float barW = 0f;
+            for (int i = 0; i < count; i++) {
+                string label = labelFn(items[i]) ?? string.Empty;
+                barW += gs.CalcSize(new GUIContent(label)).x + tabPadding * 2f;
+                if (i < count - 1) {
+                    barW += tabGap;
+                }
+            }
+            float bodyW = bodyNode.MeasureWidth?.Invoke() ?? 0f;
+            float bodyOuterW = bodyW + padPx * 2f;
+            return Mathf.Ceil(Mathf.Max(barW, bodyOuterW));
+        };
 
         node.Paint = (rect, _) => {
             Theme.Theme theme = RenderContext.Current.Theme;

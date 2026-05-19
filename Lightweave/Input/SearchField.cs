@@ -15,7 +15,7 @@ namespace Cosmere.Lightweave.Input;
     Id = "searchfield",
     Summary = "Single-line text input with leading magnifier and trailing clear glyph.",
     WhenToUse = "Filter a list or trigger search-as-you-type.",
-    SourcePath = "Lightweave/Lightweave/Input/SearchField.cs",
+    SourcePath = "Lightweave/Input/SearchField.cs",
     ShowRtl = true
 )]
 public static class SearchField {
@@ -34,6 +34,7 @@ public static class SearchField {
         SearchFieldVariant variant = SearchFieldVariant.Input,
         [DocParam("Optional key disambiguating multiple instances declared on the same line.")]
         object? instanceKey = null,
+        Variant surfaceVariant = default,
         Style? style = null,
         string[]? classes = null,
         string? id = null,
@@ -47,7 +48,14 @@ public static class SearchField {
 
         LightweaveNode node = NodeBuilder.New("SearchField", line, file);
         node.ApplyStyling("search-field", style, classes, id);
-        node.PreferredHeight = new Rem(1.75f).ToPixels();
+        node.PreferredHeight = SelectorTrigger.Height.ToPixels();
+
+        node.MeasureWidth = () => {
+            float padX = variant == SearchFieldVariant.Borderless ? 0f : InputSurface.PaddingX.ToPixels();
+            float glyphSize = new Rem(1f).ToPixels();
+            float textArea = new Rem(12f).ToPixels();
+            return Mathf.Ceil(padX + glyphSize + SpacingScale.Xs.ToPixels() + textArea + SpacingScale.Xs.ToPixels() + glyphSize + padX);
+        };
 
         node.Paint = (rect, paintChildren) => {
             Theme.Theme theme = RenderContext.Current.Theme;
@@ -78,7 +86,8 @@ public static class SearchField {
             if (variant == SearchFieldVariant.Frosted) {
                 bool sfActive = state.Hovered || state.Focused || state.Pressed;
                 BackdropBlur.Draw(rect, sfActive ? 8f : 6f);
-                Color sfTranslucent = new Color(20f / 255f, 16f / 255f, 11f / 255f, sfActive ? 0.88f : 0.78f);
+                Color sfTranslucentBase = theme.GetColor(ThemeSlot.SurfaceTranslucentDark);
+                Color sfTranslucent = new Color(sfTranslucentBase.r, sfTranslucentBase.g, sfTranslucentBase.b, sfActive ? 0.88f : 0.78f);
                 ThemeSlot sfBorderSlot = disabled
                     ? ThemeSlot.BorderOff
                     : (sfActive ? ThemeSlot.BorderHover : ThemeSlot.BorderSubtle);
@@ -89,7 +98,7 @@ public static class SearchField {
             else if (variant == SearchFieldVariant.Borderless) {
             }
             else {
-                InputSurface.Draw(rect, state);
+                InputSurface.DrawInputChrome(rect, state, surfaceVariant);
             }
 
             float padX = variant == SearchFieldVariant.Borderless ? 0f : InputSurface.PaddingX.ToPixels();

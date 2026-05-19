@@ -20,7 +20,7 @@ namespace Cosmere.Lightweave.Data;
     Id = "keyvalue",
     Summary = "Single-row label/value pair with a fixed-width label gutter.",
     WhenToUse = "Render a labeled metric, stat, or attribute alongside its value.",
-    SourcePath = "Lightweave/Lightweave/Data/KeyValue.cs",
+    SourcePath = "Lightweave/Data/KeyValue.cs",
     PreferredVariantHeight = 180f,
     ShowRtl = true
 )]
@@ -54,6 +54,13 @@ public static class KeyValue {
             float labelH = labelNode.Measure?.Invoke(lw) ?? labelNode.PreferredHeight ?? 0f;
             float valueH = value.Measure?.Invoke(valueWidth) ?? value.PreferredHeight ?? 0f;
             return Mathf.Max(labelH, valueH);
+        };
+
+        node.MeasureWidth = () => {
+            float lw = (labelWidth ?? new Rem(8f)).ToPixels();
+            float gp = (gap ?? new Rem(1f)).ToPixels();
+            float valueW = value.MeasureWidth?.Invoke() ?? 0f;
+            return Mathf.Ceil(lw + gp + valueW);
         };
 
         node.Paint = (rect, paintChildren) => {

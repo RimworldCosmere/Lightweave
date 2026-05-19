@@ -2,6 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using Cosmere.Lightweave.Doc;
 using Cosmere.Lightweave.Hooks;
+using Cosmere.Lightweave.Icons;
 using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
@@ -15,17 +16,20 @@ using Text = Cosmere.Lightweave.Typography.Typography.Text;
 namespace Cosmere.Lightweave.Navigation;
 
 public sealed record AccordionItem(
-    string Id,
-    string Header,
-    LightweaveNode Content,
-    float ContentHeight
+    int Id,
+    string Title,
+    string? Subtitle = null,
+    bool Disabled = false,
+    LightweaveNode? Content = null,
+    Action? OnOpen = null,
+    Action? OnClose = null
 );
 
 [Doc(
     Id = "accordion",
     Summary = "Stacked collapsible panels in single or multi-expand mode.",
     WhenToUse = "Reveal long-form content in sections without leaving the surface.",
-    SourcePath = "Lightweave/Lightweave/Navigation/Accordion.cs",
+    SourcePath = "Lightweave/Navigation/Accordion.cs",
     PreferredVariantHeight = 260f
 )]
 public static class Accordion {
@@ -34,12 +38,14 @@ public static class Accordion {
     private static readonly Func<float, float> EaseOutCubic = t => 1f - Mathf.Pow(1f - t, 3f);
 
     public static LightweaveNode Create(
-        [DocParam("Section definitions in display order.")]
-        IReadOnlyList<AccordionItem> items,
+        [DocParam("Section definitions. HashSet enforces unique ids; iteration order drives display order.")]
+        HashSet<AccordionItem> items,
         [DocParam("Set of section ids currently expanded.")]
-        HashSet<string> expandedIds,
-        [DocParam("Invoked with the section id when toggled.")]
-        Action<string> onToggle,
+        HashSet<int> expandedIds,
+        [DocParam("Invoked with the section id when toggled. Optional.")]
+        Action<int>? onToggle = null,
+        [DocParam("Fallback content builder when AccordionItem.Content is null.")]
+        Func<AccordionItem, LightweaveNode>? bodyBuilder = null,
         [DocParam("Single-open or multi-open behavior.")]
         AccordionMode mode = AccordionMode.Single,
         Style? style = null,
@@ -51,41 +57,129 @@ public static class Accordion {
         LightweaveNode node = NodeBuilder.New($"Accordion:{mode}", line, file);
         node.ApplyStyling("accordion", style, classes, id);
 
-        for (int i = 0; i < items.Count; i++) {
-            node.Children.Add(items[i].Content);
+        List<AccordionItem> orderedItems = new List<AccordionItem>(items.Count);
+        List<LightweaveNode> contentNodes = new List<LightweaveNode>(items.Count);
+        foreach (AccordionItem item in items) {
+            orderedItems.Add(item);
+            LightweaveNode? content = item.Content ?? bodyBuilder?.Invoke(item);
+            contentNodes.Add(content ?? Layout.Spacer.Fixed(SpacingScale.None));
         }
 
-        node.Measure = _ => MeasureHeight(items, expandedIds);
+        for (int i = 0; i < contentNodes.Count; i++) {
+            node.Children.Add(contentNodes[i]);
+        }
+
+        float headerPadXPx = SpacingScale.Lg.ToPixels();
+        float headerPadYPx = SpacingScale.Md.ToPixels();
+        float headerGapPx = SpacingScale.Sm.ToPixels();
+        float chevronSizePx = new Rem(1f).ToPixels();
+        float ordinalColumnPx = new Rem(2f).ToPixels();
+        float bodyLeftInsetPx = headerPadXPx + ordinalColumnPx + headerGapPx;
+        float bodyRightInsetPx = headerPadXPx;
+        float bodyTopPadPx = new Rem(0.5f).ToPixels();
+        float bodyBottomPadPx = new Rem(1.25f).ToPixels();
+        float headerHeightPx = new Rem(3.25f).ToPixels();
+
+        float ResolveContentHeight(int idx, float width) {
+            LightweaveNode content = contentNodes[idx];
+            if (content.Measure != null) {
+                return content.Measure(width);
+            }
+
+            return content.PreferredHeight ?? 0f;
+        }
+
+        node.Measure = availableWidth => {
+            float innerWidth = Mathf.Max(0f, availableWidth - bodyLeftInsetPx - bodyRightInsetPx);
+            float total = 0f;
+            for (int i = 0; i < orderedItems.Count; i++) {
+                total += headerHeightPx;
+                if (expandedIds.Contains(orderedItems[i].Id)) {
+                    total += ResolveContentHeight(i, innerWidth) + bodyTopPadPx + bodyBottomPadPx;
+                }
+            }
+
+            return total;
+        };
+
+        node.MeasureWidth = () => {
+            Theme.Theme theme = RenderContext.Current.Theme;
+            Font titleFont = theme.GetFont(FontRole.Heading);
+            int titleFontSize = Mathf.RoundToInt(new Rem(1.0625f).ToFontPx());
+            GUIStyle titleStyle = GuiStyleCache.GetOrCreate(titleFont, titleFontSize);
+            Font metaFont = theme.GetFont(FontRole.Caption);
+            int metaFontSize = Mathf.RoundToInt(new Rem(0.6875f).ToFontPx());
+            GUIStyle metaStyle = GuiStyleCache.GetOrCreate(metaFont, metaFontSize);
+
+            float maxW = 0f;
+            for (int i = 0; i < orderedItems.Count; i++) {
+                AccordionItem item = orderedItems[i];
+                float titleW = string.IsNullOrEmpty(item.Title) ? 0f : titleStyle.CalcSize(new GUIContent(item.Title)).x;
+                float metaW = string.IsNullOrEmpty(item.Subtitle) ? 0f : metaStyle.CalcSize(new GUIContent(item.Subtitle!.ToUpperInvariant())).x;
+                float headerW = headerPadXPx + ordinalColumnPx + headerGapPx + titleW + headerGapPx + metaW + headerGapPx + chevronSizePx + headerPadXPx;
+                if (headerW > maxW) {
+                    maxW = headerW;
+                }
+                float contentW = contentNodes[i].MeasureWidth?.Invoke() ?? 0f;
+                float panelW = bodyLeftInsetPx + contentW + bodyRightInsetPx;
+                if (panelW > maxW) {
+                    maxW = panelW;
+                }
+            }
+            return Mathf.Ceil(maxW);
+        };
 
         node.Paint = (rect, _) => {
             Theme.Theme theme = RenderContext.Current.Theme;
             Direction dir = RenderContext.Current.Direction;
             bool rtl = dir == Direction.Rtl;
 
-            float borderPx = new Rem(1f / 16f).ToPixels();
-            float headerPadX = SpacingScale.Md.ToPixels();
-            float chevronSize = new Rem(0.75f).ToPixels();
-            float contentPadX = SpacingScale.Md.ToPixels();
-            float contentPadY = SpacingScale.Sm.ToPixels();
+            float innerContentWidth = Mathf.Max(0f, rect.width - bodyLeftInsetPx - bodyRightInsetPx);
 
-            Font headerFont = theme.GetFont(FontRole.BodyBold);
-            int headerFontSize = Mathf.RoundToInt(new Rem(0.9375f).ToFontPx());
-            GUIStyle headerStyle = GuiStyleCache.GetOrCreate(headerFont, headerFontSize);
-            headerStyle.alignment = rtl ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft;
-            headerStyle.wordWrap = false;
+            Font titleFont = theme.GetFont(FontRole.Heading);
+            int titleFontSize = Mathf.RoundToInt(new Rem(1.0625f).ToFontPx());
+            GUIStyle titleStyle = GuiStyleCache.GetOrCreate(titleFont, titleFontSize);
+            titleStyle.alignment = rtl ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft;
+            titleStyle.wordWrap = false;
 
-            Font chevronFont = theme.GetFont(FontRole.Body);
-            int chevronFontSize = Mathf.RoundToInt(new Rem(0.75f).ToFontPx());
-            GUIStyle chevronStyle = GuiStyleCache.GetOrCreate(chevronFont, chevronFontSize);
-            chevronStyle.alignment = TextAnchor.MiddleCenter;
-            chevronStyle.wordWrap = false;
+            Font metaFont = theme.GetFont(FontRole.Caption);
+            int metaFontSize = Mathf.RoundToInt(new Rem(0.6875f).ToFontPx());
+            GUIStyle metaStyle = GuiStyleCache.GetOrCreate(metaFont, metaFontSize);
+            metaStyle.alignment = rtl ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight;
+            metaStyle.wordWrap = false;
+
+            Font ordinalFont = theme.GetFont(FontRole.Caption);
+            int ordinalFontSize = Mathf.RoundToInt(new Rem(0.6875f).ToFontPx());
+            GUIStyle ordinalStyle = GuiStyleCache.GetOrCreate(ordinalFont, ordinalFontSize);
+            ordinalStyle.alignment = TextAnchor.MiddleCenter;
+            ordinalStyle.wordWrap = false;
+
+            Color borderColor = theme.GetColor(ThemeSlot.BorderDefault);
+            Color outerBg = theme.GetColor(ThemeSlot.SurfaceSunken);
+            Color titleNormal = theme.GetColor(ThemeSlot.TextPrimary);
+            Color titleAccent = theme.GetColor(ThemeSlot.SurfaceAccent);
+            Color metaColor = theme.GetColor(ThemeSlot.TextMuted);
+            Color chevronColor = theme.GetColor(ThemeSlot.TextSecondary);
+            Color chevronAccent = theme.GetColor(ThemeSlot.SurfaceAccent);
+            Color openHeaderBg = theme.GetColor(ThemeSlot.SurfaceRaised);
+            openHeaderBg.a *= 0.55f;
+            Color hoverBg = theme.GetColor(ThemeSlot.SurfaceRaised);
+            hoverBg.a *= 0.4f;
+
+            BackgroundSpec outerBgSpec = BackgroundSpec.Of(ThemeSlot.SurfaceSunken);
+            BorderSpec outerBorderSpec = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderDefault);
+            PaintBox.Draw(rect, outerBgSpec, outerBorderSpec, null);
 
             Event e = Event.current;
             float cursorY = rect.y;
 
-            for (int i = 0; i < items.Count; i++) {
-                AccordionItem item = items[i];
+            for (int i = 0; i < orderedItems.Count; i++) {
+                AccordionItem item = orderedItems[i];
+                LightweaveNode content = contentNodes[i];
                 bool expanded = expandedIds.Contains(item.Id);
+
+                float contentNaturalHeight = ResolveContentHeight(i, innerContentWidth);
+                float panelHeightWhenOpen = contentNaturalHeight + bodyTopPadPx + bodyBottomPadPx;
 
                 float progress = UseAnim.Animate(
                     expanded ? 1f : 0f,
@@ -94,101 +188,119 @@ public static class Accordion {
                     i,
                     file + ":" + line + "#acc:" + item.Id
                 );
-                float revealHeight = item.ContentHeight * progress;
+                float revealHeight = panelHeightWhenOpen * progress;
 
                 bool isFirst = i == 0;
-                bool isLast = i == items.Count - 1;
 
-                Rect headerRect = new Rect(rect.x, cursorY, rect.width, HeaderHeight);
+                Rect headerRect = new Rect(rect.x, cursorY, rect.width, headerHeightPx);
 
-                BackgroundSpec headerBg = BackgroundSpec.Of(ThemeSlot.SurfaceRaised);
-                ThemeSlot headerBorderSlot = ThemeSlot.BorderDefault;
-                BorderSpec headerBorder = new BorderSpec(
-                    isFirst ? new Rem(1f / 16f) : null,
-                    Left: new Rem(1f / 16f),
-                    Right: new Rem(1f / 16f),
-                    Bottom: new Rem(1f / 16f),
-                    Color: headerBorderSlot
-                );
+                bool hovered = !item.Disabled && headerRect.Contains(e.mousePosition);
 
-                PaintBox.Draw(headerRect, headerBg, headerBorder, null);
-
-                bool hovered = headerRect.Contains(e.mousePosition);
+                if (expanded || progress > 0.001f) {
+                    Color bgTint = openHeaderBg;
+                    bgTint.a *= Mathf.Lerp(0f, 1f, progress);
+                    PaintBox.Draw(headerRect, BackgroundSpec.Of(bgTint), null, null);
+                }
                 if (hovered) {
-                    PaintBox.DrawHighlight(headerRect, RadiusSpec.All(RadiusScale.Sm), true);
+                    PaintBox.Draw(headerRect, BackgroundSpec.Of(hoverBg), null, null);
+                    MouseoverSounds.DoRegion(headerRect);
                 }
 
-                MouseoverSounds.DoRegion(headerRect);
+                if (!isFirst) {
+                    Rect divider = new Rect(rect.x, headerRect.y, rect.width, 1f);
+                    PaintBox.Draw(divider, BackgroundSpec.Of(borderColor), null, null);
+                }
+
+                float ordinalX = rtl
+                    ? headerRect.xMax - headerPadXPx - ordinalColumnPx
+                    : headerRect.x + headerPadXPx;
+                Rect ordinalRect = new Rect(ordinalX, headerRect.y, ordinalColumnPx, headerRect.height);
 
                 float chevronX = rtl
-                    ? headerRect.x + headerPadX
-                    : headerRect.xMax - headerPadX - chevronSize;
+                    ? headerRect.x + headerPadXPx
+                    : headerRect.xMax - headerPadXPx - chevronSizePx;
                 Rect chevronRect = new Rect(
                     chevronX,
-                    headerRect.y + (headerRect.height - chevronSize) / 2f,
-                    chevronSize,
-                    chevronSize
+                    headerRect.y + (headerRect.height - chevronSizePx) / 2f,
+                    chevronSizePx,
+                    chevronSizePx
                 );
 
-                Rect labelRect;
+                string metaText = string.IsNullOrEmpty(item.Subtitle) ? string.Empty : item.Subtitle!.ToUpperInvariant();
+                float metaW = string.IsNullOrEmpty(metaText) ? 0f : metaStyle.CalcSize(new GUIContent(metaText)).x;
+                float metaX = rtl
+                    ? ordinalRect.xMax + headerGapPx
+                    : chevronRect.x - headerGapPx - metaW;
+                Rect metaRect = new Rect(metaX, headerRect.y, metaW, headerRect.height);
+
+                Rect titleRect;
                 if (rtl) {
-                    float labelX = chevronRect.xMax + SpacingScale.Xs.ToPixels();
-                    labelRect = new Rect(
-                        labelX,
-                        headerRect.y,
-                        headerRect.xMax - headerPadX - labelX,
-                        headerRect.height
-                    );
+                    float titleLeft = metaRect.xMax + headerGapPx;
+                    float titleRight = chevronRect.x - headerGapPx;
+                    titleRect = new Rect(titleLeft, headerRect.y, Mathf.Max(0f, titleRight - titleLeft), headerRect.height);
                 }
                 else {
-                    labelRect = new Rect(
-                        headerRect.x + headerPadX,
-                        headerRect.y,
-                        chevronRect.x - SpacingScale.Xs.ToPixels() - (headerRect.x + headerPadX),
-                        headerRect.height
-                    );
+                    float titleLeft = ordinalRect.xMax + headerGapPx;
+                    float titleRight = (metaW > 0f ? metaRect.x : chevronRect.x) - headerGapPx;
+                    titleRect = new Rect(titleLeft, headerRect.y, Mathf.Max(0f, titleRight - titleLeft), headerRect.height);
                 }
 
-                TextDraw.DrawWithStyle(labelRect, item.Header, headerStyle, theme.GetColor(ThemeSlot.TextPrimary));
+                string ordinalText = (i + 1).ToString("D2");
+                Color ordinalColor = item.Disabled ? theme.GetColor(ThemeSlot.TextMuted) : theme.GetColor(ThemeSlot.TextMuted);
+                TextDraw.DrawWithStyle(ordinalRect, ordinalText, ordinalStyle, ordinalColor);
 
-                DrawChevron(chevronRect, theme, progress, rtl);
+                Color titleColor = item.Disabled
+                    ? theme.GetColor(ThemeSlot.TextMuted)
+                    : (expanded || hovered ? titleAccent : titleNormal);
+                TextDraw.DrawWithStyle(titleRect, item.Title, titleStyle, titleColor);
+
+                if (!string.IsNullOrEmpty(metaText)) {
+                    TextDraw.DrawWithStyle(metaRect, metaText, metaStyle, metaColor);
+                }
+
+                Color chevColor = item.Disabled
+                    ? theme.GetColor(ThemeSlot.TextMuted)
+                    : ((expanded || hovered) ? chevronAccent : chevronColor);
+                DrawChevron(chevronRect, chevColor, progress, rtl, theme);
 
                 cursorY = headerRect.yMax;
 
                 if (revealHeight > 0.5f) {
                     Rect panelRect = new Rect(rect.x, cursorY, rect.width, revealHeight);
 
-                    BackgroundSpec panelBg = BackgroundSpec.Of(ThemeSlot.SurfacePrimary);
-                    BorderSpec panelBorder = new BorderSpec(
-                        Left: new Rem(1f / 16f),
-                        Right: new Rem(1f / 16f),
-                        Bottom: isLast ? new Rem(1f / 16f) : null,
-                        Color: headerBorderSlot
-                    );
-                    PaintBox.Draw(panelRect, panelBg, panelBorder, null);
+                    Color panelBg = outerBg;
+                    panelBg.a *= 0.5f;
+                    PaintBox.Draw(panelRect, BackgroundSpec.Of(panelBg), null, null);
 
                     Rect innerRect = new Rect(
-                        panelRect.x + contentPadX,
-                        panelRect.y + contentPadY,
-                        Mathf.Max(0f, panelRect.width - contentPadX * 2f),
-                        Mathf.Max(0f, panelRect.height - contentPadY * 2f)
+                        panelRect.x + bodyLeftInsetPx,
+                        panelRect.y + bodyTopPadPx,
+                        Mathf.Max(0f, panelRect.width - bodyLeftInsetPx - bodyRightInsetPx),
+                        Mathf.Max(0f, panelRect.height - bodyTopPadPx - bodyBottomPadPx)
                     );
 
                     using (ClipScope.Begin(panelRect)) {
                         Rect clippedInner = new Rect(
-                            contentPadX,
-                            contentPadY - (item.ContentHeight - revealHeight),
+                            bodyLeftInsetPx,
+                            bodyTopPadPx - (panelHeightWhenOpen - revealHeight),
                             innerRect.width,
-                            item.ContentHeight - contentPadY * 2f
+                            contentNaturalHeight
                         );
-                        item.Content.MeasuredRect = clippedInner;
-                        LightweaveRoot.PaintSubtree(item.Content, clippedInner);
+                        content.MeasuredRect = clippedInner;
+                        LightweaveRoot.PaintSubtree(content, clippedInner);
                     }
 
                     cursorY = panelRect.yMax;
                 }
 
-                if (e.type == EventType.MouseUp && e.button == 0 && headerRect.Contains(e.mousePosition)) {
+                if (!item.Disabled && e.type == EventType.MouseUp && e.button == 0 && headerRect.Contains(e.mousePosition)) {
+                    bool wasExpanded = expanded;
+                    if (wasExpanded) {
+                        item.OnClose?.Invoke();
+                    }
+                    else {
+                        item.OnOpen?.Invoke();
+                    }
                     onToggle?.Invoke(item.Id);
                     e.Use();
                 }
@@ -198,77 +310,78 @@ public static class Accordion {
         return node;
     }
 
-    public static float MeasureHeight(IReadOnlyList<AccordionItem> items, HashSet<string> expandedIds) {
+    public static float MeasureHeight(IEnumerable<AccordionItem> items, HashSet<int> expandedIds, float contentHeightFallback = 56f) {
         float total = 0f;
-        for (int i = 0; i < items.Count; i++) {
+        foreach (AccordionItem item in items) {
             total += HeaderHeight;
-            if (expandedIds.Contains(items[i].Id)) {
-                total += items[i].ContentHeight;
+            if (expandedIds.Contains(item.Id)) {
+                total += contentHeightFallback;
             }
         }
 
         return total;
     }
 
-    private static void DrawChevron(Rect rect, Theme.Theme theme, float progress, bool rtl) {
+    private static void DrawChevron(Rect rect, Color color, float progress, bool rtl, Theme.Theme theme) {
+        IconRef caret = rtl ? Icons.Phosphor.CaretLeft : Icons.Phosphor.CaretRight;
         Vector2 pivot = new Vector2(rect.x + rect.width / 2f, rect.y + rect.height / 2f);
-        float angle = Mathf.Lerp(90f, -90f, progress);
+        float angle = Mathf.Lerp(0f, rtl ? -90f : 90f, progress);
         using (RotateScope.Around(angle, pivot)) {
-            PaintBox.DrawTexture(rect, TexUI.ArrowTexLeft, theme.GetColor(ThemeSlot.TextSecondary), ScaleMode.ScaleToFit);
+            TextDraw.Draw(
+                rect,
+                caret.Glyph,
+                FontRole.Body,
+                new Rem(1f),
+                TextAnchor.MiddleCenter,
+                color,
+                fontOverride: caret.ResolveFont()
+            );
         }
     }
 
-    private static List<AccordionItem> BuildSampleItems() {
-        LightweaveNode overviewBody = Text.Create(
-            (string)"CL_Playground_accordion_Body_Overview".Translate(),
-            wrap: true,
-            style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.875f), TextColor = ThemeSlot.TextPrimary }
-        );
-        LightweaveNode stormlightBody = Text.Create(
-            (string)"CL_Playground_accordion_Body_Stormlight".Translate(),
-            wrap: true,
-            style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.875f), TextColor = ThemeSlot.TextPrimary }
-        );
-        LightweaveNode sprenBody = Text.Create(
-            (string)"CL_Playground_accordion_Body_Spren".Translate(),
-            wrap: true,
-            style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.875f), TextColor = ThemeSlot.TextPrimary }
-        );
-
-        return new List<AccordionItem> {
-            new AccordionItem(
-                "overview",
-                (string)"CL_Playground_accordion_Header_Overview".Translate(),
-                overviewBody,
-                56f
-            ),
-            new AccordionItem(
-                "stormlight",
-                (string)"CL_Playground_accordion_Header_Stormlight".Translate(),
-                stormlightBody,
-                64f
-            ),
-            new AccordionItem(
-                "spren",
-                (string)"CL_Playground_accordion_Header_Spren".Translate(),
-                sprenBody,
-                64f
-            ),
-        };
-    }
+    
 
     [DocVariant("CL_Playground_accordion_Mode_Single")]
     public static DocSample DocsSingle() {
         return new DocSample(() => {
-            Hooks.Hooks.StateHandle<HashSet<string>> open =
-                Hooks.Hooks.UseState<HashSet<string>>(new HashSet<string> { "overview" });
+            HashSet<AccordionItem> items = new HashSet<AccordionItem> {
+                new AccordionItem(
+                    Id: 1,
+                    Title: (string)"CL_Playground_accordion_Header_Overview".Translate(),
+                    Content: Text.Create(
+                        (string)"CL_Playground_accordion_Body_Overview".Translate(),
+                        wrap: true,
+                        style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.875f), TextColor = ThemeSlot.TextPrimary }
+                    )
+                ),
+                new AccordionItem(
+                    Id: 2,
+                    Title: (string)"CL_Playground_accordion_Header_Stormlight".Translate(),
+                    Content: Text.Create(
+                        (string)"CL_Playground_accordion_Body_Stormlight".Translate(),
+                        wrap: true,
+                        style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.875f), TextColor = ThemeSlot.TextPrimary }
+                    )
+                ),
+                new AccordionItem(
+                    Id: 3,
+                    Title: (string)"CL_Playground_accordion_Header_Spren".Translate(),
+                    Content: Text.Create(
+                        (string)"CL_Playground_accordion_Body_Spren".Translate(),
+                        wrap: true,
+                        style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.875f), TextColor = ThemeSlot.TextPrimary }
+                    )
+                ),
+            };
+            Hooks.Hooks.StateHandle<HashSet<int>> open =
+                Hooks.Hooks.UseState<HashSet<int>>(new HashSet<int> { 1 });
             return Accordion.Create(
-                BuildSampleItems(),
+                items,
                 open.Value,
-                id => {
-                    HashSet<string> next = open.Value.Contains(id)
-                        ? new HashSet<string>()
-                        : new HashSet<string> { id };
+                onToggle: id => {
+                    HashSet<int> next = open.Value.Contains(id)
+                        ? new HashSet<int>()
+                        : new HashSet<int> { id };
                     open.Set(next);
                 }
             );
@@ -278,20 +391,107 @@ public static class Accordion {
     [DocVariant("CL_Playground_accordion_Mode_Multi")]
     public static DocSample DocsMulti() {
         return new DocSample(() => {
-            Hooks.Hooks.StateHandle<HashSet<string>> open =
-                Hooks.Hooks.UseState<HashSet<string>>(new HashSet<string> { "stormlight", "spren" });
+            HashSet<AccordionItem> items = new HashSet<AccordionItem> {
+                new AccordionItem(
+                    Id: 1,
+                    Title: (string)"CL_Playground_accordion_Header_Overview".Translate(),
+                    Subtitle: (string)"CL_Playground_accordion_Subtitle_Overview".Translate(),
+                    Content: Text.Create(
+                        (string)"CL_Playground_accordion_Body_Overview".Translate(),
+                        wrap: true,
+                        style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.875f), TextColor = ThemeSlot.TextPrimary }
+                    )
+                ),
+                new AccordionItem(
+                    Id: 2,
+                    Title: (string)"CL_Playground_accordion_Header_Stormlight".Translate(),
+                    Subtitle: (string)"CL_Playground_accordion_Subtitle_Stormlight".Translate(),
+                    Content: Text.Create(
+                        (string)"CL_Playground_accordion_Body_Stormlight".Translate(),
+                        wrap: true,
+                        style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.875f), TextColor = ThemeSlot.TextPrimary }
+                    )
+                ),
+                new AccordionItem(
+                    Id: 3,
+                    Title: (string)"CL_Playground_accordion_Header_Spren".Translate(),
+                    Subtitle: (string)"CL_Playground_accordion_Subtitle_Spren".Translate(),
+                    Content: Text.Create(
+                        (string)"CL_Playground_accordion_Body_Spren".Translate(),
+                        wrap: true,
+                        style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.875f), TextColor = ThemeSlot.TextPrimary }
+                    )
+                ),
+            };
+            Hooks.Hooks.StateHandle<HashSet<int>> open =
+                Hooks.Hooks.UseState<HashSet<int>>(new HashSet<int> { 2, 3 });
             return Accordion.Create(
-                BuildSampleItems(),
+                items,
                 open.Value,
-                id => {
-                    HashSet<string> next = new HashSet<string>(open.Value);
+                onToggle: id => {
+                    HashSet<int> next = new HashSet<int>(open.Value);
                     if (!next.Add(id)) {
                         next.Remove(id);
                     }
 
                     open.Set(next);
                 },
-                AccordionMode.Multi
+                mode: AccordionMode.Multi
+            );
+        });
+    }
+
+
+    [DocVariant("CL_Playground_accordion_Mode_Disabled")]
+    public static DocSample DocsDisabled() {
+        return new DocSample(() => {
+            HashSet<AccordionItem> items = new HashSet<AccordionItem> {
+                new AccordionItem(
+                    Id: 1,
+                    Title: (string)"CL_Playground_accordion_Header_Overview".Translate(),
+                    Subtitle: (string)"CL_Playground_accordion_Subtitle_Overview".Translate(),
+                    Content: Text.Create(
+                        (string)"CL_Playground_accordion_Body_Overview".Translate(),
+                        wrap: true,
+                        style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.875f), TextColor = ThemeSlot.TextPrimary }
+                    )
+                ),
+                new AccordionItem(
+                    Id: 2,
+                    Title: (string)"CL_Playground_accordion_Header_OldMagic".Translate(),
+                    Subtitle: (string)"CL_Playground_accordion_Subtitle_OldMagic".Translate(),
+                    Disabled: true,
+                    Content: Text.Create(
+                        (string)"CL_Playground_accordion_Body_OldMagic".Translate(),
+                        wrap: true,
+                        style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.875f), TextColor = ThemeSlot.TextPrimary }
+                    )
+                ),
+                new AccordionItem(
+                    Id: 3,
+                    Title: (string)"CL_Playground_accordion_Header_Spren".Translate(),
+                    Subtitle: (string)"CL_Playground_accordion_Subtitle_Spren".Translate(),
+                    Content: Text.Create(
+                        (string)"CL_Playground_accordion_Body_Spren".Translate(),
+                        wrap: true,
+                        style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.875f), TextColor = ThemeSlot.TextPrimary }
+                    )
+                ),
+            };
+            Hooks.Hooks.StateHandle<HashSet<int>> open =
+                Hooks.Hooks.UseState<HashSet<int>>(new HashSet<int> { 1 });
+            return Accordion.Create(
+                items,
+                open.Value,
+                onToggle: id => {
+                    HashSet<int> next = new HashSet<int>(open.Value);
+                    if (!next.Add(id)) {
+                        next.Remove(id);
+                    }
+
+                    open.Set(next);
+                },
+                mode: AccordionMode.Multi
             );
         });
     }
@@ -299,13 +499,24 @@ public static class Accordion {
     [DocUsage]
     public static DocSample DocsUsage() {
         return new DocSample(() => {
-            Hooks.Hooks.RefHandle<HashSet<string>> expanded =
-                Hooks.Hooks.UseRef(new HashSet<string> { "overview" });
-            return Accordion.Create(
-                BuildSampleItems(),
-                expanded.Current,
-                _ => { }
-            );
+            HashSet<AccordionItem> items = new HashSet<AccordionItem> {
+                new AccordionItem(
+                    Id: 1,
+                    Title: "Overview",
+                    Subtitle: "Stormlight + Bondsmiths",
+                    Content: Text.Create("Stormlight is the most common form of Investiture on Roshar.", wrap: true)
+                ),
+                new AccordionItem(
+                    Id: 2,
+                    Title: "Spren",
+                    Disabled: true,
+                    Content: Text.Create("Sentient nature-spirits born of Investiture and human attention.", wrap: true)
+                ),
+            };
+
+            Hooks.Hooks.RefHandle<HashSet<int>> expanded =
+                Hooks.Hooks.UseRef(new HashSet<int> { 1 });
+            return Accordion.Create(items, expanded.Current);
         });
     }
 }

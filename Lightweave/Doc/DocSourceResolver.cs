@@ -23,6 +23,124 @@ internal static class DocSourceResolver {
         return Cache.GetOrAdd(key, _ => LoadAndExtract(file, methodName));
     }
 
+    public static string? ResolveMethodSourceWithSignature(string methodName, string file) {
+        if (string.IsNullOrEmpty(methodName) || string.IsNullOrEmpty(file)) {
+            return null;
+        }
+
+        string key = file + "::full::" + methodName;
+        return Cache.GetOrAdd(key, _ => LoadAndExtractFull(file, methodName));
+    }
+
+    private static string? LoadAndExtractFull(string file, string methodName) {
+        try {
+            if (!File.Exists(file)) {
+                return null;
+            }
+
+            string source = File.ReadAllText(file);
+            return ExtractMethodFull(source, methodName);
+        }
+        catch (IOException ex) {
+            LightweaveLog.Warning($"DocSourceResolver IO failure for {file}: {ex}");
+            return null;
+        }
+        catch (UnauthorizedAccessException ex) {
+            LightweaveLog.Warning($"DocSourceResolver access denied for {file}: {ex}");
+            return null;
+        }
+    }
+
+    private static string? ExtractMethodFull(string source, string methodName) {
+        int searchFrom = 0;
+        while (searchFrom < source.Length) {
+            int matchIdx = source.IndexOf(methodName, searchFrom, StringComparison.Ordinal);
+            if (matchIdx < 0) {
+                return null;
+            }
+
+            searchFrom = matchIdx + methodName.Length;
+
+            if (matchIdx > 0 && IsIdentifierChar(source[matchIdx - 1])) {
+                continue;
+            }
+
+            int afterEnd = matchIdx + methodName.Length;
+            if (afterEnd < source.Length && IsIdentifierChar(source[afterEnd])) {
+                continue;
+            }
+
+            int parenIdx = afterEnd;
+            while (parenIdx < source.Length && (source[parenIdx] == ' ' || source[parenIdx] == '\t')) {
+                parenIdx++;
+            }
+
+            if (parenIdx >= source.Length || source[parenIdx] != '(') {
+                continue;
+            }
+
+            int sol = matchIdx;
+            while (sol > 0 && source[sol - 1] != '\n') {
+                sol--;
+            }
+
+            int eol = matchIdx;
+            while (eol < source.Length && source[eol] != '\n') {
+                eol++;
+            }
+
+            string line = source.Substring(sol, eol - sol);
+            if (!LooksLikeDeclaration(line)) {
+                continue;
+            }
+
+            int idx = parenIdx + 1;
+            int parenDepth = 1;
+            while (idx < source.Length && parenDepth > 0) {
+                char c = source[idx];
+                if (c == '(') {
+                    parenDepth++;
+                }
+                else if (c == ')') {
+                    parenDepth--;
+                }
+
+                idx++;
+            }
+
+            while (idx < source.Length && source[idx] != '{') {
+                idx++;
+            }
+
+            if (idx >= source.Length) {
+                return null;
+            }
+
+            int depth = 0;
+            int end = idx;
+            while (end < source.Length) {
+                char c = source[end];
+                if (c == '{') {
+                    depth++;
+                }
+                else if (c == '}') {
+                    depth--;
+                    if (depth == 0) {
+                        end++;
+                        break;
+                    }
+                }
+
+                end++;
+            }
+
+            string full = source.Substring(sol, end - sol);
+            return Dedent(full).TrimEnd();
+        }
+
+        return null;
+    }
+
 
     public static string? ResolveTypeSource(string file, string typeName) {
         if (string.IsNullOrEmpty(file) || string.IsNullOrEmpty(typeName)) {

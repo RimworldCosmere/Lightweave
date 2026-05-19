@@ -13,7 +13,7 @@ namespace Cosmere.Lightweave.Typography;
     Id = "eyebrow",
     Summary = "Small uppercase tracked label used above titles or to mark sections.",
     WhenToUse = "Section eyebrows above headings, metadata-row labels, status group prefixes. Always uppercase.",
-    SourcePath = "Lightweave/Lightweave/Typography/Eyebrow.cs",
+    SourcePath = "Lightweave/Typography/Eyebrow.cs",
     ShowRtl = false
 )]
 public static class Eyebrow {

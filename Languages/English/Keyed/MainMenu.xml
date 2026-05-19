@@ -60,6 +60,10 @@
     <CL_MainMenu_Lang_HeaderCount>{COUNT} available</CL_MainMenu_Lang_HeaderCount>
     <CL_MainMenu_Lang_SearchPlaceholder>Search languages</CL_MainMenu_Lang_SearchPlaceholder>
     <CL_MainMenu_Lang_NoMatches>No languages match.</CL_MainMenu_Lang_NoMatches>
+    <CL_MainMenu_Theme_Label>Theme</CL_MainMenu_Theme_Label>
+    <CL_MainMenu_Theme_HeaderTitle>THEME</CL_MainMenu_Theme_HeaderTitle>
+    <CL_MainMenu_Theme_HeaderCount>{COUNT} available</CL_MainMenu_Theme_HeaderCount>
+    <CL_MainMenu_Theme_None>No themes registered.</CL_MainMenu_Theme_None>
     <CL_MainMenu_SteamWorkshop>Steam Workshop</CL_MainMenu_SteamWorkshop>
     <CL_MainMenu_OfficialDiscord>Official Discord</CL_MainMenu_OfficialDiscord>
     <CL_MainMenu_WikiTutorials>Wiki &amp; Tutorials</CL_MainMenu_WikiTutorials>
@@ -72,7 +76,7 @@
     <CL_MainMenu_QuitToOS>Quit to Desktop</CL_MainMenu_QuitToOS>
 
     <CL_MainMenu_More_Header>MORE</CL_MainMenu_More_Header>
-    <CL_MainMenu_More_Sub_Playground>Concept demo - not affiliated with Ludeon</CL_MainMenu_More_Sub_Playground>
+    <CL_MainMenu_More_Sub_Playground>Concept demo</CL_MainMenu_More_Sub_Playground>
     <CL_MainMenu_More_Sub_Credits>Cast and dev team</CL_MainMenu_More_Sub_Credits>
     <CL_MainMenu_More_Sub_SteamWorkshop>Browse mods</CL_MainMenu_More_Sub_SteamWorkshop>
     <CL_MainMenu_More_Sub_OfficialDiscord>Community</CL_MainMenu_More_Sub_OfficialDiscord>

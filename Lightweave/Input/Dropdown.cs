@@ -18,7 +18,7 @@ namespace Cosmere.Lightweave.Input;
     Id = "dropdown",
     Summary = "Single-select menu that opens a popover list of options.",
     WhenToUse = "Pick one value from a small-to-medium static set when an inline radio group would crowd layout.",
-    SourcePath = "Lightweave/Lightweave/Input/Dropdown.cs"
+    SourcePath = "Lightweave/Input/Dropdown.cs"
 )]
 public static class Dropdown {
     private const int MaxVisibleRows = 10;
@@ -38,7 +38,9 @@ public static class Dropdown {
         [DocParam("Trigger surface treatment: Input renders an input-style chrome, Inline renders compactly.")]
         DropdownVariant variant = DropdownVariant.Input,
         [DocParam("Button variant when variant=Button. Ignored for other variants.")]
-        ButtonVariant buttonStyle = ButtonVariant.Secondary,
+        Variant buttonStyle = default,
+        [DocParam("Input surface variant when variant=Input or Inline. Ignored for Button.")]
+        Variant inputVariant = default,
         [DocParam("Disable interaction and mute the trigger.")]
         bool disabled = false,
         [DocParam("Disambiguator when multiple dropdowns share the same caller line.")]
@@ -55,9 +57,34 @@ public static class Dropdown {
         string typeAheadKey = file + "#dropdown_typeAhead" + keySuffix;
         string typeAheadExpiryKey = file + "#dropdown_typeAheadExpiry" + keySuffix;
 
+        if (buttonStyle.Id == null) {
+            buttonStyle = Variant.Secondary;
+        }
+
         LightweaveNode node = NodeBuilder.New("Dropdown", line, file);
         node.ApplyStyling("dropdown", style, classes, id);
         node.PreferredHeight = SelectorTrigger.Height.ToPixels();
+
+        node.MeasureWidth = () => {
+            Theme.Theme theme = RenderContext.Current.Theme;
+            Font font = theme.GetFont(FontRole.Body);
+            int pixelSize = Mathf.RoundToInt(new Rem(0.9375f).ToFontPx());
+            GUIStyle gs = GuiStyleCache.GetOrCreate(font, pixelSize);
+            float maxLabelW = 0f;
+            for (int i = 0; i < options.Count; i++) {
+                string lbl = labelFn(options[i]);
+                if (string.IsNullOrEmpty(lbl)) {
+                    continue;
+                }
+                float w = gs.CalcSize(new GUIContent(lbl)).x;
+                if (w > maxLabelW) {
+                    maxLabelW = w;
+                }
+            }
+            float chevronReserve = new Rem(1.5f).ToPixels();
+            float padPx = SpacingScale.Sm.ToPixels();
+            return Mathf.Ceil(maxLabelW + chevronReserve + padPx * 2f);
+        };
 
         node.Paint = (allocatedRect, paintChildren) => {
             Rect rect = SelectorTrigger.ComputeTriggerRect(allocatedRect);
@@ -82,7 +109,7 @@ public static class Dropdown {
             }
 
             InteractionState state = InteractionState.Resolve(rect, null, disabled);
-            TriggerStyle style = PaintTriggerSurface(rect, variant, buttonStyle, state, disabled);
+            TriggerStyle style = PaintTriggerSurface(rect, variant, buttonStyle, inputVariant, state, disabled);
             (Rect labelRect, Rect chevronRect) = ComputeTriggerLayout(rect, dir);
             DrawTriggerContent(labelRect, chevronRect, labelFn(value), variant, style, dir);
 
@@ -119,31 +146,33 @@ public static class Dropdown {
     private static TriggerStyle PaintTriggerSurface(
         Rect rect,
         DropdownVariant variant,
-        ButtonVariant buttonStyle,
+        Variant buttonStyle,
+        Variant inputVariant,
         InteractionState state,
         bool disabled
     ) {
         if (variant == DropdownVariant.Button) {
-            ThemeSlot fgSlot = ButtonVariants.Foreground(buttonStyle, state);
-            ThemeSlot? borderSlot = ButtonVariants.Border(buttonStyle, state);
+            ThemeSlot fgSlot = VariantPalette.Foreground(buttonStyle, state);
+            ThemeSlot? borderSlot = VariantPalette.Border(buttonStyle, state);
             BorderSpec? borderSpec = borderSlot.HasValue
                 ? BorderSpec.All(new Rem(1f / 16f), borderSlot.Value)
                 : null;
             RadiusSpec radiusSpec = RadiusSpec.All(RadiusScale.Sm);
 
-            if (buttonStyle == ButtonVariant.Frosted) {
+            if (buttonStyle == Variant.Frosted) {
                 bool active = state.Hovered || state.Pressed;
                 BackdropBlur.Draw(rect, active ? 8f : 6f);
-                Color translucent = new Color(20f / 255f, 16f / 255f, 11f / 255f, active ? 0.88f : 0.78f);
+                Color translucentBase = RenderContext.Current.Theme.GetColor(ThemeSlot.SurfaceTranslucentDark);
+                Color translucent = new Color(translucentBase.r, translucentBase.g, translucentBase.b, active ? 0.88f : 0.78f);
                 PaintBox.Draw(rect, BackgroundSpec.Of(translucent), borderSpec, radiusSpec);
             }
             else {
-                ThemeSlot? bgSlot = ButtonVariants.Background(buttonStyle, state);
+                ThemeSlot? bgSlot = VariantPalette.Background(buttonStyle, state);
                 BackgroundSpec? bgSpec = bgSlot.HasValue ? BackgroundSpec.Of(bgSlot.Value) : null;
                 PaintBox.Draw(rect, bgSpec, borderSpec, radiusSpec);
             }
 
-            float overlay = ButtonVariants.OverlayAlpha(state);
+            float overlay = VariantPalette.OverlayAlpha(state);
             if (overlay > 0f) {
                 Color overlayColor = InteractionFeedback.OverlayColor(RenderContext.Current.Theme, state, overlay);
                 PaintBox.Draw(rect, BackgroundSpec.Of(overlayColor), null, radiusSpec);
@@ -157,7 +186,7 @@ public static class Dropdown {
             };
         }
 
-        InputSurface.Draw(rect, state);
+        InputSurface.DrawInputChrome(rect, state, inputVariant);
         return new TriggerStyle {
             LabelSlot = disabled ? ThemeSlot.TextMuted : ThemeSlot.TextPrimary,
             ChevronSlot = ThemeSlot.TextMuted,
@@ -589,10 +618,10 @@ public static class Dropdown {
             DocOptions,
             v => v,
             v => s.Set(v),
-            DropdownVariant.Button,
-            ButtonVariant.Secondary,
-            forced,
-            "doc-btn-secondary"
+            variant: DropdownVariant.Button,
+            buttonStyle: Variant.Secondary,
+            disabled: forced,
+            instanceKey: "doc-btn-secondary"
         ));
     }
 
@@ -605,10 +634,59 @@ public static class Dropdown {
             DocOptions,
             v => v,
             v => s.Set(v),
-            DropdownVariant.Button,
-            ButtonVariant.Primary,
-            forced,
-            "doc-btn-primary"
+            variant: DropdownVariant.Button,
+            buttonStyle: Variant.Primary,
+            disabled: forced,
+            instanceKey: "doc-btn-primary"
+        ));
+    }
+
+
+    [DocVariant("CL_Playground_Label_Secondary")]
+    public static DocSample DocsSecondary() {
+        bool forced = RenderContext.Current.ForceDisabled;
+        StateHandle<string> s = UseState("Scadrial");
+        return new DocSample(() => Create<string>(
+            s.Value,
+            DocOptions,
+            v => v,
+            v => s.Set(v),
+            variant: DropdownVariant.Button,
+            buttonStyle: Variant.Secondary,
+            disabled: forced,
+            instanceKey: "doc-btn-secondary"
+        ));
+    }
+
+    [DocVariant("CL_Playground_Label_Ghost")]
+    public static DocSample DocsGhost() {
+        bool forced = RenderContext.Current.ForceDisabled;
+        StateHandle<string> s = UseState("Scadrial");
+        return new DocSample(() => Create<string>(
+            s.Value,
+            DocOptions,
+            v => v,
+            v => s.Set(v),
+            variant: DropdownVariant.Button,
+            buttonStyle: Variant.Ghost,
+            disabled: forced,
+            instanceKey: "doc-btn-ghost"
+        ));
+    }
+
+    [DocVariant("CL_Playground_Label_Danger")]
+    public static DocSample DocsDanger() {
+        bool forced = RenderContext.Current.ForceDisabled;
+        StateHandle<string> s = UseState("Scadrial");
+        return new DocSample(() => Create<string>(
+            s.Value,
+            DocOptions,
+            v => v,
+            v => s.Set(v),
+            variant: DropdownVariant.Button,
+            buttonStyle: Variant.Danger,
+            disabled: forced,
+            instanceKey: "doc-btn-danger"
         ));
     }
 
@@ -622,10 +700,10 @@ public static class Dropdown {
             DocOptions,
             v => v,
             v => s.Set(v),
-            DropdownVariant.Button,
-            ButtonVariant.Frosted,
-            forced,
-            "doc-btn-frosted"
+            variant: DropdownVariant.Button,
+            buttonStyle: Variant.Frosted,
+            disabled: forced,
+            instanceKey: "doc-btn-frosted"
         ));
     }
 

@@ -19,7 +19,7 @@ namespace Cosmere.Lightweave.Layout;
     Id = "card",
     Summary = "Filled rectangular container with optional header/footer.",
     WhenToUse = "Group related controls under one frame.",
-    SourcePath = "Lightweave/Lightweave/Layout/Card.cs",
+    SourcePath = "Lightweave/Layout/Card.cs",
     PreferredVariantHeight = 280f
 )]
 public static class Card {
@@ -93,6 +93,7 @@ public static class Card {
     }
 
     public static LightweaveNode Create(
+        [DocParam("Builder for the card's stacked children. Compose Card.Header(), Card.Content(), Card.Footer() in any order.", TypeOverride = "Action<List<LightweaveNode>>?", DefaultOverride = "null")]
         Action<List<LightweaveNode>>? children = null,
         Style? style = null,
         string[]? classes = null,
@@ -113,7 +114,7 @@ public static class Card {
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = ""
     ) {
-        BackgroundSpec defaultBg = BackgroundSpec.Of(ThemeSlot.SurfaceRaised);
+        BackgroundSpec defaultBg = BackgroundSpec.Of(ThemeSlot.SurfaceSunken);
         BorderSpec defaultBorder = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderDefault);
         RadiusSpec defaultRadius = RadiusSpec.All(RadiusScale.Lg);
 
@@ -207,7 +208,9 @@ public static class Card {
         return node;
     }
 
+    [Doc(Slot = true, Label = "Card.Header()")]
     public static LightweaveNode Header(
+        [DocParam("Builder for the header row's stacked children. Typically a Card.Title and a Card.Description.", TypeOverride = "Action<List<LightweaveNode>>?", DefaultOverride = "null")]
         Action<List<LightweaveNode>>? children = null,
         Style? style = null,
         string[]? classes = null,
@@ -260,14 +263,13 @@ public static class Card {
             return total;
         };
 
-        BorderSpec divider = new BorderSpec(Bottom: new Rem(1f / 16f), Color: ThemeSlot.BorderDefault);
-
         node.Paint = (rect, paintChildren) => {
             Style s = node.GetResolvedStyle();
             EdgeInsets pad = s.Padding ?? defaultPad;
-            BorderSpec border = s.Border ?? divider;
+            BorderSpec? border = s.Border;
+            BackgroundSpec bg = s.Background ?? BackgroundSpec.Of(ThemeSlot.SurfaceRaised);
 
-            PaintBox.Draw(rect, s.Background, border, null);
+            PaintBox.Draw(rect, bg, border, null);
 
             Rect inner = pad.Shrink(rect, RenderContext.Current.Direction);
             float y = inner.y;
@@ -283,7 +285,9 @@ public static class Card {
         return node;
     }
 
+    [Doc(Slot = true, Label = "Card.Title()")]
     public static LightweaveNode Title(
+        [DocParam("Title text. Rendered in BodyBold at 1.125rem with TextPrimary.")]
         string text,
         Style? style = null,
         string[]? classes = null,
@@ -306,7 +310,9 @@ public static class Card {
         return node;
     }
 
+    [Doc(Slot = true, Label = "Card.Description()")]
     public static LightweaveNode Description(
+        [DocParam("Description text. Rendered in Body at 0.875rem with TextMuted; word-wraps.")]
         string text,
         Style? style = null,
         string[]? classes = null,
@@ -322,14 +328,17 @@ public static class Card {
             Direction dir = RenderContext.Current.Direction;
             Font font = theme.GetFont(FontRole.Body);
             int size = Mathf.RoundToInt(new Rem(0.875f).ToFontPx());
-            GUIStyle gstyle = GuiStyleCache.GetOrCreate(font, size);            gstyle.alignment = dir == Direction.Rtl ? TextAnchor.UpperRight : TextAnchor.UpperLeft;
+            GUIStyle gstyle = GuiStyleCache.GetOrCreate(font, size);
+            gstyle.alignment = dir == Direction.Rtl ? TextAnchor.UpperRight : TextAnchor.UpperLeft;
             gstyle.wordWrap = true;
             TextDraw.DrawWithStyle(rect, text, gstyle, theme.GetColor(ThemeSlot.TextMuted));
         };
         return node;
     }
 
+    [Doc(Slot = true, Label = "Card.Content()")]
     public static LightweaveNode Content(
+        [DocParam("Builder for the content area's stacked children.", TypeOverride = "Action<List<LightweaveNode>>?", DefaultOverride = "null")]
         Action<List<LightweaveNode>>? children = null,
         Style? style = null,
         string[]? classes = null,
@@ -360,8 +369,10 @@ private static LightweaveNode ContentInternal(
         float contentGapPx = new Rem(0.5f).ToPixels();
         EdgeInsets defaultPad = EdgeInsets.All(SpacingScale.Md);
         BorderSpec sideBorder = new BorderSpec(
-            Left: new Rem(1f / 16f),
+            Top: new Rem(1f / 16f),
             Right: new Rem(1f / 16f),
+            Bottom: new Rem(1f / 16f),
+            Left: new Rem(1f / 16f),
             Color: ThemeSlot.BorderDefault
         );
 
@@ -428,7 +439,9 @@ private static LightweaveNode ContentInternal(
         return node;
     }
 
+    [Doc(Slot = true, Label = "Card.Footer()")]
     public static LightweaveNode Footer(
+        [DocParam("Builder for the footer row's children. Typically a HStack of Buttons.", TypeOverride = "Action<List<LightweaveNode>>?", DefaultOverride = "null")]
         Action<List<LightweaveNode>>? children = null,
         Style? style = null,
         string[]? classes = null,
@@ -466,14 +479,13 @@ private static LightweaveNode ContentInternal(
         float padBottomPx0 = pad0.Bottom?.ToPixels() ?? 0f;
         node.PreferredHeight = buttonRowH + padTopPx0 + padBottomPx0;
 
-        BorderSpec divider = new BorderSpec(Top: new Rem(1f / 16f), Color: ThemeSlot.BorderDefault);
-
         node.Paint = (rect, paintChildren) => {
             Style s = node.GetResolvedStyle();
             EdgeInsets pad = s.Padding ?? defaultPad;
-            BorderSpec border = s.Border ?? divider;
+            BorderSpec? border = s.Border;
+            BackgroundSpec bg = s.Background ?? BackgroundSpec.Of(ThemeSlot.SurfaceRaised);
 
-            PaintBox.Draw(rect, s.Background, border, null);
+            PaintBox.Draw(rect, bg, border, null);
 
             int count = children.Length;
             if (count == 0) {
@@ -542,8 +554,8 @@ private static LightweaveNode ContentInternal(
                     ));
                 }));
                 c.Add(Card.Footer(f => {
-                    f.Add(Button.Create((string)"CL_Playground_card_Pawn_Action_Dismiss".Translate(), () => { }, ButtonVariant.Secondary));
-                    f.Add(Button.Create((string)"CL_Playground_card_Pawn_Action_Promote".Translate(), () => { }, ButtonVariant.Primary));
+                    f.Add(Button.Create((string)"CL_Playground_card_Pawn_Action_Dismiss".Translate(), () => { }, Variant.Secondary));
+                    f.Add(Button.Create((string)"CL_Playground_card_Pawn_Action_Promote".Translate(), () => { }, Variant.Primary));
                 }));
             })
         );
@@ -578,15 +590,22 @@ private static LightweaveNode ContentInternal(
 
     [DocVariant("CL_Playground_Label_Loose", Order = 2)]
     public static DocSample DocsLoose() {
-        return new DocSample(() => 
+        return new DocSample(() =>
             Card.Create(c => {
                 c.Add(Card.Header(h => {
                     h.Add(Card.Title((string)"CL_Playground_card_Loose_Title".Translate()));
                     h.Add(Card.Description((string)"CL_Playground_card_Loose_Desc".Translate()));
                 }));
+                c.Add(Card.Content(ct => {
+                    ct.Add(Text.Create(
+                        (string)"CL_Playground_card_Loose_Body".Translate(),
+                        wrap: true,
+                        style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.875f), TextColor = ThemeSlot.TextSecondary }
+                    ));
+                }));
                 c.Add(Card.Footer(f => {
-                    f.Add(Button.Create((string)"CL_Playground_card_Loose_Cancel".Translate(), () => { }, ButtonVariant.Ghost));
-                    f.Add(Button.Create((string)"CL_Playground_card_Loose_Confirm".Translate(), () => { }, ButtonVariant.Primary));
+                    f.Add(Button.Create((string)"CL_Playground_card_Loose_Cancel".Translate(), () => { }, Variant.Ghost));
+                    f.Add(Button.Create((string)"CL_Playground_card_Loose_Confirm".Translate(), () => { }, Variant.Primary));
                 }));
             })
         );

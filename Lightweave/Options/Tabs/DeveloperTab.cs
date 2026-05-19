@@ -17,31 +17,31 @@ public static class DeveloperTab {
             s.Add(SettingRow.Section("CL_Options_Section_Developer",
                 SettingRow.Create(
                     "CL_Options_TestMapSizes".Translate(),
-                    Switch.Create("", Prefs.TestMapSizes, v => Prefs.TestMapSizes = v)
+                    Switch.Create("", Prefs.TestMapSizes, v => Prefs.TestMapSizes = v, variant: Variant.Secondary)
                 ),
                 SettingRow.Create(
                     "CL_Options_LogVerbose".Translate(),
-                    Switch.Create("", Prefs.LogVerbose, v => Prefs.LogVerbose = v)
+                    Switch.Create("", Prefs.LogVerbose, v => Prefs.LogVerbose = v, variant: Variant.Secondary)
                 ),
                 SettingRow.Create(
                     "CL_Options_ResetModsConfigOnCrash".Translate(),
-                    Switch.Create("", Prefs.ResetModsConfigOnCrash, v => Prefs.ResetModsConfigOnCrash = v)
+                    Switch.Create("", Prefs.ResetModsConfigOnCrash, v => Prefs.ResetModsConfigOnCrash = v, variant: Variant.Secondary)
                 ),
                 SettingRow.Create(
                     "CL_Options_DisableQuickStart".Translate(),
-                    Switch.Create("", Prefs.DisableQuickStartCryptoSickness, v => Prefs.DisableQuickStartCryptoSickness = v)
+                    Switch.Create("", Prefs.DisableQuickStartCryptoSickness, v => Prefs.DisableQuickStartCryptoSickness = v, variant: Variant.Secondary)
                 ),
                 SettingRow.Create(
                     "CL_Options_StartDevPalette".Translate(),
-                    Switch.Create("", Prefs.StartDevPaletteOn, v => Prefs.StartDevPaletteOn = v)
+                    Switch.Create("", Prefs.StartDevPaletteOn, v => Prefs.StartDevPaletteOn = v, variant: Variant.Secondary)
                 ),
                 SettingRow.Create(
                     "CL_Options_OpenLogOnWarnings".Translate(),
-                    Switch.Create("", Prefs.OpenLogOnWarnings, v => Prefs.OpenLogOnWarnings = v)
+                    Switch.Create("", Prefs.OpenLogOnWarnings, v => Prefs.OpenLogOnWarnings = v, variant: Variant.Secondary)
                 ),
                 SettingRow.Create(
                     "CL_Options_CloseLogOnEsc".Translate(),
-                    Switch.Create("", Prefs.CloseLogWindowOnEscape, v => Prefs.CloseLogWindowOnEscape = v)
+                    Switch.Create("", Prefs.CloseLogWindowOnEscape, v => Prefs.CloseLogWindowOnEscape = v, variant: Variant.Secondary)
                 ),
                 SettingRow.Create(
                     "CL_Options_DisableDevMode".Translate(),
@@ -52,7 +52,7 @@ public static class DeveloperTab {
                             DevModePermanentlyDisabledUtility.Disable,
                             destructive: true
                         )),
-                        variant: ButtonVariant.Danger,
+                        variant: Variant.Danger,
                         disabled: DevModePermanentlyDisabledUtility.Disabled
                     )
                 )
