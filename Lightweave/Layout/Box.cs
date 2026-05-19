@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using Cosmere.Lightweave.Doc;
+using Cosmere.Lightweave.Input;
 using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
@@ -14,12 +15,14 @@ namespace Cosmere.Lightweave.Layout;
     Id = "box",
     Summary = "Padded surface with optional background, border, and radius.",
     WhenToUse = "Wrap content in a themed container with consistent inner padding.",
-    SourcePath = "Lightweave/Lightweave/Layout/Box.cs"
+    SourcePath = "Lightweave/Layout/Box.cs"
 )]
 public static class Box {
     public static LightweaveNode Create(
         [DocParam("Children appended to the box.")]
         Action<List<LightweaveNode>>? children = null,
+        [DocParam("Visual variant. When non-null, seeds Background/Border/Radius defaults; explicit style: still wins.", TypeOverride = "Variant?", DefaultOverride = "null")]
+        Variant? variant = null,
         [DocParam("Style applied to the box (padding/background/border/radius/etc).", TypeOverride = "Style?", DefaultOverride = "null")]
         Style? style = null,
         [DocParam("Additional class names merged after the base 'box' class.", TypeOverride = "string[]?", DefaultOverride = "null")]
@@ -33,7 +36,19 @@ public static class Box {
         children?.Invoke(kids);
 
         LightweaveNode node = NodeBuilder.New("Box", line, file);
-        node.ApplyStyling("box", style, classes, id);
+        Style? resolvedStyle = style;
+        if (variant.HasValue) {
+            InteractionState rest = new InteractionState(false, false, false, false);
+            ThemeSlot? bgSlot = VariantPalette.Background(variant.Value, rest);
+            ThemeSlot? borderSlot = VariantPalette.Border(variant.Value, rest);
+            Style variantBase = new Style {
+                Background = bgSlot.HasValue ? BackgroundSpec.Of(bgSlot.Value) : null,
+                Border = borderSlot.HasValue ? BorderSpec.All(new Rem(1f / 16f), borderSlot.Value) : null,
+                Radius = RadiusSpec.All(RadiusScale.Sm),
+            };
+            resolvedStyle = style.HasValue ? Style.Merge(variantBase, style.Value) : variantBase;
+        }
+        node.ApplyStyling("box", resolvedStyle, classes, id);
         node.Children.AddRange(kids);
 
         float ChildMeasure(LightweaveNode child, float width) {
@@ -242,6 +257,78 @@ public static class Box {
                     Padding = EdgeInsets.All(SpacingScale.Sm),
                     Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderSubtle),
                     Radius = RadiusSpec.All(RadiusScale.Sm),
+                }
+            )
+        );
+    }
+
+
+    [DocVariant("CL_Playground_Label_Primary")]
+    public static DocSample DocsPrimary() {
+        return new DocSample(() =>
+            Box.Create(
+                c => c.Add(Text.Create(
+                    "primary",
+                    style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.8125f), TextColor = ThemeSlot.TextOnAccent }
+                )),
+                variant: Variant.Primary,
+                style: new Style {
+                    Padding = EdgeInsets.All(SpacingScale.Sm),
+                }
+            )
+        );
+    }
+
+    [DocVariant("CL_Playground_Label_Secondary")]
+    public static DocSample DocsSecondary() {
+        return new DocSample(() =>
+            Box.Create(
+                c => c.Add(Caption.Create("secondary")),
+                variant: Variant.Secondary,
+                style: new Style {
+                    Padding = EdgeInsets.All(SpacingScale.Sm),
+                }
+            )
+        );
+    }
+
+    [DocVariant("CL_Playground_Label_Ghost")]
+    public static DocSample DocsGhost() {
+        return new DocSample(() =>
+            Box.Create(
+                c => c.Add(Caption.Create("ghost")),
+                variant: Variant.Ghost,
+                style: new Style {
+                    Padding = EdgeInsets.All(SpacingScale.Sm),
+                }
+            )
+        );
+    }
+
+    [DocVariant("CL_Playground_Label_Danger")]
+    public static DocSample DocsDanger() {
+        return new DocSample(() =>
+            Box.Create(
+                c => c.Add(Text.Create(
+                    "danger",
+                    style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.8125f), TextColor = ThemeSlot.TextOnDanger }
+                )),
+                variant: Variant.Danger,
+                style: new Style {
+                    Padding = EdgeInsets.All(SpacingScale.Sm),
+                }
+            )
+        );
+    }
+
+    [DocVariant("CL_Playground_Label_Frosted")]
+    public static DocSample DocsFrosted() {
+        return new DocSample(() =>
+            Box.Create(
+                c => c.Add(Caption.Create("frosted")),
+                variant: Variant.Frosted,
+                style: new Style {
+                    Padding = EdgeInsets.All(SpacingScale.Sm),
                 }
             )
         );

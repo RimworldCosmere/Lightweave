@@ -11,7 +11,7 @@ namespace Cosmere.Lightweave.Layout;
     Id = "spacer",
     Summary = "Empty layout node that consumes space.",
     WhenToUse = "Push siblings apart in a Row/HStack/Column.",
-    SourcePath = "Lightweave/Lightweave/Layout/Spacer.cs"
+    SourcePath = "Lightweave/Layout/Spacer.cs"
 )]
 public static class Spacer {
     public static LightweaveNode Flex(

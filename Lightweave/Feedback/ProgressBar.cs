@@ -14,7 +14,7 @@ namespace Cosmere.Lightweave.Feedback;
     Id = "progressbar",
     Summary = "Determinate horizontal bar showing fractional progress.",
     WhenToUse = "Display known-duration progress with an optional label.",
-    SourcePath = "Lightweave/Lightweave/Feedback/ProgressBar.cs",
+    SourcePath = "Lightweave/Feedback/ProgressBar.cs",
     ShowRtl = true
 )]
 public static class ProgressBar {
@@ -38,6 +38,7 @@ public static class ProgressBar {
         LightweaveNode node = NodeBuilder.New($"ProgressBar:{variant}", line, file);
         node.ApplyStyling("progress-bar", style, classes, id);
         node.PreferredHeight = new Rem(1f).ToPixels();
+        node.MeasureWidth = () => Mathf.Ceil(new Rem(12f).ToPixels());
 
         node.Paint = (rect, paintChildren) => {
             Theme.Theme theme = RenderContext.Current.Theme;
@@ -87,6 +88,17 @@ public static class ProgressBar {
     [DocVariant("CL_Playground_Label_Accent")]
     public static DocSample DocsAccent() {
         return new DocSample(() => ProgressBar.Create(0.65f, 0f, 1f, "65%"));
+    }
+
+
+    [DocVariant("CL_Playground_Label_Neutral")]
+    public static DocSample DocsNeutral() {
+        return new DocSample(() => ProgressBar.Create(0.4f, 0f, 1f, "40%", variant: BadgeVariant.Neutral));
+    }
+
+    [DocVariant("CL_Playground_Label_Warning")]
+    public static DocSample DocsWarning() {
+        return new DocSample(() => ProgressBar.Create(0.75f, 0f, 1f, "75%", variant: BadgeVariant.Warning));
     }
 
     [DocVariant("CL_Playground_Label_Default")]

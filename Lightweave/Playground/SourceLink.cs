@@ -38,10 +38,12 @@ public static class SourceLink {
         try {
             string asmPath = typeof(SourceLink).Assembly.Location;
             if (!string.IsNullOrEmpty(asmPath)) {
-                string asmDir = Path.GetDirectoryName(asmPath) ?? "";
-                string up2 = Path.GetFullPath(Path.Combine(asmDir, "..", ".."));
-                if (Directory.Exists(Path.Combine(up2, "CosmereCore"))) {
-                    return up2;
+                string? cur = Path.GetDirectoryName(asmPath);
+                for (int i = 0; i < 8 && !string.IsNullOrEmpty(cur); i++) {
+                    if (LooksLikeRepoRoot(cur)) {
+                        return cur;
+                    }
+                    cur = Path.GetDirectoryName(cur);
                 }
             }
         }
@@ -50,7 +52,7 @@ public static class SourceLink {
 
         try {
             string modsParent = Path.GetFullPath(Path.Combine(GenFilePaths.ModsFolderPath, "..", ".."));
-            if (Directory.Exists(Path.Combine(modsParent, "CosmereCore"))) {
+            if (LooksLikeRepoRoot(modsParent)) {
                 return modsParent;
             }
         }
@@ -58,6 +60,22 @@ public static class SourceLink {
         }
 
         return null;
+    }
+
+    private static bool LooksLikeRepoRoot(string dir) {
+        if (string.IsNullOrEmpty(dir)) {
+            return false;
+        }
+        if (File.Exists(Path.Combine(dir, "Lightweave.sln"))) {
+            return true;
+        }
+        if (Directory.Exists(Path.Combine(dir, ".git")) || File.Exists(Path.Combine(dir, ".git"))) {
+            return true;
+        }
+        if (Directory.Exists(Path.Combine(dir, "CosmereCore"))) {
+            return true;
+        }
+        return false;
     }
 
     public static LightweaveNode Create(
@@ -160,7 +178,7 @@ public static class SourceLink {
 
     internal static string BuildGithubUrl(string sourcePath) {
         string normalized = sourcePath.Replace('\\', '/').TrimStart('/');
-        return "https://github.com/RimworldCosmere/RimworldCosmere/blob/main/" + normalized;
+        return "https://github.com/RimworldCosmere/Lightweave/blob/main/" + normalized;
     }
 
     private static void TryOpenInBrowser(string sourcePath) {

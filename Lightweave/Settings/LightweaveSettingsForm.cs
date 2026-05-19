@@ -1,8 +1,12 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Cosmere.Lightweave.Fonts;
 using Cosmere.Lightweave.Input;
 using Cosmere.Lightweave.Layout;
 using Cosmere.Lightweave.Runtime;
+using Cosmere.Lightweave.Theme;
+using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
 using UnityEngine;
 using Verse;
@@ -26,6 +30,9 @@ public static class LightweaveSettingsForm {
             stack => {
                 stack.Add(Heading.Create(2, "CL_Settings_Title".Translate()));
                 stack.Add(Caption.Create("CL_Settings_Subtitle".Translate()));
+
+                stack.Add(BuildThemeSection(settings));
+                stack.Add(Divider.Horizontal());
 
                 stack.Add(BuildFontSizeSection(settings));
                 stack.Add(Divider.Horizontal());
@@ -60,6 +67,38 @@ public static class LightweaveSettingsForm {
                     step: 5f,
                     marks: new[] { 85f, 100f, 115f, 125f },
                     format: v => Mathf.RoundToInt(v) + "%"
+                ));
+            }
+        );
+    }
+
+    private static LightweaveNode BuildThemeSection(LightweaveSettings settings) {
+        IReadOnlyList<ThemeDescriptor> themes = ThemeRegistry.All;
+        ThemeDescriptor current = themes.FirstOrDefault(t => string.Equals(t.Id, settings.SelectedThemeId, StringComparison.Ordinal))
+            ?? themes.FirstOrDefault(t => string.Equals(t.Id, ThemeRegistry.DefaultId, StringComparison.Ordinal))
+            ?? (themes.Count > 0 ? themes[0] : null!);
+        return Stack.Create(
+            new Rem(0.5f),
+            section => {
+                section.Add(Heading.Create(3, "CL_Settings_Theme_Heading".Translate()));
+                section.Add(Caption.Create("CL_Settings_Theme_Help".Translate()));
+                if (current == null || themes.Count == 0) {
+                    section.Add(Caption.Create("CL_Settings_Theme_None".Translate()));
+                    return;
+                }
+                section.Add(Dropdown.Create<ThemeDescriptor>(
+                    value: current,
+                    options: themes,
+                    labelFn: d => (string)d.LabelKey.Translate(),
+                    onChange: d => {
+                        if (d == null || string.Equals(d.Id, settings.SelectedThemeId, StringComparison.Ordinal)) {
+                            return;
+                        }
+                        settings.SelectedThemeId = d.Id;
+                        LightweaveMod.Save();
+                    },
+                    inputVariant: Variant.Secondary,
+                    buttonStyle: Variant.Secondary
                 ));
             }
         );

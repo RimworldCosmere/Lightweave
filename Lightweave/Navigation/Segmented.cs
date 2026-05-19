@@ -16,7 +16,7 @@ namespace Cosmere.Lightweave.Navigation;
     Id = "segmented",
     Summary = "Pill-shaped grouped selector for a small set of choices.",
     WhenToUse = "Toggle between 2-5 mutually exclusive filters or modes.",
-    SourcePath = "Lightweave/Lightweave/Navigation/Segmented.cs",
+    SourcePath = "Lightweave/Navigation/Segmented.cs",
     ShowRtl = true
 )]
 public static class Segmented {
@@ -38,6 +38,24 @@ public static class Segmented {
         LightweaveNode node = NodeBuilder.New($"Segmented<{typeof(T).Name}>", line, file);
         node.ApplyStyling("segmented", style, classes, id);
         node.PreferredHeight = new Rem(1.75f).ToPixels();
+        node.MeasureWidth = () => {
+            int count = items.Count;
+            if (count == 0) {
+                return 0f;
+            }
+            Theme.Theme theme = RenderContext.Current.Theme;
+            Font activeFont = theme.GetFont(FontRole.BodyBold);
+            int pixelSize = Mathf.RoundToInt(new Rem(0.875f).ToFontPx());
+            GUIStyle gs = GuiStyleCache.GetOrCreate(activeFont, pixelSize);
+            float padPx = SpacingScale.Md.ToPixels();
+            float total = 0f;
+            for (int i = 0; i < count; i++) {
+                string label = labelFn(items[i]) ?? string.Empty;
+                float w = gs.CalcSize(new GUIContent(label)).x;
+                total += w + padPx * 2f;
+            }
+            return Mathf.Ceil(total);
+        };
 
         node.Paint = (rect, _) => {
             Theme.Theme theme = RenderContext.Current.Theme;

@@ -26,7 +26,7 @@ namespace Cosmere.Lightweave.Playground;
     Id = "usestate",
     Summary = "Hook that preserves a value across renders for the current node.",
     WhenToUse = "Track local UI state - draft inputs, toggles, charge meters - inside a render function.",
-    SourcePath = "Lightweave/Lightweave/Hooks/Hooks.cs",
+    SourcePath = "Lightweave/Hooks/Hooks.cs",
     Target = typeof(Cosmere.Lightweave.Hooks.Hooks),
     TargetMember = nameof(Cosmere.Lightweave.Hooks.Hooks.UseState),
     ShowRtl = false
@@ -68,7 +68,7 @@ public static class UseStateDoc {
                     Button.Create(
                         (string)"CL_Playground_Hook_UseState_Drain".Translate(),
                         () => charge.Set(Mathf.Max(0, charge.Value - 1)),
-                        ButtonVariant.Secondary
+                        Variant.Secondary
                     ),
                     72f
                 );
@@ -130,7 +130,7 @@ public static class UseStateDoc {
     Id = "useanim",
     Summary = "Hook that smoothly animates a float toward a target value each frame.",
     WhenToUse = "Drive transitions for opacity, scale, or color blends without manual tweening.",
-    SourcePath = "Lightweave/Lightweave/Hooks/Hooks.cs",
+    SourcePath = "Lightweave/Hooks/Hooks.cs",
     ShowRtl = false,
     PreferredVariantHeight = 120f
 )]
@@ -165,7 +165,7 @@ public static class UseAnimDoc {
                         Button.Create(
                             (string)"CL_Playground_UseAnim_Toggle_Scale".Translate(),
                             () => big.Set(!big.Value),
-                            ButtonVariant.Secondary
+                            Variant.Secondary
                         ),
                         120f
                     );
@@ -202,7 +202,7 @@ public static class UseAnimDoc {
                         Button.Create(
                             (string)"CL_Playground_UseAnim_Toggle_Slide".Translate(),
                             () => right.Set(!right.Value),
-                            ButtonVariant.Secondary
+                            Variant.Secondary
                         ),
                         120f
                     );
@@ -234,7 +234,7 @@ public static class UseAnimDoc {
                         Button.Create(
                             (string)"CL_Playground_UseAnim_Toggle_Color".Translate(),
                             () => alt.Set(!alt.Value),
-                            ButtonVariant.Secondary
+                            Variant.Secondary
                         ),
                         120f
                     );
@@ -273,7 +273,7 @@ public static class UseAnimDoc {
                         Button.Create(
                             (string)"CL_Playground_UseAnim_Toggle_Stagger".Translate(),
                             () => visible.Set(!visible.Value),
-                            ButtonVariant.Secondary
+                            Variant.Secondary
                         ),
                         120f
                     );
@@ -318,7 +318,7 @@ public static class UseAnimDoc {
                         Button.Create(
                             (string)"CL_Playground_UseAnim_Toggle_Blur".Translate(),
                             () => blurred.Set(!blurred.Value),
-                            ButtonVariant.Secondary
+                            Variant.Secondary
                         ),
                         120f
                     );
@@ -349,7 +349,7 @@ public static class UseAnimDoc {
                         Button.Create(
                             (string)"CL_Playground_UseAnim_Toggle_Expand".Translate(),
                             () => wide.Set(!wide.Value),
-                            ButtonVariant.Secondary
+                            Variant.Secondary
                         ),
                         120f
                     );
@@ -380,7 +380,7 @@ public static class UseAnimDoc {
                         Button.Create(
                             (string)"CL_Playground_UseAnim_Toggle_Shrink".Translate(),
                             () => small.Set(!small.Value),
-                            ButtonVariant.Secondary
+                            Variant.Secondary
                         ),
                         120f
                     );
@@ -423,7 +423,7 @@ public static class UseAnimDoc {
                         Button.Create(
                             (string)"CL_Playground_UseAnim_Toggle_Shake".Translate(),
                             () => shakeStart.Current = Time.unscaledTime,
-                            ButtonVariant.Secondary
+                            Variant.Secondary
                         ),
                         120f
                     );
@@ -474,7 +474,7 @@ public static class UseAnimDoc {
                         Button.Create(
                             (string)"CL_Playground_UseAnim_Toggle_Bounce".Translate(),
                             () => up.Set(!up.Value),
-                            ButtonVariant.Secondary
+                            Variant.Secondary
                         ),
                         120f
                     );
@@ -553,7 +553,7 @@ public static class UseAnimDoc {
                                 active.Set(true);
                                 startTime.Current = Time.unscaledTime;
                             },
-                            ButtonVariant.Secondary
+                            Variant.Secondary
                         ),
                         120f
                     );
@@ -656,7 +656,7 @@ public static class UseAnimDoc {
                     Button.Create(
                         (string)"CL_Playground_UseAnim_Toggle".Translate(),
                         () => target.Set(!target.Value),
-                        ButtonVariant.Secondary
+                        Variant.Secondary
                     ),
                     120f
                 );
@@ -670,7 +670,7 @@ public static class UseAnimDoc {
     Id = "usefocus",
     Summary = "Hook that exposes a focus handle for routing keyboard focus to an input.",
     WhenToUse = "Programmatically focus a TextField when a button is pressed, a panel opens, or after a value clears.",
-    SourcePath = "Lightweave/Lightweave/Hooks/UseFocus.cs",
+    SourcePath = "Lightweave/Hooks/UseFocus.cs",
     Target = typeof(UseFocus),
     TargetMember = nameof(UseFocus.Use),
     ShowRtl = false
@@ -707,7 +707,7 @@ public static class UseFocusDoc {
                     Button.Create(
                         (string)"CL_Playground_Hook_UseFocus_FocusSphere".Translate(),
                         focus.Request,
-                        ButtonVariant.Secondary
+                        Variant.Secondary
                     ),
                     140f
                 );
@@ -741,7 +741,7 @@ public static class UseFocusDoc {
                             entry.Set(string.Empty);
                             focus.Request();
                         },
-                        ButtonVariant.Secondary
+                        Variant.Secondary
                     ),
                     96f
                 );
@@ -776,7 +776,7 @@ public static class UseFocusDoc {
     Id = "usehotkey",
     Summary = "Hook that binds a key chord to a callback while a node is mounted.",
     WhenToUse = "Add Escape-to-close, Ctrl+S, or other shortcuts scoped to a specific surface.",
-    SourcePath = "Lightweave/Lightweave/Hooks/UseHotkey.cs",
+    SourcePath = "Lightweave/Hooks/UseHotkey.cs",
     Target = typeof(UseHotkey),
     TargetMember = nameof(UseHotkey.Use),
     ShowRtl = false
@@ -784,17 +784,29 @@ public static class UseFocusDoc {
 public static class UseHotkeyDoc {
     [DocVariant("CL_Playground_Hook_UseHotkey_Single")]
     public static DocSample DocsSingle() {
-        return new DocSample(BuildSingleDoc, useFullSource: true);
+        return new DocSample(
+            BuildSingleDoc,
+            useFullSource: true,
+            helpers: new[] { nameof(DrawHotkeyLabel) }
+        );
     }
 
     [DocVariant("CL_Playground_Hook_UseHotkey_Modifiers")]
     public static DocSample DocsModifiers() {
-        return new DocSample(BuildModifiersDoc, useFullSource: true);
+        return new DocSample(
+            BuildModifiersDoc,
+            useFullSource: true,
+            helpers: new[] { nameof(DrawHotkeyLabel) }
+        );
     }
 
     [DocUsage]
     public static DocSample DocsUsage() {
-        return new DocSample(BuildSingleDoc, useFullSource: true);
+        return new DocSample(
+            BuildSingleDoc,
+            useFullSource: true,
+            helpers: new[] { nameof(DrawHotkeyLabel) }
+        );
     }
 
     private static LightweaveNode BuildSingleDoc() {
@@ -866,7 +878,7 @@ public static class UseHotkeyDoc {
     Id = "useref",
     Summary = "Hook that returns a mutable handle whose value persists across renders without triggering re-paints.",
     WhenToUse = "Hold scratch state - timestamps, last-known-rect, accumulators - that the next render reads but does not visualise.",
-    SourcePath = "Lightweave/Lightweave/Hooks/Hooks.cs",
+    SourcePath = "Lightweave/Hooks/Hooks.cs",
     Target = typeof(Cosmere.Lightweave.Hooks.Hooks),
     TargetMember = nameof(Cosmere.Lightweave.Hooks.Hooks.UseRef),
     ShowRtl = false
@@ -909,7 +921,7 @@ public static class UseRefDoc {
                             startTime.Current = Time.unscaledTime;
                             renderTick.Set(renderTick.Value + 1);
                         },
-                        ButtonVariant.Secondary
+                        Variant.Secondary
                     ),
                     96f
                 );
@@ -928,7 +940,7 @@ public static class UseRefDoc {
                     Button.Create(
                         (string)"CL_Playground_Hook_UseRef_Press".Translate(),
                         () => presses.Current = presses.Current + 1,
-                        ButtonVariant.Secondary
+                        Variant.Secondary
                     ),
                     120f
                 );
@@ -953,7 +965,7 @@ public static class UseRefDoc {
     Id = "usememo",
     Summary = "Hook that caches the result of an expensive computation and only recomputes when its dependencies change.",
     WhenToUse = "Avoid resorting / re-filtering large lists or rebuilding palettes on every render.",
-    SourcePath = "Lightweave/Lightweave/Hooks/Hooks.cs",
+    SourcePath = "Lightweave/Hooks/Hooks.cs",
     Target = typeof(Cosmere.Lightweave.Hooks.Hooks),
     TargetMember = nameof(Cosmere.Lightweave.Hooks.Hooks.UseMemo),
     ShowRtl = false
@@ -1004,7 +1016,7 @@ public static class UseMemoDoc {
                             ? (string)"CL_Playground_Hook_UseMemo_Descend".Translate()
                             : (string)"CL_Playground_Hook_UseMemo_Ascend".Translate(),
                         () => ascending.Set(!ascending.Value),
-                        ButtonVariant.Secondary
+                        Variant.Secondary
                     ),
                     96f
                 );
@@ -1057,7 +1069,7 @@ public static class UseMemoDoc {
     Id = "useeffect",
     Summary = "Hook that runs a side effect after render when its dependencies change, returning an optional cleanup callback.",
     WhenToUse = "Subscribe to game events, start timers, or sync external state - and tear them down when deps change or the node unmounts.",
-    SourcePath = "Lightweave/Lightweave/Hooks/Hooks.cs",
+    SourcePath = "Lightweave/Hooks/Hooks.cs",
     Target = typeof(Cosmere.Lightweave.Hooks.Hooks),
     TargetMember = nameof(Cosmere.Lightweave.Hooks.Hooks.UseEffect),
     ShowRtl = false
@@ -1140,7 +1152,7 @@ public static class UseEffectDoc {
                     Button.Create(
                         (string)"CL_Playground_Hook_UseEffect_Bump".Translate(),
                         () => seed.Set(seed.Value + 1),
-                        ButtonVariant.Secondary
+                        Variant.Secondary
                     ),
                     96f
                 );
@@ -1159,7 +1171,7 @@ public static class UseEffectDoc {
     Id = "usecontext",
     Summary = "Hook that reads the nearest context value of type T from the render tree.",
     WhenToUse = "Pass theming, locale, or session data deep without prop-drilling. Provide values via Provider nodes.",
-    SourcePath = "Lightweave/Lightweave/Hooks/Hooks.cs",
+    SourcePath = "Lightweave/Hooks/Hooks.cs",
     Target = typeof(Cosmere.Lightweave.Hooks.Hooks),
     TargetMember = nameof(Cosmere.Lightweave.Hooks.Hooks.UseContext),
     ShowRtl = false
@@ -1208,7 +1220,7 @@ public static class UseContextDoc {
     Id = "usetheme",
     Summary = "Hook that returns the active Theme for the current render subtree.",
     WhenToUse = "Read theme colors, fonts, or spacing tokens when authoring Paint callbacks.",
-    SourcePath = "Lightweave/Lightweave/Hooks/Hooks.cs",
+    SourcePath = "Lightweave/Hooks/Hooks.cs",
     Target = typeof(Cosmere.Lightweave.Hooks.Hooks),
     TargetMember = nameof(Cosmere.Lightweave.Hooks.Hooks.UseTheme),
     ShowRtl = false
@@ -1264,7 +1276,7 @@ public static class UseThemeDoc {
     Id = "usedirection",
     Summary = "Hook that returns the active text direction (Ltr or Rtl) for the current subtree.",
     WhenToUse = "Mirror layout decisions - leading vs trailing icons, gradient direction, slide-in axis - to match the active locale.",
-    SourcePath = "Lightweave/Lightweave/Hooks/Hooks.cs",
+    SourcePath = "Lightweave/Hooks/Hooks.cs",
     Target = typeof(Cosmere.Lightweave.Hooks.Hooks),
     TargetMember = nameof(Cosmere.Lightweave.Hooks.Hooks.UseDirection),
     ShowRtl = true

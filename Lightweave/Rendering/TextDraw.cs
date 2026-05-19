@@ -36,6 +36,36 @@ public static class TextDraw {
     }
 
 
+    public static void Draw(
+        Rect rect,
+        string text,
+        FontRole role,
+        Rem fontSize,
+        TextAnchor anchor,
+        Color color,
+        FontStyle fontStyle = FontStyle.Normal,
+        TextClipping clipping = TextClipping.Overflow,
+        Font? fontOverride = null
+    ) {
+        if (string.IsNullOrEmpty(text)) {
+            return;
+        }
+
+        Theme.Theme theme = RenderContext.Current.Theme;
+        int pixelSize = Mathf.RoundToInt(fontSize.ToFontPx());
+        GUIStyle style = fontOverride != null
+            ? GuiStyleCache.GetOrCreate(fontOverride, pixelSize, fontStyle)
+            : GuiStyleCache.GetOrCreate(theme, role, pixelSize, fontStyle);
+        style.alignment = anchor;
+        style.clipping = clipping;
+
+        Color saved = GUI.color;
+        GUI.color = color;
+        GUI.Label(RectSnap.SnapText(rect), text, style);
+        GUI.color = saved;
+    }
+
+
     public static void DrawTracked(
         Rect rect,
         string text,

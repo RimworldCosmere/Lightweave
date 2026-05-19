@@ -15,4 +15,7 @@ public sealed class DocAttribute : Attribute {
     public string ParentSlot { get; init; } = "";
     public Type? Target { get; init; }
     public string TargetMember { get; init; } = "";
+    public string Label { get; init; } = "";
+    public bool HideUsage { get; init; } = false;
+    public bool HideSource { get; init; } = false;
 }

@@ -6,6 +6,7 @@ using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
 using UnityEngine;
+using Verse;
 
 namespace Cosmere.Lightweave.Input;
 
@@ -13,13 +14,13 @@ namespace Cosmere.Lightweave.Input;
     Id = "button",
     Summary = "Clickable text button with variant styling.",
     WhenToUse = "Trigger an action with a label-driven affordance.",
-    SourcePath = "Lightweave/Lightweave/Input/Button.cs"
+    SourcePath = "Lightweave/Input/Button.cs"
 )]
 public static class Button {
     public static LightweaveNode Create(
         string label,
         Action? onClick,
-        ButtonVariant variant = ButtonVariant.Primary,
+        Variant variant = default,
         bool ghost = false,
         LightweaveNode? leading = null,
         LightweaveNode? trailing = null,
@@ -113,38 +114,40 @@ public static class Button {
 
             InteractionState state = InteractionState.Resolve(rect, null, disabled);
 
-            ThemeSlot fgSlot = ButtonVariants.Foreground(variant, state, ghost);
-            ThemeSlot? borderSlot = ButtonVariants.Border(variant, state, ghost);
+            ThemeSlot fgSlot = VariantPalette.Foreground(variant, state, ghost);
+            ThemeSlot? borderSlot = VariantPalette.Border(variant, state, ghost);
             RadiusSpec radius = RadiusSpec.All(RadiusScale.Sm);
             BorderSpec? border = borderSlot.HasValue
                 ? BorderSpec.All(new Rem(1f / 16f), borderSlot.Value)
                 : null;
 
-            if (variant == ButtonVariant.Frosted && !ghost) {
+            if (variant == Variant.Frosted && !ghost) {
                 bool active = state.Hovered || state.Pressed;
                 BackdropBlur.Draw(rect, active ? 8f : 6f);
-                Color translucent = new Color(20f / 255f, 16f / 255f, 11f / 255f, active ? 0.88f : 0.78f);
+                Color translucentBase = theme.GetColor(ThemeSlot.SurfaceTranslucentDark);
+                Color translucent = new Color(translucentBase.r, translucentBase.g, translucentBase.b, active ? 0.88f : 0.78f);
                 PaintBox.Draw(rect, BackgroundSpec.Of(translucent), border, radius);
             }
             else {
-                ThemeSlot? bgSlot = ButtonVariants.Background(variant, state, ghost);
+                ThemeSlot? bgSlot = VariantPalette.Background(variant, state, ghost);
                 BackgroundSpec? bg;
                 if (!bgSlot.HasValue) {
-                    if (variant == ButtonVariant.Ghost && state.Hovered && !disabled) {
-                        bg = BackgroundSpec.Of(new Color(0.157f, 0.125f, 0.086f, 0.4f));
+                    if (variant == Variant.Ghost && state.Hovered && !disabled) {
+                        Color ghostHoverBase = theme.GetColor(ThemeSlot.SurfaceGhostHover);
+                        bg = BackgroundSpec.Of(new Color(ghostHoverBase.r, ghostHoverBase.g, ghostHoverBase.b, 0.4f));
                     }
                     else {
                         bg = null;
                     }
                 }
-                else if (variant == ButtonVariant.Primary && !ghost && !state.Pressed && !disabled) {
+                else if (variant == Variant.Primary && !ghost && !state.Pressed && !disabled) {
                     Color top = theme.GetColor(bgSlot.Value);
                     Color.RGBToHSV(top, out float hue, out float sat, out float val);
                     Color bottom = Color.HSVToRGB(hue, sat, val * 0.78f);
                     bottom.a = top.a;
                     bg = new BackgroundSpec.Gradient(GradientTextureCache.Vertical(top, bottom));
                 }
-                else if (variant == ButtonVariant.Secondary && state.Hovered && !state.Pressed && !disabled) {
+                else if (variant == Variant.Secondary && state.Hovered && !state.Pressed && !disabled) {
                     Color accent = theme.GetColor(ThemeSlot.SurfaceAccent);
                     Color top = new Color(accent.r, accent.g, accent.b, 0.42f);
                     Color bottom = new Color(accent.r * 0.62f, accent.g * 0.62f, accent.b * 0.62f, 0.28f);
@@ -157,7 +160,7 @@ public static class Button {
                 PaintBox.Draw(rect, bg, border, radius);
             }
 
-            float overlay = ButtonVariants.OverlayAlpha(state);
+            float overlay = VariantPalette.OverlayAlpha(state);
             if (overlay > 0f) {
                 Color overlayColor = InteractionFeedback.OverlayColor(theme, state, overlay);
                 PaintBox.Draw(rect, BackgroundSpec.Of(overlayColor), null, radius);
@@ -227,14 +230,9 @@ public static class Button {
 
             InteractionFeedback.Apply(rect, !disabled, playHoverSound ?? true);
 
-            Event e = Event.current;
-            if (!disabled &&
-                onClick != null &&
-                e.type == EventType.MouseUp &&
-                e.button == 0 &&
-                rect.Contains(e.mousePosition)) {
+            if (!disabled && onClick != null && Widgets.ButtonInvisible(rect, doMouseoverSound: false)) {
+                LightweaveLog.Message($"[Button] onClick fired: label={label}, rect={rect}");
                 onClick.Invoke();
-                e.Use();
             }
         };
 
@@ -250,26 +248,26 @@ public static class Button {
     [DocVariant("CL_Playground_Label_Secondary")]
     public static DocSample DocsSecondary() {
         bool forced = RenderContext.Current.ForceDisabled;
-        return new DocSample(() => Create("Secondary", () => { }, ButtonVariant.Secondary, disabled: forced));
+        return new DocSample(() => Create("Secondary", () => { }, Variant.Secondary, disabled: forced));
     }
 
     [DocVariant("CL_Playground_Label_Ghost")]
     public static DocSample DocsGhost() {
         bool forced = RenderContext.Current.ForceDisabled;
-        return new DocSample(() => Create("Ghost", () => { }, ButtonVariant.Ghost, disabled: forced));
+        return new DocSample(() => Create("Ghost", () => { }, Variant.Ghost, disabled: forced));
     }
 
     [DocVariant("CL_Playground_Label_Danger")]
     public static DocSample DocsDanger() {
         bool forced = RenderContext.Current.ForceDisabled;
-        return new DocSample(() => Create("Danger", () => { }, ButtonVariant.Danger, disabled: forced));
+        return new DocSample(() => Create("Danger", () => { }, Variant.Danger, disabled: forced));
     }
 
 
     [DocVariant("CL_Playground_Label_Frosted")]
     public static DocSample DocsFrosted() {
         bool forced = RenderContext.Current.ForceDisabled;
-        return new DocSample(() => Create("Frosted", () => { }, ButtonVariant.Frosted, disabled: forced));
+        return new DocSample(() => Create("Frosted", () => { }, Variant.Frosted, disabled: forced));
     }
 
     [DocState("CL_Playground_Label_Default")]

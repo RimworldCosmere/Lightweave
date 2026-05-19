@@ -52,15 +52,16 @@ public static class LangSelectField {
             bool active = state.Hovered || state.Pressed || open.Value;
 
             BackdropBlur.Draw(rect, active ? 8f : 6f);
-            Color translucent = new Color(20f / 255f, 16f / 255f, 11f / 255f, active ? 0.88f : 0.78f);
-            ThemeSlot? borderSlot = ButtonVariants.Border(ButtonVariant.Frosted, state);
+            Color translucentBase = theme.GetColor(ThemeSlot.SurfaceTranslucentDark);
+            Color translucent = new Color(translucentBase.r, translucentBase.g, translucentBase.b, active ? 0.88f : 0.78f);
+            ThemeSlot? borderSlot = VariantPalette.Border(Variant.Frosted, state);
             BorderSpec? borderSpec = borderSlot.HasValue
                 ? BorderSpec.All(new Rem(1f / 16f), borderSlot.Value)
                 : null;
             RadiusSpec radiusSpec = RadiusSpec.All(RadiusScale.Sm);
             PaintBox.Draw(rect, BackgroundSpec.Of(translucent), borderSpec, radiusSpec);
 
-            float overlay = ButtonVariants.OverlayAlpha(state);
+            float overlay = VariantPalette.OverlayAlpha(state);
             if (overlay > 0f) {
                 Color overlayColor = InteractionFeedback.OverlayColor(theme, state, overlay);
                 PaintBox.Draw(rect, BackgroundSpec.Of(overlayColor), null, radiusSpec);
@@ -75,7 +76,7 @@ public static class LangSelectField {
                 ? (activeLang.FriendlyNameNative ?? activeLang.folderName)
                 : "English";
 
-            ThemeSlot fgSlot = ButtonVariants.Foreground(ButtonVariant.Frosted, state);
+            ThemeSlot fgSlot = VariantPalette.Foreground(Variant.Frosted, state);
             TextAnchor labelAnchor = Typography.Typography.ResolveAnchor(TextAlign.Start, dir);
             TextDraw.Draw(labelRect, labelText, FontRole.BodyBold, new Rem(0.875f), labelAnchor, fgSlot);
 

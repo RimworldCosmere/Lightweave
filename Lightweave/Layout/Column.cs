@@ -13,7 +13,7 @@ namespace Cosmere.Lightweave.Layout;
     Id = "column",
     Summary = "Vertical flow that hugs intrinsic child heights when possible.",
     WhenToUse = "Stack content vertically with consistent spacing and natural heights.",
-    SourcePath = "Lightweave/Lightweave/Layout/Column.cs",
+    SourcePath = "Lightweave/Layout/Column.cs",
     PreferredVariantHeight = 160f
 )]
 public static class Column {
@@ -58,6 +58,22 @@ public static class Column {
         float ChildHeight(LightweaveNode child, float width) {
             return child.Measure?.Invoke(width) ?? child.PreferredHeight ?? 0f;
         }
+
+        node.MeasureWidth = () => {
+            int kc = kids.Count;
+            float max = 0f;
+            for (int i = 0; i < kc; i++) {
+                LightweaveNode child = kids[i];
+                if (!child.IsInFlow()) {
+                    continue;
+                }
+                float w = child.MeasureWidth?.Invoke() ?? 0f;
+                if (w > max) {
+                    max = w;
+                }
+            }
+            return max;
+        };
 
         if (AllKidsKnown()) {
             node.Measure = width => {

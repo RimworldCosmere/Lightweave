@@ -9,6 +9,7 @@ namespace Cosmere.Lightweave.Doc;
 public sealed class DocVariantAttribute : Attribute {
     public string LabelKey { get; }
     public int Order { get; init; }
+    public bool HideCode { get; init; }
 
     public DocVariantAttribute(string labelKey) {
         LabelKey = labelKey;

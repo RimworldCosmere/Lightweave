@@ -32,12 +32,12 @@ public static class GraphicsTab {
                             ResolutionUtility.SafeSetResolution(r);
                         },
                         variant: DropdownVariant.Button,
-                        buttonStyle: ButtonVariant.Frosted
+                        buttonStyle: Variant.Frosted
                     )
                 ),
                 SettingRow.Create(
                     "CL_Options_Fullscreen".Translate(),
-                    Switch.Create("", Screen.fullScreen, v => ResolutionUtility.SafeSetFullscreen(v))
+                    Switch.Create("", Screen.fullScreen, v => ResolutionUtility.SafeSetFullscreen(v), variant: Variant.Secondary)
                 )
             ));
             s.Add(SettingRow.Section("CL_Options_Section_Visual",
@@ -58,11 +58,12 @@ public static class GraphicsTab {
                             "No".Translate()
                         ));
                         Prefs.TextureCompression = v;
-                    })
+                    },
+                    variant: Variant.Secondary)
                 ),
                 SettingRow.Create(
                     "CL_Options_PlantWindSway".Translate(),
-                    Switch.Create("", Prefs.PlantWindSway, v => Prefs.PlantWindSway = v)
+                    Switch.Create("", Prefs.PlantWindSway, v => Prefs.PlantWindSway = v, variant: Variant.Secondary)
                 ),
                 SettingRow.Create(
                     "CL_Options_ScreenShake".Translate(),
@@ -71,16 +72,17 @@ public static class GraphicsTab {
                         onChange: v => Prefs.ScreenShakeIntensity = (float)Math.Round(v, 1),
                         min: 0f,
                         max: 2f,
-                        format: v => Mathf.RoundToInt(v * 100f) + "%"
+                        format: v => Mathf.RoundToInt(v * 100f) + "%",
+                    variant: Variant.Secondary
                     )
                 ),
                 SettingRow.Create(
                     "CL_Options_SmoothCamera".Translate(),
-                    Switch.Create("", Prefs.SmoothCameraJumps, v => Prefs.SmoothCameraJumps = v)
+                    Switch.Create("", Prefs.SmoothCameraJumps, v => Prefs.SmoothCameraJumps = v, variant: Variant.Secondary)
                 ),
                 SettingRow.Create(
                     "CL_Options_GravshipCutscenes".Translate(),
-                    Switch.Create("", Prefs.GravshipCutscenes, v => Prefs.GravshipCutscenes = v)
+                    Switch.Create("", Prefs.GravshipCutscenes, v => Prefs.GravshipCutscenes = v, variant: Variant.Secondary)
                 )
             ));
         });

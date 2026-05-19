@@ -16,7 +16,7 @@ namespace Cosmere.Lightweave.Input;
     Id = "switch",
     Summary = "Animated on/off toggle with adjacent label.",
     WhenToUse = "Toggle a setting that takes effect immediately.",
-    SourcePath = "Lightweave/Lightweave/Input/Switch.cs"
+    SourcePath = "Lightweave/Input/Switch.cs"
 )]
 public static class Switch {
     private const float AnimationDurationSec = 0.12f;
@@ -32,6 +32,7 @@ public static class Switch {
         bool disabled = false,
         [DocParam("Optional key disambiguating multiple instances declared on the same line.")]
         object? instanceKey = null,
+        Variant variant = default,
         Style? style = null,
         string[]? classes = null,
         string? id = null,
@@ -51,7 +52,7 @@ public static class Switch {
             int labelPixelSize = Mathf.RoundToInt(new Rem(1f).ToFontPx());
             GUIStyle labelStyle = GuiStyleCache.GetOrCreate(labelFont, labelPixelSize);
             float labelWidth = labelStyle.CalcSize(new GUIContent(label)).x;
-            float trackWidth = new Rem(2.5f).ToPixels();
+            float trackWidth = new Rem(2.25f).ToPixels();
             float gapPx = new Rem(0.5f).ToPixels();
             return trackWidth + gapPx + labelWidth;
         };
@@ -61,10 +62,11 @@ public static class Switch {
             Direction dir = RenderContext.Current.Direction;
             bool rtl = dir == Direction.Rtl;
 
-            float trackWidth = new Rem(2.5f).ToPixels();
-            float trackHeight = new Rem(1.25f).ToPixels();
-            float thumbSize = new Rem(1f).ToPixels();
-            float thumbInset = new Rem(0.125f).ToPixels();
+            float trackWidth = new Rem(2.25f).ToPixels();
+            float trackHeight = new Rem(1.125f).ToPixels();
+            float thumbInset = new Rem(0.1875f).ToPixels();
+            float thumbHeight = trackHeight - thumbInset * 2f;
+            float thumbWidth = new Rem(0.75f).ToPixels();
             float rowHeight = new Rem(1.75f).ToPixels();
             float gapPx = new Rem(0.5f).ToPixels();
 
@@ -139,17 +141,16 @@ public static class Switch {
             BorderSpec? trackBorder = trackBorderSlot.HasValue
                 ? BorderSpec.All(new Rem(1f / 16f), trackBorderSlot.Value)
                 : null;
-            RadiusSpec trackRadius = RadiusSpec.All(RadiusScale.Full);
+            RadiusSpec trackRadius = RadiusSpec.All(RadiusScale.Xs);
             PaintBox.Draw(trackRect, trackBg, trackBorder, trackRadius);
 
-            float effectiveThumbSize = thumbSize - animFraction;
             float leftX = trackRect.x + thumbInset;
-            float rightX = trackRect.xMax - thumbInset - effectiveThumbSize;
+            float rightX = trackRect.xMax - thumbInset - thumbWidth;
             float thumbX = rtl
                 ? Mathf.Lerp(rightX, leftX, animFraction)
                 : Mathf.Lerp(leftX, rightX, animFraction);
-            float thumbY = trackRect.y + (trackHeight - effectiveThumbSize) / 2f;
-            Rect thumbRect = new Rect(thumbX, thumbY, effectiveThumbSize, effectiveThumbSize);
+            float thumbY = trackRect.y + (trackHeight - thumbHeight) / 2f;
+            Rect thumbRect = new Rect(thumbX, thumbY, thumbWidth, thumbHeight);
 
             ThemeSlot thumbSlot = disabled
                 ? ThemeSlot.BorderOff
@@ -157,7 +158,7 @@ public static class Switch {
                     ? ThemeSlot.TextOnAccent
                     : ThemeSlot.TextMuted;
             BackgroundSpec thumbBg = BackgroundSpec.Of(thumbSlot);
-            RadiusSpec thumbRadius = RadiusSpec.All(RadiusScale.Full);
+            RadiusSpec thumbRadius = RadiusSpec.All(RadiusScale.Xs);
             PaintBox.Draw(thumbRect, thumbBg, null, thumbRadius);
 
             Font labelFont = theme.GetFont(FontRole.Body);

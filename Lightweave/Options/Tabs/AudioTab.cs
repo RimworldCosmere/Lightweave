@@ -19,7 +19,8 @@ public static class AudioTab {
                         onChange: v => Prefs.VolumeMaster = v,
                         min: 0f,
                         max: 1f,
-                        format: FormatPercent
+                        format: FormatPercent,
+                    variant: Variant.Secondary
                     )
                 ),
                 SettingRow.Create(
@@ -29,7 +30,8 @@ public static class AudioTab {
                         onChange: v => Prefs.VolumeMusic = v,
                         min: 0f,
                         max: 1f,
-                        format: FormatPercent
+                        format: FormatPercent,
+                    variant: Variant.Secondary
                     )
                 ),
                 SettingRow.Create(
@@ -39,7 +41,8 @@ public static class AudioTab {
                         onChange: v => Prefs.VolumeGame = v,
                         min: 0f,
                         max: 1f,
-                        format: FormatPercent
+                        format: FormatPercent,
+                    variant: Variant.Secondary
                     )
                 ),
                 SettingRow.Create(
@@ -49,7 +52,8 @@ public static class AudioTab {
                         onChange: v => Prefs.VolumeAmbient = v,
                         min: 0f,
                         max: 1f,
-                        format: FormatPercent
+                        format: FormatPercent,
+                    variant: Variant.Secondary
                     )
                 ),
                 SettingRow.Create(
@@ -59,7 +63,8 @@ public static class AudioTab {
                         onChange: v => Prefs.VolumeUI = v,
                         min: 0f,
                         max: 1f,
-                        format: FormatPercent
+                        format: FormatPercent,
+                    variant: Variant.Secondary
                     )
                 )
             ));

@@ -20,7 +20,7 @@ public readonly record struct KeyValueRow(string Label, string Value);
     Id = "key-value-table",
     Summary = "Pairs of small-caps labels with values, stacked vertically or laid out horizontally.",
     WhenToUse = "Metadata blocks, save/mod detail panes, hero card stat rows.",
-    SourcePath = "Lightweave/Lightweave/Layout/KeyValueTable.cs",
+    SourcePath = "Lightweave/Layout/KeyValueTable.cs",
     ShowRtl = true
 )]
 public static class KeyValueTable {

@@ -22,7 +22,7 @@ public sealed record ButtonGroupItem(
     Id = "buttongroup",
     Summary = "Connected row of buttons sharing a single bordered frame.",
     WhenToUse = "Group a small set of related actions or filter choices together.",
-    SourcePath = "Lightweave/Lightweave/Input/ButtonGroup.cs",
+    SourcePath = "Lightweave/Input/ButtonGroup.cs",
     ShowRtl = true
 )]
 public static class ButtonGroup {
@@ -30,7 +30,9 @@ public static class ButtonGroup {
         [DocParam("Items rendered as segments left-to-right.")]
         IReadOnlyList<ButtonGroupItem> items,
         [DocParam("Visual variant shared by every segment.")]
-        ButtonVariant variant = ButtonVariant.Secondary,
+        Variant variant = default,
+        [DocParam("Outer shape. Pill draws a bordered, rounded container; Flat omits the outer frame and lets segments fill the rect flush with the parent.")]
+        ButtonGroupShape shape = ButtonGroupShape.Pill,
         [DocParam("Override hover sound. Null = component default (true).")]
         bool? playHoverSound = null,
         Style? style = null,
@@ -39,9 +41,30 @@ public static class ButtonGroup {
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = ""
     ) {
-        LightweaveNode node = NodeBuilder.New($"ButtonGroup:{variant}", line, file);
+        if (variant.Id == null) {
+            variant = Variant.Secondary;
+        }
+
+        LightweaveNode node = NodeBuilder.New($"ButtonGroup:{variant}:{shape}", line, file);
         node.ApplyStyling("button-group", style, classes, id);
         node.PreferredHeight = new Rem(1.75f).ToPixels();
+
+        node.MeasureWidth = () => {
+            if (items == null || items.Count == 0) {
+                return 0f;
+            }
+            Theme.Theme theme = RenderContext.Current.Theme;
+            Font font = theme.GetFont(FontRole.BodyBold);
+            int pixelSize = Mathf.RoundToInt(new Rem(0.875f).ToFontPx());
+            GUIStyle gs = GuiStyleCache.GetOrCreate(font, pixelSize);
+            float padPx = SpacingScale.Md.ToPixels();
+            float total = 0f;
+            for (int i = 0; i < items.Count; i++) {
+                float lblW = string.IsNullOrEmpty(items[i].Label) ? 0f : gs.CalcSize(new GUIContent(items[i].Label)).x;
+                total += lblW + padPx * 2f;
+            }
+            return Mathf.Ceil(total);
+        };
 
         node.Paint = (rect, _) => {
             if (items == null || items.Count == 0) {
@@ -52,8 +75,9 @@ public static class ButtonGroup {
             Direction dir = RenderContext.Current.Direction;
             bool rtl = dir == Direction.Rtl;
             bool soundEnabled = playHoverSound ?? true;
+            bool flat = shape == ButtonGroupShape.Flat;
 
-            if (variant == ButtonVariant.Secondary) {
+            if (!flat && variant == Variant.Secondary) {
                 rect = new Rect(rect.x + 1f, rect.y, Mathf.Max(0f, rect.width - 1f), rect.height);
             }
 
@@ -69,7 +93,7 @@ public static class ButtonGroup {
             Rem outerCornerRem = RadiusSpec.ResolveRem(RadiusScale.Sm);
 
             InteractionState groupState = new InteractionState(false, false, false, false);
-            ThemeSlot? outerBorderSlot = ButtonVariants.Border(variant, groupState);
+            ThemeSlot? outerBorderSlot = flat ? null : VariantPalette.Border(variant, groupState);
 
             Rect contentRect;
             Rem innerCornerRem;
@@ -90,7 +114,7 @@ public static class ButtonGroup {
             }
             else {
                 contentRect = rect;
-                innerCornerRem = outerCornerRem;
+                innerCornerRem = flat ? new Rem(0f) : outerCornerRem;
             }
 
             float segmentWidth = contentRect.width / count;
@@ -112,7 +136,7 @@ public static class ButtonGroup {
                 bool isLast = logicalIndex == count - 1;
 
                 InteractionState state = InteractionState.Resolve(segRect, null, item.Disabled);
-                ThemeSlot? bgSlot = ButtonVariants.Background(variant, state);
+                ThemeSlot? bgSlot = VariantPalette.Background(variant, state);
 
                 Rem leadingCorner = isFirst ? innerCornerRem : new Rem(0f);
                 Rem trailingCorner = isLast ? innerCornerRem : new Rem(0f);
@@ -134,7 +158,7 @@ public static class ButtonGroup {
                     PaintBox.Draw(segRect, BackgroundSpec.Of(bgSlot.Value), null, segRadius);
                 }
 
-                float overlay = ButtonVariants.OverlayAlpha(state);
+                float overlay = VariantPalette.OverlayAlpha(state);
                 if (overlay > 0f) {
                     Color overlayColor = InteractionFeedback.OverlayColor(theme, state, overlay);
                     PaintBox.Draw(segRect, BackgroundSpec.Of(overlayColor), null, segRadius);
@@ -142,7 +166,7 @@ public static class ButtonGroup {
 
                 InteractionFeedback.Apply(segRect, !item.Disabled, soundEnabled);
 
-                ThemeSlot fgSlot = ButtonVariants.Foreground(variant, state);
+                ThemeSlot fgSlot = VariantPalette.Foreground(variant, state);
                 TextDraw.DrawWithStyle(segRect, item.Label, style, theme.GetColor(fgSlot));
 
                 if (!item.Disabled &&
@@ -192,7 +216,7 @@ public static class ButtonGroup {
                     forced
                 ),
             },
-            ButtonVariant.Primary
+            Variant.Primary
         ));
     }
 
@@ -226,6 +250,34 @@ public static class ButtonGroup {
                     true
                 ),
             }
+        ));
+    }
+
+
+    [DocVariant("CL_Playground_Label_Flat")]
+    public static DocSample DocsFlat() {
+        bool forced = RenderContext.Current.ForceDisabled;
+        StateHandle<string> active = UseState<string>("All");
+
+        return new DocSample(() => Create(
+            new List<ButtonGroupItem> {
+                new ButtonGroupItem(
+                    (string)"CL_Playground_buttongroup_Flat_All".Translate(),
+                    () => active.Set("All"),
+                    forced
+                ),
+                new ButtonGroupItem(
+                    (string)"CL_Playground_buttongroup_Flat_Manual".Translate(),
+                    () => active.Set("Manual"),
+                    forced
+                ),
+                new ButtonGroupItem(
+                    (string)"CL_Playground_buttongroup_Flat_Autosaves".Translate(),
+                    () => active.Set("Autosaves"),
+                    forced
+                ),
+            },
+            shape: ButtonGroupShape.Flat
         ));
     }
 

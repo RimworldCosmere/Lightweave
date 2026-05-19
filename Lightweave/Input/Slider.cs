@@ -15,7 +15,7 @@ namespace Cosmere.Lightweave.Input;
     Id = "slider",
     Summary = "Continuous or stepped value selector along a horizontal track.",
     WhenToUse = "Pick a numeric value within a known range.",
-    SourcePath = "Lightweave/Lightweave/Input/Slider.cs"
+    SourcePath = "Lightweave/Input/Slider.cs"
 )]
 public static class Slider {
     public static LightweaveNode Create(
@@ -42,6 +42,7 @@ public static class Slider {
         bool readout = true,
         [DocParam("Readout column width. Defaults to 4rem.", TypeOverride = "Rem", DefaultOverride = "4")]
         Rem? readoutWidth = null,
+        Variant variant = default,
         Style? style = null,
         string[]? classes = null,
         string? id = null,
@@ -54,6 +55,11 @@ public static class Slider {
 
         float readoutColumnPx = readout ? (readoutWidth ?? new Rem(4f)).ToPixels() : 0f;
         float readoutGapPx = readout ? SpacingScale.Md.ToPixels() : 0f;
+
+        node.MeasureWidth = () => {
+            float trackMin = new Rem(8f).ToPixels();
+            return Mathf.Ceil(trackMin + readoutGapPx + readoutColumnPx);
+        };
 
         node.Paint = (rect, paintChildren) => {
             Theme.Theme theme = RenderContext.Current.Theme;
@@ -116,8 +122,10 @@ public static class Slider {
             float physicalFraction = rtl ? 1f - logicalFraction : logicalFraction;
             float thumbCenterX = trackRect.x + physicalFraction * trackRect.width;
             float thumbX = thumbCenterX - thumbSize / 2f;
-            float thumbY = trackBand.y + (trackBand.height - thumbSize) / 2f - .5f;
+            float thumbY = trackBand.y + (trackBand.height - thumbSize) / 2f;
             Rect thumbRect = new Rect(thumbX, thumbY, thumbSize, thumbSize);
+
+            bool thumbHovered = !disabled && thumbRect.Contains(Event.current.mousePosition);
 
             ThemeSlot filledSlot = disabled ? ThemeSlot.SurfaceDisabled : ThemeSlot.SurfaceAccent;
             ThemeSlot unfilledSlot = disabled ? ThemeSlot.SurfaceDisabled : ThemeSlot.SurfaceInput;
@@ -171,6 +179,21 @@ public static class Slider {
             }
 
             RadiusSpec thumbRadius = RadiusSpec.All(new Rem(0.875f / 2f));
+
+            if ((thumbHovered || dragging.Current) && !disabled) {
+                Rem glowRem = new Rem(0.875f + 0.625f);
+                float glowSize = glowRem.ToPixels();
+                Rect glowRect = new Rect(
+                    thumbRect.center.x - glowSize / 2f,
+                    thumbRect.center.y - glowSize / 2f,
+                    glowSize,
+                    glowSize
+                );
+                Color glow = theme.GetColor(ThemeSlot.SurfaceAccent);
+                glow.a *= 0.28f;
+                RadiusSpec glowRadius = RadiusSpec.All(glowRem * 0.5f);
+                PaintBox.Draw(glowRect, BackgroundSpec.Of(glow), null, glowRadius);
+            }
 
             ThemeSlot thumbFillSlot = disabled
                 ? ThemeSlot.SurfaceDisabled

@@ -26,6 +26,8 @@ public sealed class RenderContext {
     public Stack<Theme.Theme> ThemeStack = new Stack<Theme.Theme>();
     public Stack<Rect> PositioningAncestorStack = new Stack<Rect>();
     public bool ForceDisabled;
+    public bool ForceHovered;
+    public bool ForcePressed;
     internal OverlayQueue PendingOverlays { get; } = new OverlayQueue();
     public int OverlayContentDepth;
     public string? FocusedControlName { get; internal set; }

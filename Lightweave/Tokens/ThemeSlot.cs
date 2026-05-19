@@ -29,4 +29,9 @@ public enum ThemeSlot {
     OverlayDim,
     MapPreviewTint,
     MetadataLabel,
+    SurfaceTranslucentDark,
+    SurfaceGhostHover,
+    ScrimDefault,
+    SurfaceTooltip,
+    BorderTooltip,
 }

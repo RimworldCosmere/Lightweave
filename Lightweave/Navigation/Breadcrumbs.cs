@@ -14,7 +14,7 @@ namespace Cosmere.Lightweave.Navigation;
     Id = "breadcrumbs",
     Summary = "Inline path with chevrons that collapses on overflow.",
     WhenToUse = "Show ancestry through a hierarchy users can navigate back through.",
-    SourcePath = "Lightweave/Lightweave/Navigation/Breadcrumbs.cs",
+    SourcePath = "Lightweave/Navigation/Breadcrumbs.cs",
     ShowRtl = true
 )]
 public static class Breadcrumbs {
@@ -25,10 +25,12 @@ public static class Breadcrumbs {
     public static LightweaveNode Create(
         [DocParam("Ordered crumb labels from root to current.")]
         IReadOnlyList<string> crumbs,
-        [DocParam("Invoked when an earlier crumb is clicked.")]
+        [DocParam("Invoked when an earlier crumb is clicked. When null the row renders as a non-interactive eyebrow.")]
         Action<int>? onNavigate = null,
         [DocParam("Override hover sound on non-current crumbs. Null = component default (false).")]
         bool? playHoverSound = null,
+        [DocParam("Single-character separator drawn between crumbs.")]
+        string separator = "/",
         Style? style = null,
         string[]? classes = null,
         string? id = null,
@@ -38,6 +40,26 @@ public static class Breadcrumbs {
         LightweaveNode node = NodeBuilder.New("Breadcrumbs", line, file);
         node.ApplyStyling("breadcrumbs", style, classes, id);
         node.PreferredHeight = RowHeight.ToPixels();
+        node.MeasureWidth = () => {
+            if (crumbs == null || crumbs.Count == 0) {
+                return 0f;
+            }
+            Theme.Theme theme = RenderContext.Current.Theme;
+            Font font = theme.GetFont(FontRole.Mono);
+            int pixelSize = Mathf.RoundToInt(LabelSize.ToFontPx());
+            GUIStyle gs = GuiStyleCache.GetOrCreate(font, pixelSize);
+            float gapPx = SpacingScale.Sm.ToPixels();
+            float sepWidth = gs.CalcSize(new GUIContent(separator)).x;
+            float total = 0f;
+            for (int i = 0; i < crumbs.Count; i++) {
+                string text = (crumbs[i] ?? string.Empty).ToUpperInvariant();
+                total += gs.CalcSize(new GUIContent(text)).x;
+                if (i < crumbs.Count - 1) {
+                    total += gapPx + sepWidth + gapPx;
+                }
+            }
+            return Mathf.Ceil(total);
+        };
         node.Paint = (rect, _) => {
             if (crumbs == null || crumbs.Count == 0) {
                 return;
@@ -46,29 +68,27 @@ public static class Breadcrumbs {
             Theme.Theme theme = RenderContext.Current.Theme;
             Direction dir = RenderContext.Current.Direction;
             bool rtl = dir == Direction.Rtl;
+            bool interactiveRow = onNavigate != null;
 
-            Font font = theme.GetFont(FontRole.Body);
+            Font font = theme.GetFont(FontRole.Mono);
             int pixelSize = Mathf.RoundToInt(LabelSize.ToFontPx());
-            GUIStyle style = GuiStyleCache.GetOrCreate(font, pixelSize);
-            style.alignment = TextAnchor.MiddleLeft;
+            GUIStyle gs = GuiStyleCache.GetOrCreate(font, pixelSize);
+            gs.alignment = TextAnchor.MiddleLeft;
 
-            string chevronGlyph = rtl ? "‹" : "›";
-            float gapPx = SpacingScale.Xs.ToPixels();
+            float gapPx = SpacingScale.Sm.ToPixels();
             float rowHeight = RowHeight.ToPixels();
             float rowY = rect.y + (rect.height - rowHeight) * 0.5f;
 
             int count = crumbs.Count;
             float[] labelWidths = new float[count];
+            string[] upper = new string[count];
             for (int i = 0; i < count; i++) {
-                string crumbText = crumbs[i] ?? string.Empty;
-                Vector2 size = style.CalcSize(new GUIContent(crumbText));
-                labelWidths[i] = size.x;
+                upper[i] = (crumbs[i] ?? string.Empty).ToUpperInvariant();
+                labelWidths[i] = gs.CalcSize(new GUIContent(upper[i])).x;
             }
 
-            Vector2 chevronSize = style.CalcSize(new GUIContent(chevronGlyph));
-            float chevronWidth = chevronSize.x;
-            Vector2 ellipsisSize = style.CalcSize(new GUIContent(Ellipsis));
-            float ellipsisWidth = ellipsisSize.x;
+            float sepWidth = gs.CalcSize(new GUIContent(separator)).x;
+            float ellipsisWidth = gs.CalcSize(new GUIContent(Ellipsis)).x;
 
             bool[] visible = new bool[count];
             for (int i = 0; i < count; i++) {
@@ -78,13 +98,13 @@ public static class Breadcrumbs {
             bool showEllipsis = false;
 
             if (count > 1) {
-                float total = TotalWidth(labelWidths, visible, count, chevronWidth, gapPx, showEllipsis, ellipsisWidth);
+                float total = TotalWidth(labelWidths, visible, count, sepWidth, gapPx, showEllipsis, ellipsisWidth);
                 int removeIndex = 1;
                 while (total > rect.width && removeIndex < count - 1) {
                     visible[removeIndex] = false;
                     showEllipsis = true;
                     removeIndex++;
-                    total = TotalWidth(labelWidths, visible, count, chevronWidth, gapPx, showEllipsis, ellipsisWidth);
+                    total = TotalWidth(labelWidths, visible, count, sepWidth, gapPx, showEllipsis, ellipsisWidth);
                 }
             }
 
@@ -94,24 +114,19 @@ public static class Breadcrumbs {
             bool firstDrawn = true;
             bool ellipsisDrawn = false;
 
+            Color separatorColor = theme.GetColor(ThemeSlot.TextMuted);
+            Color currentColor = interactiveRow
+                ? theme.GetColor(ThemeSlot.TextSecondary)
+                : theme.GetColor(ThemeSlot.TextMuted);
+
             for (int i = 0; i < count; i++) {
                 if (!visible[i]) {
                     if (!ellipsisDrawn && showEllipsis) {
                         if (!firstDrawn) {
-                            cursor = DrawChevron(
-                                cursor,
-                                rowY,
-                                rowHeight,
-                                chevronWidth,
-                                chevronGlyph,
-                                style,
-                                theme,
-                                rtl,
-                                gapPx
-                            );
+                            cursor = DrawSeparator(cursor, rowY, rowHeight, sepWidth, separator, gs, separatorColor, rtl, gapPx);
                         }
 
-                        cursor = DrawEllipsis(cursor, rowY, rowHeight, ellipsisWidth, style, theme, rtl, gapPx);
+                        cursor = DrawEllipsis(cursor, rowY, rowHeight, ellipsisWidth, gs, separatorColor, rtl, gapPx);
                         firstDrawn = false;
                         ellipsisDrawn = true;
                     }
@@ -120,10 +135,9 @@ public static class Breadcrumbs {
                 }
 
                 if (!firstDrawn) {
-                    cursor = DrawChevron(cursor, rowY, rowHeight, chevronWidth, chevronGlyph, style, theme, rtl, gapPx);
+                    cursor = DrawSeparator(cursor, rowY, rowHeight, sepWidth, separator, gs, separatorColor, rtl, gapPx);
                 }
 
-                string crumbText = crumbs[i] ?? string.Empty;
                 float labelWidth = labelWidths[i];
                 bool isLast = i == lastVisibleIndex;
 
@@ -137,7 +151,7 @@ public static class Breadcrumbs {
                     cursor = labelRect.xMax + gapPx;
                 }
 
-                DrawCrumb(labelRect, crumbText, i, isLast, onNavigate, style, theme, playHoverSound ?? false);
+                DrawCrumb(labelRect, upper[i], i, isLast, interactiveRow, onNavigate, gs, theme, playHoverSound ?? false, currentColor);
                 firstDrawn = false;
             }
         };
@@ -148,7 +162,7 @@ public static class Breadcrumbs {
         float[] labelWidths,
         bool[] visible,
         int count,
-        float chevronWidth,
+        float separatorWidth,
         float gapPx,
         bool showEllipsis,
         float ellipsisWidth
@@ -169,35 +183,35 @@ public static class Breadcrumbs {
 
         if (visibleCount > 1) {
             int separators = visibleCount - 1;
-            total += separators * (chevronWidth + gapPx * 2f);
+            total += separators * (separatorWidth + gapPx * 2f);
         }
 
         return total;
     }
 
-    private static float DrawChevron(
+    private static float DrawSeparator(
         float cursor,
         float rowY,
         float rowHeight,
-        float chevronWidth,
-        string chevronGlyph,
+        float separatorWidth,
+        string separator,
         GUIStyle style,
-        Theme.Theme theme,
+        Color color,
         bool rtl,
         float gapPx
     ) {
-        Rect chevronRect;
+        Rect sepRect;
         float next;
         if (rtl) {
-            chevronRect = new Rect(cursor - chevronWidth, rowY, chevronWidth, rowHeight);
-            next = chevronRect.x - gapPx;
+            sepRect = new Rect(cursor - separatorWidth, rowY, separatorWidth, rowHeight);
+            next = sepRect.x - gapPx;
         }
         else {
-            chevronRect = new Rect(cursor, rowY, chevronWidth, rowHeight);
-            next = chevronRect.xMax + gapPx;
+            sepRect = new Rect(cursor, rowY, separatorWidth, rowHeight);
+            next = sepRect.xMax + gapPx;
         }
 
-        TextDraw.DrawWithStyle(chevronRect, chevronGlyph, style, theme.GetColor(ThemeSlot.TextMuted));
+        TextDraw.DrawWithStyle(sepRect, separator, style, color);
         return next;
     }
 
@@ -207,7 +221,7 @@ public static class Breadcrumbs {
         float rowHeight,
         float ellipsisWidth,
         GUIStyle style,
-        Theme.Theme theme,
+        Color color,
         bool rtl,
         float gapPx
     ) {
@@ -222,7 +236,7 @@ public static class Breadcrumbs {
             next = ellipsisRect.xMax + gapPx;
         }
 
-        TextDraw.DrawWithStyle(ellipsisRect, Ellipsis, style, theme.GetColor(ThemeSlot.TextMuted));
+        TextDraw.DrawWithStyle(ellipsisRect, Ellipsis, style, color);
         return next;
     }
 
@@ -231,13 +245,15 @@ public static class Breadcrumbs {
         string text,
         int index,
         bool isLast,
+        bool interactiveRow,
         Action<int>? onNavigate,
         GUIStyle style,
         Theme.Theme theme,
-        bool soundEnabled
+        bool soundEnabled,
+        Color currentColor
     ) {
         Event e = Event.current;
-        bool interactive = !isLast;
+        bool interactive = interactiveRow && !isLast;
         bool hovering = interactive && labelRect.Contains(e.mousePosition);
 
         if (hovering) {
@@ -248,18 +264,18 @@ public static class Breadcrumbs {
             Cosmere.Lightweave.Input.InteractionFeedback.Apply(labelRect, true, soundEnabled);
         }
 
-        ThemeSlot slot;
+        Color color;
         if (isLast) {
-            slot = ThemeSlot.TextPrimary;
+            color = currentColor;
         }
         else if (hovering) {
-            slot = ThemeSlot.TextPrimary;
+            color = theme.GetColor(ThemeSlot.TextSecondary);
         }
         else {
-            slot = ThemeSlot.TextMuted;
+            color = theme.GetColor(ThemeSlot.TextMuted);
         }
 
-        TextDraw.DrawWithStyle(labelRect, text, style, theme.GetColor(slot));
+        TextDraw.DrawWithStyle(labelRect, text, style, color);
 
         if (interactive && e.type == EventType.MouseUp && e.button == 0 && labelRect.Contains(e.mousePosition)) {
             onNavigate?.Invoke(index);
@@ -269,17 +285,33 @@ public static class Breadcrumbs {
 
     [DocVariant("CL_Playground_Label_Default")]
     public static DocSample DocsDefault() {
-        string[] path = new[] {
-            (string)"CL_Playground_Breadcrumbs_Crumb_Worlds".Translate(),
-            (string)"CL_Playground_Breadcrumbs_Crumb_Roshar".Translate(),
-            (string)"CL_Playground_Breadcrumbs_Crumb_ShatteredPlains".Translate(),
-        };
-        return new DocSample(() => Breadcrumbs.Create(path));
+        return new DocSample(() => {
+            string[] path = new[] {
+                (string)"CL_Playground_Breadcrumbs_Crumb_Worlds".Translate(),
+                (string)"CL_Playground_Breadcrumbs_Crumb_Roshar".Translate(),
+                (string)"CL_Playground_Breadcrumbs_Crumb_ShatteredPlains".Translate(),
+            };
+            return Breadcrumbs.Create(path);
+        });
+    }
+
+    [DocVariant("CL_Playground_Label_Interactive")]
+    public static DocSample DocsInteractive() {
+        return new DocSample(() => {
+            string[] path = new[] {
+                (string)"CL_Playground_Breadcrumbs_Crumb_Worlds".Translate(),
+                (string)"CL_Playground_Breadcrumbs_Crumb_Roshar".Translate(),
+                (string)"CL_Playground_Breadcrumbs_Crumb_ShatteredPlains".Translate(),
+            };
+            return Breadcrumbs.Create(path, onNavigate: _ => { });
+        });
     }
 
     [DocUsage]
     public static DocSample DocsUsage() {
-        string[] path = new[] { "Worlds", "Roshar", "Shattered Plains" };
-        return new DocSample(() => Breadcrumbs.Create(path));
+        return new DocSample(() => {
+            string[] path = new[] { "Worlds", "Roshar", "Shattered Plains" };
+            return Breadcrumbs.Create(path);
+        });
     }
 }

@@ -3,6 +3,15 @@
     <CL_Settings_Title>Lightweave</CL_Settings_Title>
     <CL_Settings_Subtitle>UI library and main-menu redesign.</CL_Settings_Subtitle>
 
+    <CL_Settings_Theme_Heading>Theme</CL_Settings_Theme_Heading>
+    <CL_Settings_Theme_Help>Pick the color palette and surface treatments used across every Lightweave-rendered surface.</CL_Settings_Theme_Help>
+    <CL_Settings_Theme_None>No themes are registered.</CL_Settings_Theme_None>
+
+    <CL_Theme_Default>Default</CL_Theme_Default>
+    <CL_Theme_Cosmere>Cosmere</CL_Theme_Cosmere>
+    <CL_Theme_Scadrial>Scadrial</CL_Theme_Scadrial>
+    <CL_Theme_Roshar>Roshar</CL_Theme_Roshar>
+
     <CL_Settings_FontSize_Heading>Font size</CL_Settings_FontSize_Heading>
     <CL_Settings_FontSize_Help>Scales every Lightweave-rendered surface. Vanilla UI is unaffected.</CL_Settings_FontSize_Help>
 

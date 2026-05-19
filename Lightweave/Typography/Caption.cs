@@ -16,7 +16,7 @@ public static partial class Typography {
         Id = "caption",
         Summary = "Small muted caption text using the Caption font role and TextMuted color.",
         WhenToUse = "Timestamps, secondary metadata, and other low-emphasis descriptors.",
-        SourcePath = "Lightweave/Lightweave/Typography/Caption.cs",
+        SourcePath = "Lightweave/Typography/Caption.cs",
         ShowRtl = true
     )]
     public static class Caption {

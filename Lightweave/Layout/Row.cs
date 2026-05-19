@@ -13,7 +13,7 @@ namespace Cosmere.Lightweave.Layout;
     Id = "row",
     Summary = "Horizontal flow that splits available width evenly across children.",
     WhenToUse = "Lay out a fixed set of peers side by side.",
-    SourcePath = "Lightweave/Lightweave/Layout/Row.cs",
+    SourcePath = "Lightweave/Layout/Row.cs",
     ShowRtl = true
 )]
 public static class Row {
@@ -38,6 +38,25 @@ public static class Row {
         LightweaveNode node = NodeBuilder.New("Row", line, file);
         node.ApplyStyling("row", style, classes, id);
         node.Children.AddRange(kids);
+
+        node.MeasureWidth = () => {
+            int count = kids.Count;
+            if (count == 0) {
+                return 0f;
+            }
+
+            float gapPx = gap.ToPixels();
+            float total = 0f;
+            int counted = 0;
+            for (int i = 0; i < count; i++) {
+                if (!kids[i].IsInFlow()) {
+                    continue;
+                }
+                total += kids[i].MeasureWidth?.Invoke() ?? 0f;
+                counted++;
+            }
+            return total + gapPx * Math.Max(0, counted - 1);
+        };
 
         node.Measure = availableWidth => {
             int count = kids.Count;

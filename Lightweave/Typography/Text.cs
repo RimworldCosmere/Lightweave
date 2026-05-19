@@ -17,7 +17,7 @@ public static partial class Typography {
         Id = "text",
         Summary = "Single-line or wrapped text rendered with theme font and color.",
         WhenToUse = "Body copy, inline labels, or any text content. The foundation for Heading, Label, Caption, and Code.",
-        SourcePath = "Lightweave/Lightweave/Typography/Text.cs",
+        SourcePath = "Lightweave/Typography/Text.cs",
         ShowRtl = true
     )]
     public static class Text {
@@ -26,6 +26,8 @@ public static partial class Typography {
             string content,
             [DocParam("Wrap to multiple lines when content exceeds available width.")]
             bool wrap = false,
+            [DocParam("Parse Unity rich-text tags (<b>, <i>, <color=...>, etc.) instead of rendering them literally.")]
+            bool richText = false,
             [DocParam("Style applied to the text (FontFamily/FontSize/TextColor/TextAlign/FontWeight/etc).", TypeOverride = "Style?", DefaultOverride = "null")]
             Style? style = null,
             [DocParam("Additional class names merged after the base 'text' class.", TypeOverride = "string[]?", DefaultOverride = "null")]
@@ -51,6 +53,7 @@ public static partial class Typography {
                     _ => GuiStyleCache.GetOrCreate(theme, FontRole.Body, pixelSize, weight),
                 };
                 guiStyle.wordWrap = wrap;
+                guiStyle.richText = richText;
                 return guiStyle;
             }
 

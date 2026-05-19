@@ -2,6 +2,7 @@
 <LanguageData>
     <CL_ModsConfig_Title>Mods</CL_ModsConfig_Title>
     <CL_ModsConfig_Save>Save</CL_ModsConfig_Save>
+    <CL_ModsConfig_Discard>Discard</CL_ModsConfig_Discard>
     <CL_ModsConfig_Empty_Eyebrow>NOTHING TO SHOW</CL_ModsConfig_Empty_Eyebrow>
     <CL_ModsConfig_Empty_Body>Select a mod from the list to inspect.</CL_ModsConfig_Empty_Body>
 

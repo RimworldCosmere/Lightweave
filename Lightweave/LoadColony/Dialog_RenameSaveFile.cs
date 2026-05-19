@@ -17,9 +17,7 @@ using Text = Cosmere.Lightweave.Typography.Typography.Text;
 
 namespace Cosmere.Lightweave.LoadColony;
 
-public class Dialog_RenameSaveFile : Window {
-    private readonly Guid rootId = Guid.NewGuid();
-
+public class Dialog_RenameSaveFile : LightweaveWindow {
     private readonly SaveFileInfo file;
     private readonly string originalName;
     private readonly Action onAfter;
@@ -33,45 +31,29 @@ public class Dialog_RenameSaveFile : Window {
         this.originalName = currentName;
         this.newName = currentName;
         this.onAfter = onAfter;
-        doCloseX = false;
-        doCloseButton = false;
-        forcePause = true;
         absorbInputAroundWindow = false;
-        closeOnAccept = false;
-        closeOnCancel = true;
-        closeOnClickedOutside = false;
-        layer = WindowLayer.Super;
-        drawShadow = false;
-        doWindowBackground = false;
     }
 
-    public override Vector2 InitialSize => new Vector2(UI.screenWidth, UI.screenHeight);
+    protected override float? CardWidth => 520f;
+    protected override float? CardHeight => 320f;
+    protected internal override Color? ScrimColor => new Color(0f, 0f, 0f, 0.25f);
+    protected override BackgroundSpec? CardBackground => BackgroundSpec.Blur(new Color(0f, 0f, 0f, 0.95f), 10f);
+    protected internal override float VignetteIntensity => 0.35f;
+    protected internal override float VignetteScale => 0.9f;
+    protected override EdgeInsets? CardPadding => EdgeInsets.All(SpacingScale.Md);
 
-    protected override float Margin => 0f;
-
-    public override void DoWindowContents(Rect inRect) {
-        bool acceptPressed = false;
-        if (Event.current.type == EventType.KeyDown &&
-            (Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter)) {
-            acceptPressed = true;
-            Event.current.Use();
-        }
-
-        LightweaveRoot.Render(inRect, rootId, () => Build(acceptPressed));
+    public override void OnAcceptKeyPressed() {
+        TryCommit();
     }
 
-    private LightweaveNode Build(bool acceptPressed) {
+    protected override LightweaveNode Body() {
         UseFocus.FocusHandle focus = UseFocus.Use();
         if (!focusRequested) {
             focus.Request();
             focusRequested = true;
         }
 
-        if (acceptPressed) {
-            TryCommit();
-        }
-
-        LightweaveNode card = Stack.Create(SpacingScale.Sm, c => {
+        return Stack.Create(SpacingScale.Sm, c => {
             c.Add(Eyebrow.Create("CL_LoadColony_Rename".Translate()));
             c.Add(Typography.Typography.Heading.Create(3, originalName));
             c.Add(Text.Create(
@@ -100,25 +82,15 @@ public class Dialog_RenameSaveFile : Window {
                 h.AddHug(Button.Create(
                     label: "CancelButton".Translate(),
                     onClick: () => Close(),
-                    variant: ButtonVariant.Secondary
+                    variant: Variant.Secondary
                 ));
                 h.AddHug(Button.Create(
                     label: "CL_LoadColony_Rename".Translate(),
                     onClick: TryCommit,
-                    variant: ButtonVariant.Primary
+                    variant: Variant.Primary
                 ));
             }, style: new Style { Height = new Rem(2.5f) }));
-        }, style: new Style { Padding = EdgeInsets.All(SpacingScale.Md) });
-
-        return Dialog.Create(
-            content: () => card,
-            width: 520f,
-            height: 320f,
-            scrimColor: new Color(0f, 0f, 0f, 0.25f),
-            cardBackground: BackgroundSpec.Blur(new Color(0f, 0f, 0f, 0.95f), 10f),
-            vignetteIntensity: 0.35f,
-            vignetteScale: 0.9f
-        );
+        });
     }
 
     private void TryCommit() {

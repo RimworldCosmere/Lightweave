@@ -17,7 +17,7 @@ namespace Cosmere.Lightweave.Feedback;
     Id = "pill",
     Summary = "Tag-style chip with optional leading icon and label. Supports default / selected / muted states and full-pill click.",
     WhenToUse = "Filter chips, expansion / faction / trait tags, mode toggles. Use Badge for compact non-interactive status.",
-    SourcePath = "Lightweave/Lightweave/Feedback/Pill.cs"
+    SourcePath = "Lightweave/Feedback/Pill.cs"
 )]
 public static class Pill {
     public static LightweaveNode Create(

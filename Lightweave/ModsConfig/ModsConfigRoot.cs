@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Cosmere.Lightweave.Icons;
+using Cosmere.Lightweave.Input;
 using Cosmere.Lightweave.Layout;
 using Cosmere.Lightweave.Overlay;
 using Cosmere.Lightweave.Runtime;
@@ -10,6 +12,7 @@ using RimWorld;
 using UnityEngine;
 using Verse;
 using Verse.Steam;
+using Text = Cosmere.Lightweave.Typography.Typography.Text;
 
 namespace Cosmere.Lightweave.ModsConfig;
 
@@ -22,6 +25,7 @@ public static class ModsConfigRoot {
     private static readonly Rem DetailPaneWidth = new Rem(38.75f);
 
     public static LightweaveNode Build(RimWorld.Page_ModsConfig page, Action onClose) {
+        ConflictSnapshot.Invalidate();
         Hooks.Hooks.StateHandle<ModsTab> tab = Hooks.Hooks.UseState(ModsTab.Installed);
         Hooks.Hooks.StateHandle<string> query = Hooks.Hooks.UseState(string.Empty);
         List<ModMetaData> tabMods = ModsForTab(tab.Value);
@@ -42,51 +46,66 @@ public static class ModsConfigRoot {
                 : "CL_ModsConfig_Stat_ConflictCountPlural".Translate(conflictCount.Named("COUNT"))).Resolve();
         }
 
-        List<DialogHeaderTab> tabs = new List<DialogHeaderTab> {
-            new DialogHeaderTab(
-                (string)"CL_ModsConfig_Tab_Installed".Translate(),
-                tab.Value == ModsTab.Installed,
-                () => tab.Set(ModsTab.Installed)
-            ),
-            new DialogHeaderTab(
-                (string)"CL_ModsConfig_Tab_LoadOrder".Translate(),
-                tab.Value == ModsTab.LoadOrder,
-                () => tab.Set(ModsTab.LoadOrder)
-            ),
-        };
+        bool dirty = ModsConfigState.HasUnsavedChanges(page);
 
-        LightweaveNode card = Box.Create(
-            children: c => c.Add(Stack.Create(SpacingScale.None, root => {
-                root.Add(DialogHeader.Create(
-                    title: "CL_ModsConfig_Title".Translate(),
-                    breadcrumb: null,
-                    trailingActionLabel: "CL_ModsConfig_Save".Translate(),
-                    onTrailingAction: () => SaveAndClose(page),
-                    onClose: () => RequestClose(page, onClose),
-                    drawDivider: true,
-                    tabs: tabs,
-                    statusLine: statusLine,
-                    statusWarn: statusWarn
-                ));
-                root.AddFlex(HStack.Create(SpacingScale.None, h => {
-                    h.AddFlex(ModListPane.Create(
-                        visible,
-                        selected.Value,
-                        name => selected.Set(name),
-                        page,
-                        tab.Value,
-                        query.Value,
-                        q => query.Set(q)
+        LightweaveNode? footerNode = dirty
+            ? WindowFooter.Create(
+                actions: HStack.Create(SpacingScale.Xxs, a => {
+                    a.AddHug(Button.Create(
+                        (string)"CL_ModsConfig_Discard".Translate(),
+                        () => DiscardAndClose(page, onClose),
+                        Variant.Ghost
                     ));
-                    h.Add(ModDetailPane.Create(activeMod, page, onClose), DetailPaneWidth.ToPixels());
-                }));
-            }))
-        );
+                    a.AddHug(Button.Create(
+                        (string)"CL_ModsConfig_Save".Translate(),
+                        () => SaveAndClose(page, onClose),
+                        Variant.Primary
+                    ));
+                })
+            )
+            : null;
 
-        return Dialog.Create(
-            content: () => card,
-            cardBackground: BackgroundSpec.Blur(new Color(0f, 0f, 0f, 0.95f), 10f)
-        );
+        LightweaveNode statusContent = HStack.Create(SpacingScale.Xs, h => {
+            h.AddHug(Text.Create(statusLine, style: new Style {
+                FontFamily = FontRole.Mono,
+                FontSize = new Rem(0.7f),
+                LetterSpacing = Tracking.Of(0.08f),
+                TextColor = ThemeSlot.TextMuted,
+            }));
+            if (!string.IsNullOrEmpty(statusWarn)) {
+                h.AddHug(Text.Create(statusWarn!, style: new Style {
+                    FontFamily = FontRole.Mono,
+                    FontSize = new Rem(0.7f),
+                    LetterSpacing = Tracking.Of(0.08f),
+                    TextColor = ThemeSlot.StatusWarning,
+                }));
+            }
+        });
+
+        return Stack.Create(SpacingScale.None, root => {
+            root.Add(WindowHeader.Create(
+                title: "CL_ModsConfig_Title".Translate(),
+                headerContent: statusContent,
+                onClose: () => RequestClose(page, onClose),
+                drawDivider: true
+            ));
+            root.AddFlex(HStack.Create(SpacingScale.None, h => {
+                h.AddFlex(ModListPane.Create(
+                    visible,
+                    selected.Value,
+                    name => selected.Set(name),
+                    page,
+                    tab.Value,
+                    t => tab.Set(t),
+                    query.Value,
+                    q => query.Set(q)
+                ));
+                h.Add(ModDetailPane.Create(activeMod, page, onClose), DetailPaneWidth.ToPixels());
+            }));
+            if (footerNode != null) {
+                root.Add(footerNode);
+            }
+        });
     }
 
     private static List<ModMetaData> ModsForTab(ModsTab tab) {
@@ -158,22 +177,28 @@ public static class ModsConfigRoot {
                ?? mods.FirstOrDefault();
     }
 
-    private static void SaveAndClose(RimWorld.Page_ModsConfig page) {
+    private static void SaveAndClose(RimWorld.Page_ModsConfig page, Action onClose) {
         ModsConfigState.SetSaveChanges(page, true);
-        page.Close();
+        onClose();
+    }
+
+
+    private static void DiscardAndClose(RimWorld.Page_ModsConfig page, Action onClose) {
+        ModsConfigState.SetDiscardChanges(page, true);
+        onClose();
     }
 
     private static void RequestClose(RimWorld.Page_ModsConfig page, Action onClose) {
         if (!ModsConfigState.HasUnsavedChanges(page)) {
             ModsConfigState.SetDiscardChanges(page, true);
-            page.Close();
+            onClose();
             return;
         }
         Find.WindowStack.Add(new Dialog_ModsConfigConfirmClose(
-            onSave: () => SaveAndClose(page),
+            onSave: () => SaveAndClose(page, onClose),
             onDiscard: () => {
                 ModsConfigState.SetDiscardChanges(page, true);
-                page.Close();
+                onClose();
             }
         ));
     }

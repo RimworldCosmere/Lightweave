@@ -3,12 +3,13 @@ using UnityEngine;
 
 namespace Cosmere.Lightweave.Theme;
 
+[LightweaveTheme("scadrial", "CL_Theme_Scadrial", Order = 20)]
 public static class ScadrialTheme {
     public static Theme Build(Font body, Font bodyBold, Font heading, Font display, Font mono) {
         Dictionary<ThemeSlot, Color> colors = new Dictionary<ThemeSlot, Color> {
             [ThemeSlot.SurfacePrimary] = new Color(0.088f, 0.106f, 0.130f, 0.96f),
             [ThemeSlot.SurfaceRaised] = new Color(0.138f, 0.158f, 0.188f, 1.00f),
-            [ThemeSlot.SurfaceSunken] = new Color(0.052f, 0.062f, 0.078f, 0.96f),
+            [ThemeSlot.SurfaceSunken] = new Color(0.052f, 0.062f, 0.078f, 1f),
             [ThemeSlot.SurfaceTranslucent] = new Color(0.020f, 0.025f, 0.035f, 0.35f),
             [ThemeSlot.SurfaceAccent] = new Color(0.420f, 0.580f, 0.760f, 0.95f),
             [ThemeSlot.SurfaceShadow] = new Color(0.000f, 0.000f, 0.000f, 0.40f),
@@ -34,6 +35,11 @@ public static class ScadrialTheme {
             [ThemeSlot.OverlayDim] = new Color(0.020f, 0.025f, 0.035f, 0.62f),
             [ThemeSlot.MapPreviewTint] = new Color(0.165f, 0.185f, 0.220f, 1.00f),
             [ThemeSlot.MetadataLabel] = new Color(0.420f, 0.450f, 0.495f),
+            [ThemeSlot.SurfaceTranslucentDark] = new Color(0.020f, 0.025f, 0.035f, 1.00f),
+            [ThemeSlot.SurfaceGhostHover] = new Color(0.090f, 0.115f, 0.150f, 1.00f),
+            [ThemeSlot.ScrimDefault] = new Color(0.000f, 0.000f, 0.000f, 1.00f),
+            [ThemeSlot.SurfaceTooltip] = new Color(0.045f, 0.040f, 0.050f, 1.00f),
+            [ThemeSlot.BorderTooltip] = new Color(0.580f, 0.620f, 0.700f, 0.30f),
         };
         return BaseTheme.Compose(colors, body, bodyBold, heading, display, mono);
     }

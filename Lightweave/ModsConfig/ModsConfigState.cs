@@ -9,16 +9,21 @@ namespace Cosmere.Lightweave.ModsConfig;
 internal static class ModsConfigState {
     private const BindingFlags PrivateInstance = BindingFlags.Instance | BindingFlags.NonPublic;
 
+    private static readonly FieldInfo? ActiveModsWhenOpenedHashField =
+        typeof(Page_ModsConfig).GetField("activeModsWhenOpenedHash", PrivateInstance);
+
+    private static readonly FieldInfo? SaveChangesField =
+        typeof(Page_ModsConfig).GetField("saveChanges", PrivateInstance);
+
+    private static readonly FieldInfo? DiscardChangesField =
+        typeof(Page_ModsConfig).GetField("discardChanges", PrivateInstance);
+
     public static bool HasUnsavedChanges(Page_ModsConfig page) {
         try {
-            FieldInfo? hashField = typeof(Page_ModsConfig).GetField(
-                "activeModsWhenOpenedHash",
-                PrivateInstance
-            );
-            if (hashField == null) {
+            if (ActiveModsWhenOpenedHashField == null) {
                 return true;
             }
-            int opened = (int)(hashField.GetValue(page) ?? 0);
+            int opened = (int)(ActiveModsWhenOpenedHashField.GetValue(page) ?? 0);
             int current = ModLister.InstalledModsListHash(activeOnly: true);
             return opened != current;
         }
@@ -29,24 +34,23 @@ internal static class ModsConfigState {
     }
 
     public static bool GetSaveChanges(Page_ModsConfig page) {
-        return GetPrivateBool(page, "saveChanges");
+        return GetPrivateBool(page, SaveChangesField, "saveChanges");
     }
 
     public static bool GetDiscardChanges(Page_ModsConfig page) {
-        return GetPrivateBool(page, "discardChanges");
+        return GetPrivateBool(page, DiscardChangesField, "discardChanges");
     }
 
     public static void SetSaveChanges(Page_ModsConfig page, bool value) {
-        SetPrivateBool(page, "saveChanges", value);
+        SetPrivateBool(page, SaveChangesField, "saveChanges", value);
     }
 
     public static void SetDiscardChanges(Page_ModsConfig page, bool value) {
-        SetPrivateBool(page, "discardChanges", value);
+        SetPrivateBool(page, DiscardChangesField, "discardChanges", value);
     }
 
-    private static bool GetPrivateBool(Page_ModsConfig page, string fieldName) {
+    private static bool GetPrivateBool(Page_ModsConfig page, FieldInfo? field, string fieldName) {
         try {
-            FieldInfo? field = typeof(Page_ModsConfig).GetField(fieldName, PrivateInstance);
             if (field == null) {
                 LightweaveLog.Error("Page_ModsConfig." + fieldName + " field not found via reflection.");
                 return false;
@@ -59,9 +63,8 @@ internal static class ModsConfigState {
         }
     }
 
-    private static void SetPrivateBool(Page_ModsConfig page, string fieldName, bool value) {
+    private static void SetPrivateBool(Page_ModsConfig page, FieldInfo? field, string fieldName, bool value) {
         try {
-            FieldInfo? field = typeof(Page_ModsConfig).GetField(fieldName, PrivateInstance);
             if (field == null) {
                 LightweaveLog.Error("Page_ModsConfig." + fieldName + " field not found via reflection.");
                 return;

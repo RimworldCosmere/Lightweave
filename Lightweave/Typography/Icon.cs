@@ -17,7 +17,7 @@ public static partial class Typography {
         Id = "icon",
         Summary = "Themed bitmap icon scaled to fit and tinted by a theme color.",
         WhenToUse = "Inline glyphs in buttons, list rows, and toolbars.",
-        SourcePath = "Lightweave/Lightweave/Typography/Icon.cs"
+        SourcePath = "Lightweave/Typography/Icon.cs"
     )]
     public static class Icon {
         public static LightweaveNode Create(

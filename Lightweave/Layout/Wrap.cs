@@ -14,7 +14,7 @@ namespace Cosmere.Lightweave.Layout;
     Id = "wrap",
     Summary = "Wrapping flow that re-flows children onto new rows when the line fills.",
     WhenToUse = "Variable count of equally-sized chips that should wrap to width.",
-    SourcePath = "Lightweave/Lightweave/Layout/Wrap.cs",
+    SourcePath = "Lightweave/Layout/Wrap.cs",
     PreferredVariantHeight = 120f,
     ShowRtl = true
 )]
@@ -52,6 +52,16 @@ public static class Wrap {
             }
             return c;
         }
+
+        node.MeasureWidth = () => {
+            int flowCount = FlowCount();
+            if (flowCount == 0) {
+                return 0f;
+            }
+            float gapPx = gap.ToPixels();
+            float minW = Mathf.Max(minChildWidth.ToPixels(), 1f);
+            return flowCount * minW + Math.Max(0, flowCount - 1) * gapPx;
+        };
 
         node.Measure = availableWidth => {
             int flowCount = FlowCount();

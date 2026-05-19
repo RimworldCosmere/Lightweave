@@ -14,7 +14,7 @@ namespace Cosmere.Lightweave.Feedback;
     Id = "tag",
     Summary = "Rectangular bordered chip with monospace uppercase tracked label and optional leading dot. Static, non-interactive.",
     WhenToUse = "Save list AUTO chip, status indicator (MANUAL SAVE / AUTOSAVE / INCOMPATIBLE), active condition rows. Use Pill for interactive filter chips; use Badge for pill-shaped status pills.",
-    SourcePath = "Lightweave/Lightweave/Feedback/Tag.cs"
+    SourcePath = "Lightweave/Feedback/Tag.cs"
 )]
 public static class Tag {
     public static LightweaveNode Create(

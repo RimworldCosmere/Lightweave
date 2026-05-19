@@ -9,6 +9,7 @@ public class LightweaveSettings : ModSettings {
     public bool ParseSaveMetadata = true;
     public bool TranslationToastDismissed;
     public bool DevBuildToastDismissed;
+    public string SelectedThemeId = "default";
 
     public float FontScale => FontScalePercent / 100f;
 
@@ -19,6 +20,7 @@ public class LightweaveSettings : ModSettings {
         Scribe_Values.Look(ref ParseSaveMetadata, "parseSaveMetadata", true);
         Scribe_Values.Look(ref TranslationToastDismissed, "translationToastDismissed");
         Scribe_Values.Look(ref DevBuildToastDismissed, "devBuildToastDismissed");
+        Scribe_Values.Look(ref SelectedThemeId, "selectedThemeId", "default");
         base.ExposeData();
     }
 }

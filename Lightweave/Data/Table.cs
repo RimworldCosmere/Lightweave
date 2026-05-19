@@ -27,7 +27,7 @@ public sealed record TableColumn<T>(
     Id = "table",
     Summary = "Tabular renderer with a header row, alternating row backgrounds, and column separators.",
     WhenToUse = "Display structured records that benefit from named columns and row alignment.",
-    SourcePath = "Lightweave/Lightweave/Data/Table.cs",
+    SourcePath = "Lightweave/Data/Table.cs",
     PreferredVariantHeight = 220f,
     ShowRtl = true
 )]
@@ -58,6 +58,19 @@ public static class Table {
         float resolvedRowHeight = (rowHeight ?? DefaultRowHeight).ToPixels();
         int rowCountForHeight = rows?.Count ?? 0;
         node.PreferredHeight = resolvedRowHeight * (rowCountForHeight + 1);
+
+        node.MeasureWidth = () => {
+            if (columns == null || columns.Count == 0) {
+                return 0f;
+            }
+            float autoColPx = new Rem(8f).ToPixels();
+            float total = 0f;
+            for (int c = 0; c < columns.Count; c++) {
+                Rem? w = columns[c].Width;
+                total += w.HasValue ? w.Value.ToPixels() : autoColPx;
+            }
+            return Mathf.Ceil(total + LightweaveScrollView.GutterPixels(true));
+        };
 
         node.Paint = (rect, _) => {
             if (columns == null || columns.Count == 0) {
@@ -240,51 +253,63 @@ public static class Table {
         PaintBox.FillSolid(sepRect, theme.GetColor(ThemeSlot.BorderSubtle));
     }
 
-    private static LightweaveNode BuildSampleTable() {
-        (string World, string Shards, string Population)[] rows = new[] {
-            ("Roshar", "Honor + Cultivation + Odium", "Millions"),
-            ("Scadrial", "Harmony + Others", "Billions"),
-            ("Nalthis", "Endowment", "Millions"),
-            ("Taldain", "Autonomy", "Few"),
-        };
-
-        List<TableColumn<(string World, string Shards, string Population)>> columns =
-            new List<TableColumn<(string, string, string)>> {
-                new TableColumn<(string, string, string)>(
-                    (string)"CL_Playground_Table_Col_World".Translate(),
-                    r => Text.Create(
-                        r.Item1,
-                        style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.875f), TextColor = ThemeSlot.TextPrimary }
-                    ),
-                    new Rem(7f)
-                ),
-                new TableColumn<(string, string, string)>(
-                    (string)"CL_Playground_Table_Col_Shards".Translate(),
-                    r => Text.Create(
-                        r.Item2,
-                        style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.8125f), TextColor = ThemeSlot.TextSecondary }
-                    )
-                ),
-                new TableColumn<(string, string, string)>(
-                    (string)"CL_Playground_Table_Col_Population".Translate(),
-                    r => Text.Create(
-                        r.Item3,
-                        style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.8125f), TextColor = ThemeSlot.TextMuted }
-                    ),
-                    new Rem(6f)
-                ),
-            };
-
-        return Table.Create<(string, string, string)>(rows, columns);
-    }
+    
 
     [DocVariant("CL_Playground_Label_Default")]
     public static DocSample DocsDefault() {
-        return new DocSample(() => BuildSampleTable());
+        return new DocSample(() => {
+            (string World, string Shards, string Population)[] rows = new[] {
+                ("Roshar", "Honor + Cultivation + Odium", "Millions"),
+                ("Scadrial", "Harmony + Others", "Billions"),
+                ("Nalthis", "Endowment", "Millions"),
+                ("Taldain", "Autonomy", "Few"),
+            };
+
+            List<TableColumn<(string World, string Shards, string Population)>> columns =
+                new List<TableColumn<(string, string, string)>> {
+                    new TableColumn<(string, string, string)>(
+                        (string)"CL_Playground_Table_Col_World".Translate(),
+                        r => Text.Create(r.Item1, style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.875f), TextColor = ThemeSlot.TextPrimary }),
+                        new Rem(7f)
+                    ),
+                    new TableColumn<(string, string, string)>(
+                        (string)"CL_Playground_Table_Col_Shards".Translate(),
+                        r => Text.Create(r.Item2, style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.8125f), TextColor = ThemeSlot.TextSecondary })
+                    ),
+                    new TableColumn<(string, string, string)>(
+                        (string)"CL_Playground_Table_Col_Population".Translate(),
+                        r => Text.Create(r.Item3, style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.8125f), TextColor = ThemeSlot.TextMuted }),
+                        new Rem(6f)
+                    ),
+                };
+
+            return Table.Create<(string, string, string)>(rows, columns);
+        });
     }
 
     [DocUsage]
     public static DocSample DocsUsage() {
-        return new DocSample(() => BuildSampleTable());
+        return new DocSample(() => {
+            (string World, string Shards)[] rows = new[] {
+                ("Roshar", "Honor + Cultivation + Odium"),
+                ("Scadrial", "Harmony"),
+                ("Nalthis", "Endowment"),
+            };
+
+            List<TableColumn<(string World, string Shards)>> columns =
+                new List<TableColumn<(string, string)>> {
+                    new TableColumn<(string, string)>(
+                        "World",
+                        r => Text.Create(r.Item1, style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.875f), TextColor = ThemeSlot.TextPrimary }),
+                        new Rem(7f)
+                    ),
+                    new TableColumn<(string, string)>(
+                        "Shards",
+                        r => Text.Create(r.Item2, style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.8125f), TextColor = ThemeSlot.TextSecondary })
+                    ),
+                };
+
+            return Table.Create<(string, string)>(rows, columns);
+        });
     }
 }

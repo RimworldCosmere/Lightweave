@@ -45,6 +45,9 @@ public readonly record struct LightweaveScrollView : IDisposable {
     private static float ArrowInnerPadding => new Rem(0.25f).ToPixels();
     private const float ArrowSidePadding = 1f;
 
+    [ThreadStatic] private static float _pendingWheelDeltaY;
+    [ThreadStatic] private static bool _pendingWheel;
+
     public static float WidthFor(ScrollbarStyle style) {
         switch (style) {
             case ScrollbarStyle.Slim:
@@ -62,16 +65,18 @@ public readonly record struct LightweaveScrollView : IDisposable {
         return mode == ScrollbarMode.Auto ? new Rem(0.375f).ToPixels() : ScrollbarRightGap;
     }
 
+    public const float ContentRightPadding = 10f;
+
     public static float GutterPixels(bool verticalVisible, ScrollbarMode mode, ScrollbarStyle style) {
         if (!verticalVisible || mode == ScrollbarMode.Never) {
             return 0f;
         }
 
         if (mode == ScrollbarMode.Auto) {
-            return 0f;
+            return ScrollbarLeftGap + ContentRightPadding;
         }
 
-        return ScrollbarLeftGap + WidthFor(style) + ScrollbarRightGap;
+        return ScrollbarLeftGap + WidthFor(style) + ScrollbarRightGap + ContentRightPadding;
     }
 
     public static float GutterPixels(bool verticalVisible) {
@@ -100,7 +105,7 @@ public readonly record struct LightweaveScrollView : IDisposable {
 
         float declared = Math.Max(status.Height, outRect.height);
         bool overflows = declared - 0.1f >= outRect.height;
-        status.VerticalVisible = overflows && mode != ScrollbarMode.Never;
+        status.VerticalVisible = overflows;
 
         float gutter = GutterPixels(status.VerticalVisible, mode, style);
         contentHeight = declared;
@@ -111,26 +116,16 @@ public readonly record struct LightweaveScrollView : IDisposable {
         status.LastViewportHeight = outRect.height;
         status.Height = 0f;
 
-        float prevY = status.Position.y;
-
         Event scrollEvt = Event.current;
         if (scrollEvt != null
             && scrollEvt.rawType == EventType.ScrollWheel
-            && outRect.Contains(scrollEvt.mousePosition)
-            && status.VerticalVisible) {
-            float scrollRange = Math.Max(0f, contentHeight - outRect.height);
-            float delta = scrollEvt.delta.y * 20f;
-            float next = Mathf.Clamp(status.Position.y + delta, 0f, scrollRange);
-            status.Position = new Vector2(status.Position.x, next);
-            if (scrollEvt.type == EventType.ScrollWheel) {
-                scrollEvt.Use();
-            }
+            && scrollEvt.type == EventType.ScrollWheel) {
+            _pendingWheelDeltaY = scrollEvt.delta.y;
+            _pendingWheel = true;
+            scrollEvt.Use();
         }
 
         Widgets.BeginScrollView(outRect, ref status.Position, rect, false);
-        if (Math.Abs(status.Position.y - prevY) > 0.01f) {
-            status.LastScrollAtRealtime = Time.realtimeSinceStartup;
-        }
     }
 
     public LightweaveScrollView(Rect outRect, LightweaveScrollStatus status, bool showScrollbar)
@@ -146,6 +141,19 @@ public readonly record struct LightweaveScrollView : IDisposable {
 
     public void Dispose() {
         Widgets.EndScrollView();
+
+        if (_pendingWheel && status.VerticalVisible && Mouse.IsOver(outRect)) {
+            float scrollRange = Math.Max(0f, contentHeight - outRect.height);
+            float delta = _pendingWheelDeltaY * 20f;
+            float prevY = status.Position.y;
+            float next = Mathf.Clamp(prevY + delta, 0f, scrollRange);
+            status.Position = new Vector2(status.Position.x, next);
+            if (Math.Abs(next - prevY) > 0.01f) {
+                status.LastScrollAtRealtime = Time.realtimeSinceStartup;
+            }
+            _pendingWheel = false;
+            _pendingWheelDeltaY = 0f;
+        }
 
         if (!status.VerticalVisible || mode == ScrollbarMode.Never) {
             return;

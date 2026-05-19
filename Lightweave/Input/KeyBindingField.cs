@@ -19,7 +19,7 @@ public readonly record struct KeyBinding(KeyCode Key, KeyModifiers Modifiers);
     Id = "keybinding",
     Summary = "Captures a single keyboard shortcut with optional modifiers.",
     WhenToUse = "Bind a hotkey: click to record, then press the desired combination.",
-    SourcePath = "Lightweave/Lightweave/Input/KeyBindingField.cs"
+    SourcePath = "Lightweave/Input/KeyBindingField.cs"
 )]
 public static class KeyBindingField {
     private const string ClearGlyph = "×";
@@ -33,6 +33,7 @@ public static class KeyBindingField {
         bool disabled = false,
         [DocParam("Optional key disambiguating multiple instances declared on the same line.")]
         object? instanceKey = null,
+        Variant variant = default,
         Style? style = null,
         string[]? classes = null,
         string? id = null,
@@ -44,7 +45,14 @@ public static class KeyBindingField {
 
         LightweaveNode node = NodeBuilder.New("KeyBindingField", line, file);
         node.ApplyStyling("key-binding-field", style, classes, id);
-        node.PreferredHeight = new Rem(1.75f).ToPixels();
+        node.PreferredHeight = SelectorTrigger.Height.ToPixels();
+
+        node.MeasureWidth = () => {
+            float padX = SpacingScale.Sm.ToPixels();
+            float glyphSize = new Rem(1f).ToPixels();
+            float labelMin = new Rem(8f).ToPixels();
+            return Mathf.Ceil(padX + labelMin + SpacingScale.Xs.ToPixels() + glyphSize + padX);
+        };
 
         node.Paint = (rect, paintChildren) => {
             Theme.Theme theme = RenderContext.Current.Theme;
@@ -65,7 +73,7 @@ public static class KeyBindingField {
                 disabled
             );
 
-            InputSurface.Draw(rect, state);
+            InputSurface.DrawInputChrome(rect, state, variant);
 
             float padX = SpacingScale.Sm.ToPixels();
             float glyphSize = new Rem(1f).ToPixels();

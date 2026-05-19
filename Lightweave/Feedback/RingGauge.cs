@@ -14,7 +14,7 @@ namespace Cosmere.Lightweave.Feedback;
     Id = "ringgauge",
     Summary = "Circular determinate gauge showing fractional progress.",
     WhenToUse = "Compact dial-style readout for a single 0-1 value.",
-    SourcePath = "Lightweave/Lightweave/Feedback/RingGauge.cs",
+    SourcePath = "Lightweave/Feedback/RingGauge.cs",
     ShowRtl = false
 )]
 public static class RingGauge {
@@ -42,6 +42,7 @@ public static class RingGauge {
         LightweaveNode node = NodeBuilder.New("RingGauge", line, file);
         node.ApplyStyling("ring-gauge", style, classes, id);
         node.PreferredHeight = new Rem(4f).ToPixels();
+        node.MeasureWidth = () => Mathf.Ceil(new Rem(4f).ToPixels());
 
         node.Paint = (rect, paintChildren) => {
             Theme.Theme theme = RenderContext.Current.Theme;

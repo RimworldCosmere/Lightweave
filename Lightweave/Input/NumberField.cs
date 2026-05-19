@@ -17,7 +17,7 @@ namespace Cosmere.Lightweave.Input;
     Id = "numberfield",
     Summary = "Numeric input with bounds, parsing, and formatting.",
     WhenToUse = "Capture a single numeric value with optional min/max clamping.",
-    SourcePath = "Lightweave/Lightweave/Input/NumberField.cs",
+    SourcePath = "Lightweave/Input/NumberField.cs",
     ShowRtl = true
 )]
 public static class NumberField {
@@ -47,6 +47,7 @@ public static class NumberField {
         int decimalPlaces = 2,
         [DocParam("Optional key disambiguating multiple instances declared on the same line.")]
         object? instanceKey = null,
+        Variant variant = default,
         Style? style = null,
         string[]? classes = null,
         string? id = null,
@@ -63,7 +64,12 @@ public static class NumberField {
 
         LightweaveNode node = NodeBuilder.New("NumberField", line, file);
         node.ApplyStyling("number-field", style, classes, id);
-        node.PreferredHeight = new Rem(1.75f).ToPixels();
+        node.PreferredHeight = SelectorTrigger.Height.ToPixels();
+
+        node.MeasureWidth = () => {
+            float padX = InputSurface.PaddingX.ToPixels();
+            return Mathf.Ceil(new Rem(6f).ToPixels() + padX * 2f);
+        };
 
         bool localAllowDecimal = allowDecimal;
         int localDecimalPlaces = Mathf.Max(0, decimalPlaces);
@@ -99,7 +105,7 @@ public static class NumberField {
             }
 
             InteractionState state = InteractionState.Resolve(rect, focusName, disabled);
-            InputSurface.Draw(rect, state);
+            InputSurface.DrawInputChrome(rect, state, variant);
 
             float padX = InputSurface.PaddingX.ToPixels();
             float padY = InputSurface.PaddingY.ToPixels();

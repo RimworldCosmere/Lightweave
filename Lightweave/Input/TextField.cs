@@ -20,7 +20,7 @@ namespace Cosmere.Lightweave.Input;
     Id = "textfield",
     Summary = "Single-line editable text input.",
     WhenToUse = "Capture a short string (name, label, search term).",
-    SourcePath = "Lightweave/Lightweave/Input/TextField.cs",
+    SourcePath = "Lightweave/Input/TextField.cs",
     ShowRtl = true
 )]
 public static class TextField {
@@ -42,6 +42,8 @@ public static class TextField {
         UseFocus.FocusHandle? focus = null,
         [DocParam("Optional key disambiguating multiple instances declared on the same line.")]
         object? instanceKey = null,
+        [DocParam("Visual variant. Defaults to Secondary (quiet input chrome).", TypeOverride = "Variant", DefaultOverride = "Secondary")]
+        Variant variant = default,
         Style? style = null,
         string[]? classes = null,
         string? id = null,
@@ -57,7 +59,12 @@ public static class TextField {
 
         LightweaveNode node = NodeBuilder.New("TextField", line, file);
         node.ApplyStyling("text-field", style, classes, id);
-        node.PreferredHeight = new Rem(1.75f).ToPixels();
+        node.PreferredHeight = SelectorTrigger.Height.ToPixels();
+
+        node.MeasureWidth = () => {
+            float padX = InputSurface.PaddingX.ToPixels();
+            return Mathf.Ceil(new Rem(12f).ToPixels() + padX * 2f);
+        };
 
         node.Paint = (rect, paintChildren) => {
             Theme.Theme theme = RenderContext.Current.Theme;
@@ -81,7 +88,7 @@ public static class TextField {
             Hooks.Hooks.StateHandle<int> shakeFrames = Hooks.Hooks.UseState(0, line, shakeKey);
 
             InteractionState state = InteractionState.Resolve(rect, focusName, disabled);
-            InputSurface.Draw(rect, state);
+            InputSurface.DrawInputChrome(rect, state, variant);
 
             float padX = InputSurface.PaddingX.ToPixels();
             float padY = InputSurface.PaddingY.ToPixels();
@@ -151,6 +158,71 @@ public static class TextField {
         };
 
         return node;
+    }
+
+[DocVariant("CL_Playground_Label_Primary")]
+    public static DocSample DocsPrimary() {
+        bool forced = RenderContext.Current.ForceDisabled;
+        StateHandle<string> s = UseState("Stormlight");
+        return new DocSample(() => Create(
+            s.Value,
+            v => s.Set(v),
+            (string)"CL_Playground_Controls_TextField_Placeholder".Translate(),
+            disabled: forced,
+            variant: Variant.Primary
+        ));
+    }
+
+    [DocVariant("CL_Playground_Label_Secondary")]
+    public static DocSample DocsSecondary() {
+        bool forced = RenderContext.Current.ForceDisabled;
+        StateHandle<string> s = UseState("Stormlight");
+        return new DocSample(() => Create(
+            s.Value,
+            v => s.Set(v),
+            (string)"CL_Playground_Controls_TextField_Placeholder".Translate(),
+            disabled: forced,
+            variant: Variant.Secondary
+        ));
+    }
+
+    [DocVariant("CL_Playground_Label_Ghost")]
+    public static DocSample DocsGhost() {
+        bool forced = RenderContext.Current.ForceDisabled;
+        StateHandle<string> s = UseState("Stormlight");
+        return new DocSample(() => Create(
+            s.Value,
+            v => s.Set(v),
+            (string)"CL_Playground_Controls_TextField_Placeholder".Translate(),
+            disabled: forced,
+            variant: Variant.Ghost
+        ));
+    }
+
+    [DocVariant("CL_Playground_Label_Danger")]
+    public static DocSample DocsDanger() {
+        bool forced = RenderContext.Current.ForceDisabled;
+        StateHandle<string> s = UseState("Stormlight");
+        return new DocSample(() => Create(
+            s.Value,
+            v => s.Set(v),
+            (string)"CL_Playground_Controls_TextField_Placeholder".Translate(),
+            disabled: forced,
+            variant: Variant.Danger
+        ));
+    }
+
+    [DocVariant("CL_Playground_Label_Frosted")]
+    public static DocSample DocsFrosted() {
+        bool forced = RenderContext.Current.ForceDisabled;
+        StateHandle<string> s = UseState("Stormlight");
+        return new DocSample(() => Create(
+            s.Value,
+            v => s.Set(v),
+            (string)"CL_Playground_Controls_TextField_Placeholder".Translate(),
+            disabled: forced,
+            variant: Variant.Frosted
+        ));
     }
 
     [DocVariant("CL_Playground_Label_Filled")]

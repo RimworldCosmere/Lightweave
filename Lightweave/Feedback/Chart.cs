@@ -15,7 +15,7 @@ namespace Cosmere.Lightweave.Feedback;
     Id = "chart",
     Summary = "Inline data visualization with optional axes, hover, and tooltips.",
     WhenToUse = "Trend lines, sparklines, or compact time-series readouts. Add axes for richer dashboards or stay compact for dense UIs.",
-    SourcePath = "Lightweave/Lightweave/Feedback/Chart.cs",
+    SourcePath = "Lightweave/Feedback/Chart.cs",
     PreferredVariantHeight = 200f
 )]
 public static class Chart {
@@ -68,6 +68,7 @@ public static class Chart {
         LightweaveNode node = NodeBuilder.New("Chart", line, file);
         node.ApplyStyling("chart", style, classes, id);
         node.PreferredHeight = new Rem(2f).ToPixels();
+        node.MeasureWidth = () => Mathf.Ceil(new Rem(16f).ToPixels());
 
         ChartHoverState[] stateRef = { default };
 
@@ -128,7 +129,7 @@ public static class Chart {
                     float t = (float)i / (tickCountY - 1);
                     float val = Mathf.Lerp(max, min, t);
                     float yp = plotRect.y + t * plotRect.height;
-                    Rect labelRect = new Rect(rect.x, yp - tickPx, yAxisGutter - 6f, tickPx * 2f);
+                    Rect labelRect = new Rect(rect.x, yp - tickPx, yAxisGutter - new Rem(0.375f).ToPixels(), tickPx * 2f);
                     string txt = yTickFormatter != null ? yTickFormatter(val) : val.ToString("0.#");
                     TextDraw.DrawWithStyle(labelRect, txt, tickStyle, textCol);
                     PaintBox.DrawLine(new Vector2(plotRect.x, yp), new Vector2(plotRect.xMax, yp), gridCol, 1f);
@@ -147,7 +148,9 @@ public static class Chart {
                     float t = (float)i / (tickCountX - 1);
                     int idx = Mathf.RoundToInt(t * (samples.Count - 1));
                     float xp = plotRect.x + t * plotRect.width;
-                    Rect labelRect = new Rect(xp - 32f, plotRect.yMax + 4f, 64f, tickPx + 4f);
+                    float xLabelHalfW = new Rem(2f).ToPixels();
+                    float xLabelPadY = SpacingScale.Xxs.ToPixels();
+                    Rect labelRect = new Rect(xp - xLabelHalfW, plotRect.yMax + xLabelPadY, xLabelHalfW * 2f, tickPx + xLabelPadY);
                     string txt = xTickFormatter != null ? xTickFormatter(idx) : idx.ToString();
                     TextDraw.DrawWithStyle(labelRect, txt, tickStyle, textCol);
                 }
@@ -155,7 +158,8 @@ public static class Chart {
 
             if (showXAxis && xAxisLabel != null) {
                 labelStyle.alignment = TextAnchor.MiddleCenter;
-                Rect xlRect = new Rect(plotRect.x, rect.yMax - labelPx - 4f, plotRect.width, labelPx + 4f);
+                float xlPad = SpacingScale.Xxs.ToPixels();
+                Rect xlRect = new Rect(plotRect.x, rect.yMax - labelPx - xlPad, plotRect.width, labelPx + xlPad);
                 TextDraw.DrawWithStyle(xlRect, xAxisLabel, labelStyle, mutedCol);
             }
 
@@ -279,7 +283,7 @@ public static class Chart {
                 float hx = plot.x + idx * xStep;
                 float hyNorm = s.Flat ? 0.5f : (samplesCaptured[idx] - s.Min) / Mathf.Max(0.0001f, s.Max - s.Min);
                 float hy = plot.yMax - hyNorm * plot.height;
-                const float pointAnchorSize = 6f;
+                float pointAnchorSize = new Rem(0.375f).ToPixels();
                 return new Rect(
                     hx - pointAnchorSize * 0.5f,
                     hy - pointAnchorSize * 0.5f,

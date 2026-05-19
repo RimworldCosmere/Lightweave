@@ -15,7 +15,7 @@ namespace Cosmere.Lightweave.Input;
     Id = "colorpicker",
     Summary = "Swatch grid for selecting from a fixed palette of colors.",
     WhenToUse = "Pick a color from a curated set rather than a free-form picker.",
-    SourcePath = "Lightweave/Lightweave/Input/ColorPicker.cs"
+    SourcePath = "Lightweave/Input/ColorPicker.cs"
 )]
 public static class ColorPicker {
     private static readonly Color[] DefaultPalette = new[] {
@@ -40,6 +40,7 @@ public static class ColorPicker {
         IReadOnlyList<Color>? palette = null,
         [DocParam("Disables interaction and applies disabled styling.")]
         bool disabled = false,
+        Variant variant = default,
         Style? style = null,
         string[]? classes = null,
         string? id = null,
@@ -50,6 +51,16 @@ public static class ColorPicker {
         node.ApplyStyling("color-picker", style, classes, id);
 
         IReadOnlyList<Color> effectivePalette = palette ?? DefaultPalette;
+
+        node.MeasureWidth = () => {
+            int n = effectivePalette.Count;
+            if (n == 0) {
+                return new Rem(1.5f).ToPixels();
+            }
+            float swatchSize = new Rem(1.5f).ToPixels();
+            float gap = SpacingScale.Xs.ToPixels();
+            return n * swatchSize + Math.Max(0, n - 1) * gap;
+        };
 
         node.Measure = availableWidth => {
             if (effectivePalette.Count == 0) {

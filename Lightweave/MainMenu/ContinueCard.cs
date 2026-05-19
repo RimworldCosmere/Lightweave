@@ -263,24 +263,28 @@ public static class ContinueCard {
             LetterSpacing = Tracking.Widest,
         };
         node.Paint = (rect, _) => {
+            Theme.Theme theme = RenderContext.Current.Theme;
             InteractionState state = InteractionState.Resolve(rect, null, false);
 
-            Color topColor = new Color(212f / 255f, 168f / 255f, 87f / 255f, 1f);
-            Color bottomColor = new Color(184f / 255f, 136f / 255f, 56f / 255f, 1f);
-            if (state.Pressed) {
-                topColor = new Color(160f / 255f, 120f / 255f, 50f / 255f, 1f);
-                bottomColor = new Color(120f / 255f, 84f / 255f, 28f / 255f, 1f);
-            }
-            else if (state.Hovered) {
-                topColor = new Color(224f / 255f, 185f / 255f, 106f / 255f, 1f);
-                bottomColor = new Color(199f / 255f, 151f / 255f, 65f / 255f, 1f);
-            }
-            BackgroundSpec.Gradient bg = new BackgroundSpec.Gradient(GradientTextureCache.Vertical(topColor, bottomColor));
-            PaintBox.Draw(rect, bg, null, RadiusSpec.All(RadiusScale.None));
+            Color top = theme.GetColor(ThemeSlot.SurfaceAccent);
+            Color.RGBToHSV(top, out float hue, out float sat, out float val);
+            Color bottom = Color.HSVToRGB(hue, sat, val * 0.78f);
+            bottom.a = top.a;
 
-            Color leftBorder = new Color(0f, 0f, 0f, 0.4f);
+            BackgroundSpec.Gradient bg = new BackgroundSpec.Gradient(GradientTextureCache.Vertical(top, bottom));
+            RadiusSpec radius = RadiusSpec.All(RadiusScale.None);
+            PaintBox.Draw(rect, bg, null, radius);
+
+            float overlay = VariantPalette.OverlayAlpha(state);
+            if (overlay > 0f) {
+                Color overlayColor = InteractionFeedback.OverlayColor(theme, state, overlay);
+                PaintBox.Draw(rect, BackgroundSpec.Of(overlayColor), null, radius);
+            }
+
+            Color inset = theme.GetColor(ThemeSlot.BorderDefault);
+            inset.a = 0.4f;
             Rect leftStroke = new Rect(rect.x, rect.y, 1f, rect.height);
-            PaintBox.Fill(leftStroke, leftBorder);
+            PaintBox.Fill(leftStroke, inset);
 
             if (Event.current.type == EventType.Repaint) {
                 Font? font = LightweaveFonts.CarlitoBold ?? LightweaveFonts.CarlitoRegular;
@@ -291,7 +295,7 @@ public static class ContinueCard {
                     ? Mathf.Max(0, Mathf.RoundToInt(resolved.LetterSpacing.Value.ToPixels(fontSizeRem.ToFontPx())))
                     : 0f;
 
-                Color inkColor = new Color(26f / 255f, 19f / 255f, 10f / 255f, 1f);
+                Color inkColor = theme.GetColor(ThemeSlot.TextOnAccent);
                 string text = "▶  " + ((string)"CL_MainMenu_Continue_Action".Translate()).ToUpperInvariant();
 
                 TextDraw.DrawTracked(

@@ -4,10 +4,12 @@ using Verse;
 
 namespace Cosmere.Lightweave.Input;
 
-internal readonly record struct InteractionState(bool Hovered, bool Pressed, bool Focused, bool Disabled) {
+public readonly record struct InteractionState(bool Hovered, bool Pressed, bool Focused, bool Disabled) {
     public static InteractionState Resolve(Rect rect, string? focusName, bool disabled) {
         LightweaveHitTracker.Track(rect);
-        if (disabled) {
+        RenderContext ctx = RenderContext.Current;
+        bool effectiveDisabled = disabled || ctx.ForceDisabled;
+        if (effectiveDisabled) {
             if (Mouse.IsOver(rect)) {
                 CursorOverrides.MarkDisabledHover();
             }
@@ -15,8 +17,13 @@ internal readonly record struct InteractionState(bool Hovered, bool Pressed, boo
             return new InteractionState(false, false, false, true);
         }
 
+        if (ctx.ForceHovered || ctx.ForcePressed) {
+            bool focusedForced = focusName != null && GUI.GetNameOfFocusedControl() == focusName;
+            return new InteractionState(true, ctx.ForcePressed, focusedForced, false);
+        }
+
         bool hovered = Mouse.IsOver(rect);
-        if (hovered && RenderContext.Current.OverlayContentDepth == 0) {
+        if (hovered && ctx.OverlayContentDepth == 0) {
             UnityEngine.Event evt = UnityEngine.Event.current;
             if (evt != null) {
                 Vector2 screenPos = GUIUtility.GUIToScreenPoint(evt.mousePosition);
@@ -26,7 +33,7 @@ internal readonly record struct InteractionState(bool Hovered, bool Pressed, boo
             }
         }
         bool pressed = hovered && UnityEngine.Input.GetMouseButton(0);
-        bool focused = focusName != null && GUI.GetNameOfFocusedControl() == focusName;
-        return new InteractionState(hovered, pressed, focused, false);
+        bool focusedDefault = focusName != null && GUI.GetNameOfFocusedControl() == focusName;
+        return new InteractionState(hovered, pressed, focusedDefault, false);
     }
 }

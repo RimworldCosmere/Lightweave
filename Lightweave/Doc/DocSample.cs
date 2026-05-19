@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Text;
 using Cosmere.Lightweave.Runtime;
 
 namespace Cosmere.Lightweave.Doc;
@@ -12,6 +13,7 @@ public sealed record DocSample {
         Func<LightweaveNode> build,
         bool useFullSource = false,
         Type? companion = null,
+        string[]? helpers = null,
         [CallerArgumentExpression("build")] string buildExpr = "",
         [CallerFilePath] string file = ""
     ) {
@@ -21,7 +23,25 @@ public sealed record DocSample {
             ? DocSourceResolver.ResolveMethodSource(normalized, file) ?? normalized
             : normalized;
         string qualified = QualifyLeadingMethodCall(raw, file);
-        Code = AppendCompanion(qualified, companion, file);
+        string withCompanion = AppendCompanion(qualified, companion, file);
+        Code = AppendHelpers(withCompanion, helpers, file);
+    }
+
+    private static string AppendHelpers(string code, string[]? helpers, string file) {
+        if (helpers == null || helpers.Length == 0) {
+            return code;
+        }
+
+        StringBuilder builder = new StringBuilder(code);
+        for (int i = 0; i < helpers.Length; i++) {
+            string? helperSrc = DocSourceResolver.ResolveMethodSourceWithSignature(helpers[i], file);
+            if (string.IsNullOrEmpty(helperSrc)) {
+                continue;
+            }
+            builder.Append("\n\n");
+            builder.Append(helperSrc);
+        }
+        return builder.ToString();
     }
 
     

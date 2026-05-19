@@ -19,19 +19,19 @@ public static class ControlsTab {
             s.Add(SettingRow.Section("CL_Options_Section_Mouse",
                 SettingRow.Create(
                     "CL_Options_EdgeScroll".Translate(),
-                    Switch.Create("", Prefs.EdgeScreenScroll, v => Prefs.EdgeScreenScroll = v)
+                    Switch.Create("", Prefs.EdgeScreenScroll, v => Prefs.EdgeScreenScroll = v, variant: Variant.Secondary)
                 ),
                 SettingRow.Create(
                     "CL_Options_ZoomToMouse".Translate(),
-                    Switch.Create("", Prefs.ZoomToMouse, v => Prefs.ZoomToMouse = v)
+                    Switch.Create("", Prefs.ZoomToMouse, v => Prefs.ZoomToMouse = v, variant: Variant.Secondary)
                 ),
                 SettingRow.Create(
                     "CL_Options_ZoomSwitchLayer".Translate(),
-                    Switch.Create("", Prefs.ZoomSwitchWorldLayer, v => Prefs.ZoomSwitchWorldLayer = v)
+                    Switch.Create("", Prefs.ZoomSwitchWorldLayer, v => Prefs.ZoomSwitchWorldLayer = v, variant: Variant.Secondary)
                 ),
                 SettingRow.Create(
                     "CL_Options_RememberDrawStyle".Translate(),
-                    Switch.Create("", Prefs.RememberDrawStlyes, v => Prefs.RememberDrawStlyes = v)
+                    Switch.Create("", Prefs.RememberDrawStlyes, v => Prefs.RememberDrawStlyes = v, variant: Variant.Secondary)
                 ),
                 SettingRow.Create(
                     "CL_Options_MapDragSensitivity".Translate(),
@@ -40,7 +40,8 @@ public static class ControlsTab {
                         onChange: v => Prefs.MapDragSensitivity = (float)Math.Round(v, 2),
                         min: 0.8f,
                         max: 2.5f,
-                        format: v => Mathf.RoundToInt(v * 100f) + "%"
+                        format: v => Mathf.RoundToInt(v * 100f) + "%",
+                    variant: Variant.Secondary
                     )
                 )
             ));
@@ -50,7 +51,7 @@ public static class ControlsTab {
                     Button.Create(
                         label: "CL_Options_KeyBindings_Action".Translate(),
                         onClick: () => Find.WindowStack.Add(new Dialog_KeyBindings()),
-                        variant: ButtonVariant.Secondary
+                        variant: Variant.Secondary
                     )
                 )
             ));

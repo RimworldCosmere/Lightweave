@@ -5,6 +5,7 @@ using Cosmere.Lightweave.Feedback;
 using Cosmere.Lightweave.Input;
 using Cosmere.Lightweave.Layout;
 using Cosmere.Lightweave.MainMenu;
+using Cosmere.Lightweave.Navigation;
 using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
@@ -25,12 +26,39 @@ public static class SaveListPane {
     public static LightweaveNode Create(
         List<SaveFileInfo> files,
         string? selected,
-        Action<string> onSelect
+        Action<string> onSelect,
+        string filter,
+        Action<string> onFilterChange
     ) {
-        return Box.Create(
-            children: c => c.Add(ScrollArea.Create(
-                content: BuildList(files, selected, onSelect)
+        IReadOnlyList<string> filterValues = new[] { "all", "manual", "auto" };
+        string LabelFor(string f) {
+            return f switch {
+                "manual" => "CL_LoadColony_Filter_Manual".Translate(),
+                "auto" => "CL_LoadColony_Filter_Auto".Translate(),
+                _ => "CL_LoadColony_Filter_All".Translate(),
+            };
+        }
+
+        LightweaveNode filterRow = Box.Create(
+            children: c => c.Add(Segmented.Create<string>(
+                value: filter,
+                items: filterValues,
+                labelFn: LabelFor,
+                onChange: onFilterChange
             )),
+            style: new Style {
+                Padding = EdgeInsets.All(SpacingScale.Sm),
+                Border = new BorderSpec(Bottom: new Rem(0.0625f), Color: ThemeSlot.BorderSubtle),
+            }
+        );
+
+        return Box.Create(
+            children: c => c.Add(Stack.Create(SpacingScale.None, s => {
+                s.Add(filterRow);
+                s.AddFlex(ScrollArea.Create(
+                    content: BuildList(files, selected, onSelect)
+                ));
+            })),
             style: new Style {
                 Padding = EdgeInsets.Zero,
                 Border = new BorderSpec(Right: new Rem(0.0625f), Color: ThemeSlot.BorderSubtle),

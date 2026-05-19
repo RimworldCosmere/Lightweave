@@ -56,7 +56,7 @@ public static class DockTile {
         return Button.Create(
             label: string.Empty,
             onClick: onClick,
-            variant: ButtonVariant.Frosted,
+            variant: Variant.Frosted,
             disabled: disabled,
             style: merged,
             classes: StyleExtensions.PrependClass("dock-tile", classes),

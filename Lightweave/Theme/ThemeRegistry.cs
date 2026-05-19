@@ -1,61 +1,124 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using Cosmere.Lightweave.Fonts;
+using Cosmere.Lightweave.Settings;
 using UnityEngine;
+using Verse;
 
 namespace Cosmere.Lightweave.Theme;
 
+public sealed record ThemeDescriptor(string Id, string LabelKey, int Order, Type SourceType);
+
 public static class ThemeRegistry {
-    private static Theme? cachedDefault;
-    private static Theme? cachedCosmere;
-    private static Theme? cachedScadrial;
-    private static Theme? cachedRoshar;
+    public const string DefaultId = "default";
 
-    public static Theme Default {
-        get {
-            if (cachedDefault != null) {
-                return cachedDefault;
+    private static List<ThemeDescriptor>? cachedDescriptors;
+    private static readonly Dictionary<string, Theme> cachedThemes = new Dictionary<string, Theme>(StringComparer.Ordinal);
+    private static readonly Dictionary<string, MethodInfo> cachedBuilders = new Dictionary<string, MethodInfo>(StringComparer.Ordinal);
+
+    public static IReadOnlyList<ThemeDescriptor> All => GetDescriptors();
+
+    public static Theme Get(string id) {
+        if (cachedThemes.TryGetValue(id, out Theme cached)) {
+            return cached;
+        }
+        IReadOnlyList<ThemeDescriptor> all = GetDescriptors();
+        ThemeDescriptor? desc = all.FirstOrDefault(d => string.Equals(d.Id, id, StringComparison.Ordinal));
+        if (desc == null) {
+            if (string.Equals(id, DefaultId, StringComparison.Ordinal)) {
+                throw new InvalidOperationException(
+                    "ThemeRegistry has no theme registered with id 'default'. The lightweave assembly must contribute at least one [LightweaveTheme] attribute."
+                );
             }
+            return Get(DefaultId);
+        }
+        if (!cachedBuilders.TryGetValue(desc.Id, out MethodInfo builder)) {
+            throw new InvalidOperationException($"ThemeRegistry lost the cached builder for theme id '{desc.Id}'. This is a bug in ThemeRegistry initialization.");
+        }
+        FontSet fonts = RequireFonts();
+        Theme built = (Theme)builder.Invoke(null, new object[] { fonts.Body, fonts.BodyBold, fonts.Heading, fonts.Display, fonts.Mono })!;
+        cachedThemes[desc.Id] = built;
+        return built;
+    }
 
-            FontSet fonts = RequireFonts();
-            cachedDefault = DefaultTheme.Build(fonts.Body, fonts.BodyBold, fonts.Heading, fonts.Display, fonts.Mono);
-            return cachedDefault;
+    public static Theme Active {
+        get {
+            string id = LightweaveMod.Settings?.SelectedThemeId ?? DefaultId;
+            return Get(string.IsNullOrEmpty(id) ? DefaultId : id);
         }
     }
 
-    public static Theme Cosmere {
-        get {
-            if (cachedCosmere != null) {
-                return cachedCosmere;
+    public static Theme Default => Get(DefaultId);
+    public static Theme Cosmere => Get("cosmere");
+    public static Theme Scadrial => Get("scadrial");
+    public static Theme Roshar => Get("roshar");
+
+    private static IReadOnlyList<ThemeDescriptor> GetDescriptors() {
+        if (cachedDescriptors != null) {
+            return cachedDescriptors;
+        }
+
+        List<ThemeDescriptor> list = new List<ThemeDescriptor>();
+        HashSet<string> seenIds = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies()) {
+            Type[] types;
+            try {
+                types = asm.GetTypes();
+            } catch (ReflectionTypeLoadException ex) {
+                types = ex.Types.Where(t => t != null).ToArray()!;
+            } catch (Exception ex) {
+                Log.Warning($"[Lightweave] ThemeRegistry skipping assembly '{asm.FullName}': {ex.Message}");
+                continue;
             }
 
-            FontSet fonts = RequireFonts();
-            cachedCosmere = CosmereTheme.Build(fonts.Body, fonts.BodyBold, fonts.Heading, fonts.Display, fonts.Mono);
-            return cachedCosmere;
-        }
-    }
-
-    public static Theme Scadrial {
-        get {
-            if (cachedScadrial != null) {
-                return cachedScadrial;
+            foreach (Type type in types) {
+                if (type == null) {
+                    continue;
+                }
+                LightweaveThemeAttribute? attr;
+                try {
+                    attr = type.GetCustomAttribute<LightweaveThemeAttribute>();
+                } catch (Exception ex) {
+                    Log.Warning($"[Lightweave] ThemeRegistry could not read attributes on '{type.FullName}': {ex.Message}");
+                    continue;
+                }
+                if (attr == null) {
+                    continue;
+                }
+                MethodInfo? buildMethod = type.GetMethod(
+                    "Build",
+                    BindingFlags.Public | BindingFlags.Static,
+                    binder: null,
+                    types: new[] { typeof(Font), typeof(Font), typeof(Font), typeof(Font), typeof(Font) },
+                    modifiers: null
+                );
+                if (buildMethod == null || !typeof(Theme).IsAssignableFrom(buildMethod.ReturnType)) {
+                    Log.Warning(
+                        $"[Lightweave] Theme type '{type.FullName}' is marked [LightweaveTheme] but is missing a 'public static Theme Build(Font, Font, Font, Font, Font)' method. Skipping."
+                    );
+                    continue;
+                }
+                if (!seenIds.Add(attr.Id)) {
+                    Log.Warning(
+                        $"[Lightweave] Duplicate theme id '{attr.Id}' on type '{type.FullName}'. First registration wins; this one is ignored."
+                    );
+                    continue;
+                }
+                list.Add(new ThemeDescriptor(attr.Id, attr.LabelKey, attr.Order, type));
+                cachedBuilders[attr.Id] = buildMethod;
             }
-
-            FontSet fonts = RequireFonts();
-            cachedScadrial = ScadrialTheme.Build(fonts.Body, fonts.BodyBold, fonts.Heading, fonts.Display, fonts.Mono);
-            return cachedScadrial;
         }
-    }
 
-    public static Theme Roshar {
-        get {
-            if (cachedRoshar != null) {
-                return cachedRoshar;
-            }
+        list.Sort((a, b) => {
+            int cmp = a.Order.CompareTo(b.Order);
+            return cmp != 0 ? cmp : string.CompareOrdinal(a.Id, b.Id);
+        });
 
-            FontSet fonts = RequireFonts();
-            cachedRoshar = RosharTheme.Build(fonts.Body, fonts.BodyBold, fonts.Heading, fonts.Display, fonts.Mono);
-            return cachedRoshar;
-        }
+        cachedDescriptors = list;
+        return list;
     }
 
     private static FontSet RequireFonts() {

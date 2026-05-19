@@ -3,12 +3,13 @@ using UnityEngine;
 
 namespace Cosmere.Lightweave.Theme;
 
+[LightweaveTheme("default", "CL_Theme_Default", Order = 0)]
 public static class DefaultTheme {
     public static Theme Build(Font body, Font bodyBold, Font heading, Font display, Font mono) {
         Dictionary<ThemeSlot, Color> colors = new Dictionary<ThemeSlot, Color> {
             [ThemeSlot.SurfacePrimary] = new Color(0.133f, 0.131f, 0.125f, 0.95f),
             [ThemeSlot.SurfaceRaised] = new Color(0.175f, 0.168f, 0.155f, 1.00f),
-            [ThemeSlot.SurfaceSunken] = new Color(0.083f, 0.080f, 0.074f, 0.95f),
+            [ThemeSlot.SurfaceSunken] = new Color(0.083f, 0.080f, 0.074f, 1f),
             [ThemeSlot.SurfaceTranslucent] = new Color(0.030f, 0.030f, 0.025f, 0.35f),
             [ThemeSlot.SurfaceAccent] = new Color(0.800f, 0.660f, 0.350f, 0.92f),
             [ThemeSlot.SurfaceShadow] = new Color(0.000f, 0.000f, 0.000f, 0.35f),
@@ -34,6 +35,11 @@ public static class DefaultTheme {
             [ThemeSlot.OverlayDim] = new Color(0.030f, 0.030f, 0.025f, 0.62f),
             [ThemeSlot.MapPreviewTint] = new Color(0.205f, 0.198f, 0.180f, 1.00f),
             [ThemeSlot.MetadataLabel] = new Color(0.420f, 0.410f, 0.375f),
+            [ThemeSlot.SurfaceTranslucentDark] = new Color(0.078f, 0.063f, 0.043f, 1.00f),
+            [ThemeSlot.SurfaceGhostHover] = new Color(0.157f, 0.125f, 0.086f, 1.00f),
+            [ThemeSlot.ScrimDefault] = new Color(0.000f, 0.000f, 0.000f, 1.00f),
+            [ThemeSlot.SurfaceTooltip] = new Color(0.039f, 0.031f, 0.020f, 1.00f),
+            [ThemeSlot.BorderTooltip] = new Color(0.769f, 0.667f, 0.510f, 0.28f),
         };
         return BaseTheme.Compose(colors, body, bodyBold, heading, display, mono, BaseTheme.BuildFlatRadii());
     }

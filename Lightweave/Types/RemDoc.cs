@@ -1,4 +1,5 @@
 using Cosmere.Lightweave.Doc;
+using Cosmere.Lightweave.Input;
 using Cosmere.Lightweave.Layout;
 using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
@@ -6,188 +7,209 @@ using Cosmere.Lightweave.Theme;
 using Cosmere.Lightweave.Tokens;
 using UnityEngine;
 using Verse;
+using LText = Cosmere.Lightweave.Typography.Typography.Text;
 
 namespace Cosmere.Lightweave.Types;
 
 [Doc(
-    Id = "rem",
-    Summary = "Sizing primitive used for every spacing, padding, font size, and border thickness in Lightweave.",
+    Id = "rem-spacing",
+    Summary = "Sizing primitive used for every spacing, padding, and border thickness in Lightweave.",
     WhenToUse = "Pass Rem (or a SpacingScale step) anywhere a size is needed so the whole token system scales together when base units change.",
-    SourcePath = "Lightweave/Lightweave/Types/Rem.cs",
-    Category = "Tokens",
-    PreferredVariantHeight = 160f
+    SourcePath = "Lightweave/Types/Rem.cs",
+    Category = "Foundation",
+    PreferredVariantHeight = 120f,
+    HideUsage = true,
+    HideSource = true
 )]
 public static class RemDoc {
-    private static readonly (string Label, Rem Step)[] LadderSteps = {
-        ("Xxs (0.25)", SpacingScale.Xxs),
-        ("Xs (0.5)", SpacingScale.Xs),
-        ("Sm (0.75)", SpacingScale.Sm),
-        ("Md (1)", SpacingScale.Md),
-        ("Lg (1.5)", SpacingScale.Lg),
-        ("Xl (2)", SpacingScale.Xl),
-        ("Xxl (3)", SpacingScale.Xxl),
-        ("Xxxl (4)", SpacingScale.Xxxl),
-    };
-
-    private static readonly Rem[] FontSteps = {
-        new Rem(0.625f),
-        new Rem(0.75f),
-        new Rem(0.875f),
-        new Rem(1f),
-        new Rem(1.25f),
-        new Rem(1.5f),
-        new Rem(2f),
-    };
-
-    [DocVariant("CL_Playground_rem_Conversion")]
+    [DocVariant("CL_Playground_rem-spacing_Conversion")]
     public static DocSample DocsConversion() {
-        return new DocSample(() =>
-            Box.Create(
-                outer => outer.Add(ConversionReadoutNode()),
-                style: new Style {
-                    Padding = EdgeInsets.All(new Rem(0.5f)),
-                    Background = BackgroundSpec.Of(ThemeSlot.SurfaceSunken),
-                    Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderSubtle),
-                    Radius = RadiusSpec.All(RadiusScale.Sm),
+        return new DocSample(() => {
+            Style monoStyle = new Style {
+                FontFamily = FontRole.Mono,
+                FontSize = new Rem(0.875f),
+                TextColor = ThemeSlot.TextPrimary,
+            };
+            string layoutBase = $"Layout base : {Spacing.BaseUnit}px = 1rem";
+            string fontBase = $"Font base   : {Spacing.FontBaseUnit}px = 1rem";
+            string half = $"0.5rem  -> {0.5f * Spacing.BaseUnit:0.##}px layout / {0.5f * Spacing.FontBaseUnit:0.##}px font";
+            string one = $"1rem    -> {Spacing.BaseUnit}px layout / {Spacing.FontBaseUnit}px font";
+            string oneAndHalf = $"1.5rem  -> {1.5f * Spacing.BaseUnit:0.##}px layout / {1.5f * Spacing.FontBaseUnit:0.##}px font";
+            return Stack.Create(
+                gap: new Rem(0.125f),
+                children: col => {
+                    col.Add(LText.Create(layoutBase, style: monoStyle));
+                    col.Add(LText.Create(fontBase, style: monoStyle));
+                    col.Add(LText.Create(" ", style: monoStyle));
+                    col.Add(LText.Create(half, style: monoStyle));
+                    col.Add(LText.Create(one, style: monoStyle));
+                    col.Add(LText.Create(oneAndHalf, style: monoStyle));
                 }
-            )
-        );
+            );
+        });
     }
 
-    [DocVariant("CL_Playground_rem_SpacingLadder")]
+    [DocVariant("CL_Playground_rem-spacing_SpacingLadder")]
     public static DocSample DocsSpacingLadder() {
-        return new DocSample(() =>
+        return new DocSample(() => {
+            float rowHeightPx = new Rem(1.5f).ToPixels();
+            float labelColumnWidthPx = new Rem(7f).ToPixels();
+            Rem rowGap = new Rem(0.25f);
+            (string Label, Rem Step)[] ladder = {
+                ("Xxs (0.25)", SpacingScale.Xxs),
+                ("Xs (0.5)", SpacingScale.Xs),
+                ("Sm (0.75)", SpacingScale.Sm),
+                ("Md (1)", SpacingScale.Md),
+                ("Lg (1.5)", SpacingScale.Lg),
+                ("Xl (2)", SpacingScale.Xl),
+                ("Xxl (3)", SpacingScale.Xxl),
+                ("Xxxl (4)", SpacingScale.Xxxl),
+            };
+            return Stack.Create(
+                gap: rowGap,
+                children: col => {
+                    for (int i = 0; i < ladder.Length; i++) {
+                        (string label, Rem step) = ladder[i];
+                        float barWidthPx = step.ToPixels();
+                        col.Add(HStack.Create(
+                            gap: new Rem(0.5f),
+                            children: row => {
+                                row.Add(LText.Create(
+                                    label,
+                                    style: new Style {
+                                        FontFamily = FontRole.Mono,
+                                        FontSize = new Rem(0.8125f),
+                                        TextColor = ThemeSlot.TextMuted,
+                                    }
+                                ), labelColumnWidthPx);
+                                row.Add(Box.Create(
+                                    bar => { },
+                                    style: new Style {
+                                        Background = BackgroundSpec.Of(ThemeSlot.SurfaceAccent),
+                                        Radius = RadiusSpec.All(RadiusScale.Sm),
+                                        Height = Length.Rem(0.75f),
+                                    }
+                                ), barWidthPx);
+                            }
+                        ), rowHeightPx);
+                    }
+                }
+            );
+        });
+    }
+
+
+    [DocVariant("CL_Playground_rem-spacing_PaddingSteps")]
+    public static DocSample DocsPaddingSteps() {
+        LightweaveNode Cell(string labelKey, Rem step) =>
             Box.Create(
-                outer => outer.Add(SpacingLadderNode()),
+                inner => inner.Add(LText.Create(
+                    (string)labelKey.Translate(),
+                    style: new Style {
+                        FontFamily = FontRole.Mono,
+                        FontSize = new Rem(0.8125f),
+                        TextColor = ThemeSlot.TextOnAccent,
+                        TextAlign = TextAlign.Center,
+                    }
+                )),
                 style: new Style {
-                    Padding = EdgeInsets.All(new Rem(0.5f)),
-                    Background = BackgroundSpec.Of(ThemeSlot.SurfaceSunken),
-                    Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderSubtle),
+                    Padding = EdgeInsets.All(step),
+                    Background = BackgroundSpec.Of(ThemeSlot.SurfaceAccent),
                     Radius = RadiusSpec.All(RadiusScale.Sm),
+                }
+            );
+
+        return new DocSample(() =>
+            HStack.Create(
+                gap: SpacingScale.Sm,
+                children: row => {
+                    row.AddFlex(Cell("CL_Playground_rem-spacing_Step_Xs", SpacingScale.Xs));
+                    row.AddFlex(Cell("CL_Playground_rem-spacing_Step_Sm", SpacingScale.Sm));
+                    row.AddFlex(Cell("CL_Playground_rem-spacing_Step_Md", SpacingScale.Md));
+                    row.AddFlex(Cell("CL_Playground_rem-spacing_Step_Lg", SpacingScale.Lg));
                 }
             )
         );
     }
 
-    [DocVariant("CL_Playground_rem_FontLadder")]
-    public static DocSample DocsFontLadder() {
-        return new DocSample(() =>
+    [DocVariant("CL_Playground_rem-spacing_StackGaps")]
+    public static DocSample DocsStackGaps() {
+        Style chipStyle = new Style {
+            Padding = new EdgeInsets(SpacingScale.Xxs, SpacingScale.Sm, SpacingScale.Xxs, SpacingScale.Sm),
+            Background = BackgroundSpec.Of(ThemeSlot.SurfaceRaised),
+            Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderSubtle),
+            Radius = RadiusSpec.All(RadiusScale.Sm),
+        };
+
+        LightweaveNode Chip() =>
             Box.Create(
-                outer => outer.Add(FontLadderNode()),
-                style: new Style {
-                    Padding = EdgeInsets.All(new Rem(0.5f)),
-                    Background = BackgroundSpec.Of(ThemeSlot.SurfaceSunken),
-                    Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderSubtle),
-                    Radius = RadiusSpec.All(RadiusScale.Sm),
+                chip => chip.Add(LText.Create(
+                    "·",
+                    style: new Style {
+                        FontFamily = FontRole.Body,
+                        FontSize = new Rem(0.75f),
+                        TextColor = ThemeSlot.TextSecondary,
+                        TextAlign = TextAlign.Center,
+                    }
+                )),
+                style: chipStyle
+            );
+
+        LightweaveNode Section(string labelKey, Rem gap) =>
+            Stack.Create(
+                gap: SpacingScale.Xxs,
+                children: section => {
+                    section.Add(LText.Create(
+                        (string)labelKey.Translate(),
+                        style: new Style {
+                            FontFamily = FontRole.Mono,
+                            FontSize = new Rem(0.75f),
+                            TextColor = ThemeSlot.TextMuted,
+                        }
+                    ));
+                    section.Add(HStack.Create(
+                        gap: gap,
+                        children: row => {
+                            row.AddHug(Chip());
+                            row.AddHug(Chip());
+                            row.AddHug(Chip());
+                            row.AddHug(Chip());
+                        }
+                    ));
+                }
+            );
+
+        return new DocSample(() =>
+            Stack.Create(
+                gap: SpacingScale.Md,
+                children: col => {
+                    col.Add(Section("CL_Playground_rem-spacing_Step_Xxs", SpacingScale.Xxs));
+                    col.Add(Section("CL_Playground_rem-spacing_Step_Xs", SpacingScale.Xs));
+                    col.Add(Section("CL_Playground_rem-spacing_Step_Sm", SpacingScale.Sm));
+                    col.Add(Section("CL_Playground_rem-spacing_Step_Md", SpacingScale.Md));
                 }
             )
         );
     }
 
-    [DocUsage]
-    public static DocSample DocsUsage() {
+    [DocVariant("CL_Playground_rem-spacing_ButtonsAreRems")]
+    public static DocSample DocsButtonsAreRems() {
         return new DocSample(() =>
-            Box.Create(
-                outer => outer.Add(ConversionReadoutNode()),
-                style: new Style {
-                    Padding = EdgeInsets.All(new Rem(0.5f)),
-                    Background = BackgroundSpec.Of(ThemeSlot.SurfaceSunken),
-                    Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderSubtle),
-                    Radius = RadiusSpec.All(RadiusScale.Sm),
+            HStack.Create(
+                gap: SpacingScale.Sm,
+                children: row => {
+                    row.AddHug(Button.Create(label: Variant.Primary.Id, onClick: null, variant: Variant.Primary));
+                    row.AddHug(Button.Create(label: Variant.Secondary.Id, onClick: null, variant: Variant.Secondary));
+                    row.AddHug(Button.Create(label: Variant.Ghost.Id, onClick: null, variant: Variant.Ghost));
                 }
             )
         );
     }
 
-    private static LightweaveNode ConversionReadoutNode() {
-        LightweaveNode node = NodeBuilder.New("RemConversion");
-        node.PreferredHeight = new Rem(4.5f).ToPixels();
-        node.Measure = _ => new Rem(4.5f).ToPixels();
-        node.Paint = (rect, _) => {
-            Theme.Theme theme = RenderContext.Current.Theme;
-            int pixelSize = Mathf.RoundToInt(new Rem(0.875f).ToFontPx());
-            GUIStyle style = GuiStyleCache.GetOrCreate(theme.GetFont(FontRole.Mono), pixelSize, FontStyle.Normal);
-            style.alignment = TextAnchor.UpperLeft;
+    
 
-            string text =
-                $"Layout base : {Spacing.BaseUnit}px = 1rem\n" +
-                $"Font base   : {Spacing.FontBaseUnit}px = 1rem\n" +
-                $"\n" +
-                $"0.5rem  -> {0.5f * Spacing.BaseUnit:0.##}px layout / {0.5f * Spacing.FontBaseUnit:0.##}px font\n" +
-                $"1rem    -> {Spacing.BaseUnit}px layout / {Spacing.FontBaseUnit}px font\n" +
-                $"1.5rem  -> {1.5f * Spacing.BaseUnit:0.##}px layout / {1.5f * Spacing.FontBaseUnit:0.##}px font";
+    
 
-            Color saved = GUI.color;
-            GUI.color = theme.GetColor(ThemeSlot.TextPrimary);
-            GUI.Label(RectSnap.Snap(rect), text, style);
-            GUI.color = saved;
-        };
-        return node;
-    }
+    
 
-    private static LightweaveNode SpacingLadderNode() {
-        LightweaveNode node = NodeBuilder.New("RemSpacingLadder");
-        float rowHeight = new Rem(1.5f).ToPixels();
-        float totalHeight = rowHeight * LadderSteps.Length;
-        node.PreferredHeight = totalHeight;
-        node.Measure = _ => totalHeight;
-        node.Paint = (rect, _) => {
-            Theme.Theme theme = RenderContext.Current.Theme;
-            int pixelSize = Mathf.RoundToInt(new Rem(0.8125f).ToFontPx());
-            GUIStyle labelStyle = GuiStyleCache.GetOrCreate(theme.GetFont(FontRole.Mono), pixelSize, FontStyle.Normal);
-            labelStyle.alignment = TextAnchor.MiddleLeft;
-            float labelWidth = new Rem(7f).ToPixels();
-            float gap = new Rem(0.5f).ToPixels();
-            RadiusSpec radius = RadiusSpec.All(RadiusScale.Sm);
-
-            for (int i = 0; i < LadderSteps.Length; i++) {
-                (string label, Rem step) = LadderSteps[i];
-                Rect row = new Rect(rect.x, rect.y + i * rowHeight, rect.width, rowHeight);
-                Rect labelRect = new Rect(row.x, row.y, labelWidth, row.height);
-                float barOriginX = labelRect.xMax + gap;
-                float barWidth = Mathf.Max(0f, Mathf.Min(step.ToPixels(), row.xMax - barOriginX));
-                Rect barRect = new Rect(barOriginX, row.y + rowHeight * 0.25f, barWidth, rowHeight * 0.5f);
-
-                Color saved = GUI.color;
-                GUI.color = theme.GetColor(ThemeSlot.TextMuted);
-                GUI.Label(RectSnap.Snap(labelRect), label, labelStyle);
-                GUI.color = saved;
-
-                if (barWidth > 0f) {
-                    PaintBox.Draw(barRect, BackgroundSpec.Of(ThemeSlot.SurfaceAccent), null, radius);
-                }
-            }
-        };
-        return node;
-    }
-
-    private static LightweaveNode FontLadderNode() {
-        LightweaveNode node = NodeBuilder.New("RemFontLadder");
-        float totalHeight = 0f;
-        float[] rowHeights = new float[FontSteps.Length];
-        for (int i = 0; i < FontSteps.Length; i++) {
-            rowHeights[i] = Mathf.Max(new Rem(1.25f).ToPixels(), FontSteps[i].ToFontPx() + 4f);
-            totalHeight += rowHeights[i];
-        }
-
-        node.PreferredHeight = totalHeight;
-        node.Measure = _ => totalHeight;
-        node.Paint = (rect, _) => {
-            Theme.Theme theme = RenderContext.Current.Theme;
-            float y = rect.y;
-            for (int i = 0; i < FontSteps.Length; i++) {
-                Rem step = FontSteps[i];
-                int pixelSize = Mathf.RoundToInt(step.ToFontPx());
-                GUIStyle style = GuiStyleCache.GetOrCreate(theme.GetFont(FontRole.Body), pixelSize, FontStyle.Normal);
-                style.alignment = TextAnchor.MiddleLeft;
-                Rect row = new Rect(rect.x, y, rect.width, rowHeights[i]);
-                Color saved = GUI.color;
-                GUI.color = theme.GetColor(ThemeSlot.TextPrimary);
-                GUI.Label(RectSnap.Snap(row), $"{step.Value:0.###}rem ({pixelSize}px) The quick brown fox", style);
-                GUI.color = saved;
-                y += rowHeights[i];
-            }
-        };
-        return node;
-    }
 }

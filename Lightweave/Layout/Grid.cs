@@ -13,7 +13,7 @@ namespace Cosmere.Lightweave.Layout;
     Id = "grid",
     Summary = "Two-dimensional column-driven layout with fixed and fractional tracks.",
     WhenToUse = "Place children on a column grid with explicit track sizes.",
-    SourcePath = "Lightweave/Lightweave/Layout/Grid.cs"
+    SourcePath = "Lightweave/Layout/Grid.cs"
 )]
 public static class Grid {
     public static LightweaveNode Create(
@@ -76,6 +76,32 @@ public static class Grid {
             }
             return flow;
         }
+
+        node.MeasureWidth = () => {
+            List<GridTrack> cols = ResolveCols();
+            int n = cols.Count;
+            if (n == 0) {
+                return 0f;
+            }
+            List<LightweaveNode> flow = CollectInFlow();
+            float gapPx = gap.ToPixels();
+            float total = 0f;
+            for (int c = 0; c < n; c++) {
+                if (cols[c] is GridTrack.Fixed f) {
+                    total += f.Size.ToPixels();
+                    continue;
+                }
+                float colMax = 0f;
+                for (int r = 0; r * n + c < flow.Count; r++) {
+                    float w = flow[r * n + c].MeasureWidth?.Invoke() ?? 0f;
+                    if (w > colMax) {
+                        colMax = w;
+                    }
+                }
+                total += colMax;
+            }
+            return total + gapPx * Math.Max(0, n - 1);
+        };
 
         node.Measure = availableWidth => {
             List<GridTrack> cols = ResolveCols();

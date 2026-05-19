@@ -17,7 +17,7 @@ public enum HotkeyBadgeSize {
     Id = "hotkey-badge",
     Summary = "Compact key-cap label for hotkeys: bordered surface, monospace letter, themed muted text.",
     WhenToUse = "Inline hotkey hints next to actions, dock buttons, and key binding rows.",
-    SourcePath = "Lightweave/Lightweave/Typography/HotkeyBadge.cs",
+    SourcePath = "Lightweave/Typography/HotkeyBadge.cs",
     ShowRtl = false
 )]
 public static class HotkeyBadge {
@@ -45,13 +45,7 @@ public static class HotkeyBadge {
         node.ApplyStyling("hotkey-badge", style, classes, id);
         node.PreferredHeight = heightRem.ToPixels();
 
-        node.Measure = _ => heightRem.ToPixels();
-
-        node.Paint = (rect, _) => {
-            if (Event.current.type != EventType.Repaint) {
-                return;
-            }
-
+        GUIStyle ResolveLabelStyle() {
             Theme.Theme theme = RenderContext.Current.Theme;
             Style s = node.GetResolvedStyle();
             FontRef? fr = s.FontFamily;
@@ -62,7 +56,25 @@ public static class HotkeyBadge {
             };
             Rem resolvedFontSize = s.FontSize ?? fontRem;
             int pixelSize = Mathf.RoundToInt(resolvedFontSize.ToFontPx());
-            GUIStyle gs = GuiStyleCache.GetOrCreate(font, pixelSize, FontStyle.Normal);
+            return GuiStyleCache.GetOrCreate(font, pixelSize, FontStyle.Normal);
+        }
+
+        node.Measure = _ => heightRem.ToPixels();
+
+        node.MeasureWidth = () => {
+            GUIStyle gs = ResolveLabelStyle();
+            float labelWidth = string.IsNullOrEmpty(label) ? 0f : gs.CalcSize(new GUIContent(label)).x;
+            return Mathf.Max(minWidthPx, labelWidth + horizontalPadPx * 2f);
+        };
+
+        node.Paint = (rect, _) => {
+            if (Event.current.type != EventType.Repaint) {
+                return;
+            }
+
+            Theme.Theme theme = RenderContext.Current.Theme;
+            Style s = node.GetResolvedStyle();
+            GUIStyle gs = ResolveLabelStyle();
             gs.alignment = TextAnchor.MiddleCenter;
             float labelWidth = string.IsNullOrEmpty(label) ? 0f : gs.CalcSize(new GUIContent(label)).x;
             float capWidth = Mathf.Max(minWidthPx, labelWidth + horizontalPadPx * 2f);

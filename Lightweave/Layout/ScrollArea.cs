@@ -12,7 +12,7 @@ namespace Cosmere.Lightweave.Layout;
     Id = "scrollarea",
     Summary = "Scrollable viewport that clips overflow content.",
     WhenToUse = "Wrap content that may exceed the available height.",
-    SourcePath = "Lightweave/Lightweave/Layout/ScrollArea.cs",
+    SourcePath = "Lightweave/Layout/ScrollArea.cs",
     PreferredVariantHeight = 160f
 )]
 public static class ScrollArea {

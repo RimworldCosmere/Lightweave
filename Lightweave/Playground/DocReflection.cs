@@ -50,7 +50,11 @@ internal static class DocReflection {
         }
 
         PlaygroundDocs docs = Build(primitive);
-        if (docs.UsageCode == null && docs.Composition == null && docs.ApiReference == null) {
+        if (docs.UsageCode == null
+            && docs.Composition == null
+            && docs.ApiReference == null
+            && !docs.HideUsage
+            && !docs.HideSource) {
             return null;
         }
 
@@ -116,7 +120,9 @@ internal static class DocReflection {
             UsageCode: usage,
             Composition: composition.Count > 0 ? composition : null,
             ApiReference: apiGroups.Count > 0 ? apiGroups : null,
-            ShowRtl: root.ShowRtl
+            ShowRtl: root.ShowRtl,
+            HideUsage: root.HideUsage,
+            HideSource: root.HideSource
         );
     }
 
@@ -124,7 +130,9 @@ internal static class DocReflection {
         return BuildSamples<DocVariantAttribute, PlaygroundVariant>(
             primitive,
             forceDisabled,
-            (attr, sample, factory) => new PlaygroundVariant(attr.LabelKey, () => (factory() ?? sample).Build(), sample.Code),
+            (attr, sample, factory) => new PlaygroundVariant(attr.LabelKey, () => (factory() ?? sample).Build(), sample.Code) {
+                HideCode = attr.HideCode,
+            },
             attr => attr.Order
         );
     }
@@ -255,7 +263,10 @@ internal static class DocReflection {
     }
 
     private static IReadOnlyList<CompositionLine> BuildComposition(Type primitive) {
-        string rootName = primitive.Name;
+        DocAttribute? rootDoc = primitive.GetCustomAttribute<DocAttribute>();
+        string rootName = rootDoc != null && rootDoc.Label.Length > 0
+            ? rootDoc.Label
+            : primitive.Name;
         List<CompositionLine> lines = new List<CompositionLine> {
             new CompositionLine(0, rootName),
         };
@@ -292,9 +303,21 @@ internal static class DocReflection {
     ) {
         if (!children.TryGetValue(parentName, out List<MethodInfo>? kids)) return;
         for (int i = 0; i < kids.Count; i++) {
-            string name = kids[i].Name;
-            lines.Add(new CompositionLine(indent, $"{rootName}.{name}"));
-            AppendChildren(rootName, name, indent + 1, children, lines);
+            MethodInfo mi = kids[i];
+            DocAttribute? d = mi.GetCustomAttribute<DocAttribute>();
+            string label;
+            if (d != null && d.Label.Length > 0) {
+                int parenIdx = d.Label.IndexOf('(');
+                label = parenIdx > 0 ? d.Label.Substring(0, parenIdx) : d.Label;
+                if (label.EndsWith(".Create")) {
+                    label = label.Substring(0, label.Length - 7);
+                }
+            }
+            else {
+                label = $"{rootName}.{mi.Name}";
+            }
+            lines.Add(new CompositionLine(indent, label));
+            AppendChildren(rootName, mi.Name, indent + 1, children, lines);
         }
     }
 
@@ -344,7 +367,8 @@ internal static class DocReflection {
             }
 
             if (isSlot && slotParams.Count > 0) {
-                slotGroups.Add(new ApiGroup($"{primitive.Name}.{method.Name}()", slotParams));
+                string label = d != null && d.Label.Length > 0 ? d.Label : $"{primitive.Name}.{method.Name}()";
+                slotGroups.Add(new ApiGroup(label, slotParams));
             }
         }
 

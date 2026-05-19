@@ -5,6 +5,7 @@ using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
 using UnityEngine;
+using Text = Cosmere.Lightweave.Typography.Typography.Text;
 
 namespace Cosmere.Lightweave.Layout;
 
@@ -12,7 +13,7 @@ namespace Cosmere.Lightweave.Layout;
     Id = "vignette",
     Summary = "Decorative vignette overlay - darkens corners or edges to create mood and focus.",
     WhenToUse = "Frame a hero panel, dim the edges of a card, fade out content along one edge.",
-    SourcePath = "Lightweave/Lightweave/Layout/Vignette.cs"
+    SourcePath = "Lightweave/Layout/Vignette.cs"
 )]
 public static class Vignette {
     public static LightweaveNode Create(
@@ -115,27 +116,64 @@ public static class Vignette {
 
     [DocVariant("CL_Playground_Vignette_Radial")]
     public static DocSample DocsRadial() {
-        return new DocSample(() => DocsViewport(VignetteShape.Radial, VignetteEdge.Bottom));
+        return new DocSample(
+            () => DocsViewport(VignetteShape.Radial, VignetteEdge.Bottom),
+            helpers: new[] { nameof(DocsViewport) }
+        );
     }
 
     [DocVariant("CL_Playground_Vignette_Frame")]
     public static DocSample DocsFrame() {
-        return new DocSample(() => DocsViewport(VignetteShape.Frame, VignetteEdge.Bottom));
+        return new DocSample(
+            () => DocsViewport(VignetteShape.Frame, VignetteEdge.Bottom),
+            helpers: new[] { nameof(DocsViewport) }
+        );
     }
 
     [DocVariant("CL_Playground_Vignette_LinearBottom")]
     public static DocSample DocsLinearBottom() {
-        return new DocSample(() => DocsViewport(VignetteShape.Linear, VignetteEdge.Bottom));
+        return new DocSample(
+            () => DocsViewport(VignetteShape.Linear, VignetteEdge.Bottom),
+            helpers: new[] { nameof(DocsViewport) }
+        );
     }
 
     [DocVariant("CL_Playground_Vignette_LinearTop")]
     public static DocSample DocsLinearTop() {
-        return new DocSample(() => DocsViewport(VignetteShape.Linear, VignetteEdge.Top));
+        return new DocSample(
+            () => DocsViewport(VignetteShape.Linear, VignetteEdge.Top),
+            helpers: new[] { nameof(DocsViewport) }
+        );
     }
 
     [DocUsage]
     public static DocSample DocsUsage() {
-        return new DocSample(() => DocsViewport(VignetteShape.Radial, VignetteEdge.Bottom));
+        return new DocSample(() => Box.Create(
+            c => c.Add(
+                Vignette.Create(
+                    Box.Create(
+                        inner => inner.Add(Text.Create(
+                            "Wrapped child",
+                            style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.9375f), TextColor = ThemeSlot.TextPrimary }
+                        )),
+                        style: new Style {
+                            Padding = EdgeInsets.All(SpacingScale.Lg),
+                            Background = BackgroundSpec.Of(ThemeSlot.SurfaceRaised),
+                            Radius = RadiusSpec.All(RadiusScale.Sm),
+                        }
+                    ),
+                    shape: VignetteShape.Radial,
+                    edge: VignetteEdge.Bottom,
+                    intensity: 0.7f,
+                    color: ThemeSlot.SurfaceSunken
+                )
+            ),
+            style: new Style {
+                Padding = EdgeInsets.All(SpacingScale.Xs),
+                Background = BackgroundSpec.Of(ThemeSlot.SurfaceAccent),
+                Radius = RadiusSpec.All(RadiusScale.Sm),
+            }
+        ));
     }
 
     private static LightweaveNode DocsViewport(VignetteShape shape, VignetteEdge edge) {

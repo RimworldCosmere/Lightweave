@@ -36,7 +36,7 @@ public sealed class StackBuilder {
     Id = "stack",
     Summary = "Vertical layout with explicit per-item sizing (fixed, flex, hug).",
     WhenToUse = "Stack rows where some are fixed-height, some hug content, some absorb leftover space.",
-    SourcePath = "Lightweave/Lightweave/Layout/Stack.cs",
+    SourcePath = "Lightweave/Layout/Stack.cs",
     PreferredVariantHeight = 160f
 )]
 public static class Stack {

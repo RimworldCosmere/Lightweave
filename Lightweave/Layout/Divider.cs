@@ -13,7 +13,7 @@ namespace Cosmere.Lightweave.Layout;
     Id = "divider",
     Summary = "Thin separator drawn at theme border color.",
     WhenToUse = "Subdivide a Stack/Row visually without adding extra background.",
-    SourcePath = "Lightweave/Lightweave/Layout/Divider.cs"
+    SourcePath = "Lightweave/Layout/Divider.cs"
 )]
 public static class Divider {
     public static LightweaveNode Horizontal(
