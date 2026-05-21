@@ -19,7 +19,7 @@ public static class SaveMetadata {
     private const double CacheSeconds = 5.0;
 
     public static LatestSave? Get() {
-        if (!LightweaveMod.Settings.ParseSaveMetadata) {
+        if (!LightweaveRedesignMod.Settings.ParseSaveMetadata) {
             return null;
         }
 

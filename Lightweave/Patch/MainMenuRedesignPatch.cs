@@ -17,7 +17,7 @@ public static class MainMenuRedesignPatch {
     private static readonly FieldInfo? AnyMapFilesField = AccessTools.Field(typeof(MainMenuDrawer), "anyMapFiles");
 
     public static bool Prefix() {
-        LightweaveSettings? settings = LightweaveMod.Settings;
+        LightweaveRedesignSettings? settings = LightweaveRedesignMod.Settings;
         if (settings == null || !settings.RedesignMainMenu) {
             return true;
         }

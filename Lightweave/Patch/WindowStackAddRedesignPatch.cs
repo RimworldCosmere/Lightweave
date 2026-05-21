@@ -13,7 +13,7 @@ namespace Cosmere.Lightweave.Patch;
 [HarmonyPatch(typeof(WindowStack), nameof(WindowStack.Add), [typeof(Window)])]
 public static class WindowStackAddRedesignPatch {
     public static bool Prefix(WindowStack __instance, Window window) {
-        LightweaveSettings? settings = LightweaveMod.Settings;
+        LightweaveRedesignSettings? settings = LightweaveRedesignMod.Settings;
         if (settings == null || !settings.RedesignMainMenu) {
             return true;
         }

@@ -9,7 +9,7 @@ namespace Cosmere.Lightweave.Patch;
 [HarmonyPatch(typeof(Page_ModsConfig), nameof(Page_ModsConfig.OnCloseRequest))]
 public static class Page_ModsConfigCloseRequestPatch {
     public static bool Prefix(Page_ModsConfig __instance, ref bool __result) {
-        LightweaveSettings? settings = LightweaveMod.Settings;
+        LightweaveRedesignSettings? settings = LightweaveRedesignMod.Settings;
         if (settings == null || !settings.RedesignMainMenu) {
             return true;
         }

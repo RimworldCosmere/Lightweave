@@ -8,7 +8,7 @@ namespace Cosmere.Lightweave.Patch;
 [HarmonyPatch(typeof(Verse.ModsConfig), nameof(Verse.ModsConfig.RestartFromChangedMods))]
 public static class ModsConfigRestartPatch {
     public static bool Prefix() {
-        LightweaveSettings? settings = LightweaveMod.Settings;
+        LightweaveRedesignSettings? settings = LightweaveRedesignMod.Settings;
         if (settings == null || !settings.RedesignMainMenu) {
             return true;
         }
