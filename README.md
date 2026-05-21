@@ -4,9 +4,16 @@ A composable IMGUI framework for RimWorld mods. Provides nodes, layout, theming,
 
 Built for and consumed by the [RimWorld: Cosmere](https://github.com/RimworldCosmere/RimworldCosmere) mod suite, but designed to be a shared dependency for any mod that wants composable, themed UI.
 
+## Mods in this repo
+
+This repo ships two cooperating RimWorld mods:
+
+- **`Cosmere.Lightweave`** — the framework itself (IMGUI primitives, theming, adapters, the developer Playground). Required by any mod that consumes Lightweave.
+- **`Cosmere.Lightweave.Redesign`** — opt-in screen redesigns built on the framework: a new main menu, mod manager, load-colony picker, and options page. Depends on `Cosmere.Lightweave`. Disable this mod to fall back to vanilla RimWorld screens while keeping the framework available to other mods.
+
 ## Install for players
 
-Subscribe on the [Steam Workshop](#) or download the latest release from the [GitHub releases page](https://github.com/RimworldCosmere/Lightweave/releases/latest). Mods that depend on Lightweave will list it as a required dependency.
+Subscribe on the [Steam Workshop](#) or download the latest release from the [GitHub releases page](https://github.com/RimworldCosmere/Lightweave/releases/latest). Mods that depend on Lightweave will list it as a required dependency. The screen redesigns are a separate optional mod and can be toggled independently.
 
 ## Use in your mod
 
@@ -53,16 +60,16 @@ dotnet build Lightweave.sln
 
 ## Framework rules
 
-Lightweave is two things at once, in this order:
+Lightweave is split across two mods, in this order:
 
-1. A **consumable IMGUI primitive framework** (`Layout/`, `Input/`, `Feedback/`, `Navigation/`, `Overlay/`, `Typography/`, `Data/`, `Doc/`) — reusable, themed, documented, composable.
-2. A **new RimWorld UI implementation** (`MainMenu/`, `LoadColony/`, `ModsConfig/`, `Options/`, `Playground/`) that consumes those primitives.
+1. A **consumable IMGUI primitive framework** in `Cosmere.Lightweave` (`Layout/`, `Input/`, `Feedback/`, `Navigation/`, `Overlay/`, `Typography/`, `Data/`, `Doc/`) — reusable, themed, documented, composable — plus the developer `Playground/` that exercises every primitive.
+2. A **RimWorld screen redesign mod** in `Cosmere.Lightweave.Redesign` (`MainMenu/`, `LoadColony/`, `ModsConfig/`, `Options/`) that consumes those primitives.
 
-The framework comes first. Feature dirs are the proving ground — if a feature can't be expressed in primitives, the framework is missing something. Every feature mistake is a framework gap.
+The framework comes first. The Playground and the redesign feature dirs are the proving ground — if a feature can't be expressed in primitives, the framework is missing something. Every feature mistake is a framework gap. The dependency is one-directional: the redesign mod imports the framework; the framework never imports the redesign mod.
 
 ### Framework-first composition
 
-Raw `Widgets.*` / `GUI.*` / `UnityEngine.GUI*` / `Listing_Standard` calls live **only** in `Rendering/`, `Patch/`, `Adapter/`, `Polyfills/`. Everywhere else — primitives and feature dirs — must compose existing primitives or call into `Rendering/` helpers.
+Raw `Widgets.*` / `GUI.*` / `UnityEngine.GUI*` / `Listing_Standard` calls live **only** in the framework's `Rendering/`, `Patch/`, `Adapter/`, `Polyfills/` and in the redesign mod's own `Patch/` dir. Everywhere else — primitives, the Playground, and redesign feature dirs — must compose existing primitives or call into `Rendering/` helpers.
 
 If you're about to write `Widgets.X` or `new Color(...)` inside a feature dir, stop. Either a primitive should own that, or an existing primitive is missing a prop. If a primitive does not exist for what you need, **build the primitive first, then resume the feature**.
 
