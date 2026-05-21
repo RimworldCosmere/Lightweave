@@ -136,32 +136,38 @@ public static class Stack {
             };
         }
 
-        node.Paint = (rect, paintChildren) => {
+        float[]? resolvedHeights = null;
+        bool[]? inFlow = null;
+
+        node.Layout = rect => {
             if (count == 0) {
                 return;
+            }
+
+            if (resolvedHeights == null || resolvedHeights.Length != count) {
+                resolvedHeights = new float[count];
+                inFlow = new bool[count];
             }
 
             float gapPx = ResolveGapPx();
             float nonFlexTotal = 0f;
             int flexCount = 0;
             int flowCount = 0;
-            float[] resolvedHeights = new float[count];
-            bool[] inFlow = new bool[count];
             for (int i = 0; i < count; i++) {
                 bool flow = builder.Items[i].node.IsInFlow();
-                inFlow[i] = flow;
+                inFlow![i] = flow;
                 if (!flow) {
-                    resolvedHeights[i] = 0f;
+                    resolvedHeights![i] = 0f;
                     continue;
                 }
                 flowCount++;
                 if (builder.Items[i].mode == StackItemMode.Flex) {
                     flexCount++;
-                    resolvedHeights[i] = 0f;
+                    resolvedHeights![i] = 0f;
                 }
                 else {
                     float h = ResolveItemHeight(i, rect.width);
-                    resolvedHeights[i] = h;
+                    resolvedHeights![i] = h;
                     nonFlexTotal += h;
                 }
             }
@@ -173,15 +179,13 @@ public static class Stack {
             float y = rect.y;
             for (int i = 0; i < count; i++) {
                 LightweaveNode child = builder.Items[i].node;
-                if (!inFlow[i]) {
+                if (!inFlow![i]) {
                     continue;
                 }
-                float measured = builder.Items[i].mode == StackItemMode.Flex ? flexEach : resolvedHeights[i];
+                float measured = builder.Items[i].mode == StackItemMode.Flex ? flexEach : resolvedHeights![i];
                 child.MeasuredRect = new Rect(rect.x, y, rect.width, measured);
                 y += measured + gapPx;
             }
-
-            paintChildren();
         };
         return node;
     }

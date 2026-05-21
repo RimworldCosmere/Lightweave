@@ -56,16 +56,66 @@ public static class ColorsDoc {
             ThemeSlot.StatusWarning,
             ThemeSlot.StatusDanger,
             ThemeSlot.StatusSuccess,
-            ThemeSlot.AccentMuted,
+            ThemeSlot.AccentSoft,
         }),
         ("CL_Playground_colors_Group_Interaction", new[] {
-            ThemeSlot.InteractionHover,
-            ThemeSlot.InteractionPress,
+            ThemeSlot.HoverTint,
+            ThemeSlot.ActiveTint,
             ThemeSlot.OverlayDim,
             ThemeSlot.ScrimDefault,
             ThemeSlot.MapPreviewTint,
         }),
+        ("CL_Playground_colors_Group_Glass", new[] {
+            ThemeSlot.Glass1,
+            ThemeSlot.Glass2,
+            ThemeSlot.Glass3,
+            ThemeSlot.GlassFrost,
+        }),
+        ("CL_Playground_colors_Group_GradientTints", new[] {
+            ThemeSlot.WindowHeaderTint,
+            ThemeSlot.WindowFooterTint,
+            ThemeSlot.ButtonPrimaryFill,
+            ThemeSlot.ButtonPrimaryFillHover,
+            ThemeSlot.AccentGlow,
+            ThemeSlot.ShelfTint,
+        }),
+        ("CL_Playground_colors_Group_Shadows", new[] {
+            ThemeSlot.ShadowModal,
+            ThemeSlot.ShadowCard,
+            ThemeSlot.ShadowPopover,
+            ThemeSlot.ShadowTooltip,
+            ThemeSlot.ShadowToast,
+            ThemeSlot.ShadowRim,
+            ThemeSlot.ShadowInsetTop,
+            ThemeSlot.ShadowInsetTopStrong,
+        }),
+        ("CL_Playground_colors_Group_TextShadows", new[] {
+            ThemeSlot.TextShadowEmboss,
+            ThemeSlot.TextShadowDeep,
+            ThemeSlot.TextShadowDisplay,
+        }),
+        ("CL_Playground_colors_Group_Grain", new[] {
+            ThemeSlot.GrainTint,
+        }),
     };
+
+    private static readonly string[] SlotNames = BuildSlotNameCache();
+
+    private static string[] BuildSlotNameCache() {
+        ThemeSlot[] values = (ThemeSlot[])System.Enum.GetValues(typeof(ThemeSlot));
+        int max = 0;
+        for (int i = 0; i < values.Length; i++) {
+            int v = (int)values[i];
+            if (v > max) {
+                max = v;
+            }
+        }
+        string[] names = new string[max + 1];
+        for (int i = 0; i < values.Length; i++) {
+            names[(int)values[i]] = values[i].ToString();
+        }
+        return names;
+    }
 
     private static readonly Variant[] AllVariants = {
         Variant.Primary,
@@ -275,52 +325,30 @@ public static class ColorsDoc {
     private static LightweaveNode SlotSwatchesNode() {
         LightweaveNode node = NodeBuilder.New("ColorsSlots");
 
-        float headingHeight = new Rem(1.25f).ToPixels();
-        float swatchSize = new Rem(1.75f).ToPixels();
-        float rowGap = new Rem(0.25f).ToPixels();
-        float groupGap = new Rem(0.5f).ToPixels();
-        float labelGap = new Rem(0.5f).ToPixels();
-        float columnGap = new Rem(0.75f).ToPixels();
-        float minColumnWidth = new Rem(11f).ToPixels();
-        float rowHeight = swatchSize;
+        float headingHeight = new Rem(1.5f).ToPixels();
+        float headingGap = new Rem(0.5f).ToPixels();
+        float groupGap = new Rem(1.5f).ToPixels();
+        float cardGap = new Rem(0.75f).ToPixels();
+        float chipHeight = new Rem(5.5f).ToPixels();
+        float metaPadX = new Rem(0.875f).ToPixels();
+        float metaPadY = new Rem(0.625f).ToPixels();
+        float metaLineGap = new Rem(0.125f).ToPixels();
+        float minColumnWidth = new Rem(10.5f).ToPixels();
 
-        LightweaveNode[][] cellsByGroup = new LightweaveNode[SlotGroups.Length][];
-        for (int g = 0; g < SlotGroups.Length; g++) {
-            ThemeSlot[] slots = SlotGroups[g].Slots;
-            LightweaveNode[] cells = new LightweaveNode[slots.Length];
-            Rect[] swatchRects = new Rect[slots.Length];
-            for (int i = 0; i < slots.Length; i++) {
-                int cellIndex = i;
-                Rect[] capturedRects = swatchRects;
-                ThemeSlot slot = slots[i];
-                LightweaveNode cell = BuildSwatchCell(
-                    slot,
-                    swatchSize,
-                    labelGap,
-                    rowHeight,
-                    r => capturedRects[cellIndex] = r
-                );
-                cells[i] = Tooltip.Create(
-                    cell,
-                    () => BuildSlotTooltipContent(slot, RenderContext.Current.Theme.GetColor(slot)),
-                    side: TooltipSide.TopEnd,
-                    anchor: () => capturedRects[cellIndex],
-                    line: (int)slot,
-                    file: "ColorsDoc.SlotSwatchesNode"
-                );
-                node.Children.Add(cells[i]);
-            }
-            cellsByGroup[g] = cells;
-        }
+        int namePx = Mathf.RoundToInt(new Rem(0.8125f).ToFontPx());
+        int monoPx = Mathf.RoundToInt(new Rem(0.6875f).ToFontPx());
+        float nameLine = Mathf.Round(namePx * 1.4f);
+        float monoLine = Mathf.Round(monoPx * 1.45f);
+        float cardHeight = chipHeight + metaPadY * 2f + nameLine + monoLine + monoLine + metaLineGap * 2f;
 
         node.Measure = availableWidth => {
-            int columns = ComputeColumns(availableWidth, minColumnWidth, columnGap);
+            int columns = ComputeColumns(availableWidth, minColumnWidth, cardGap);
             float total = 0f;
             for (int g = 0; g < SlotGroups.Length; g++) {
                 int count = SlotGroups[g].Slots.Length;
                 int rowsInGroup = Mathf.CeilToInt((float)count / columns);
-                total += headingHeight + rowGap;
-                total += rowsInGroup * rowHeight + Mathf.Max(0, rowsInGroup - 1) * rowGap;
+                total += headingHeight + headingGap;
+                total += rowsInGroup * cardHeight + Mathf.Max(0, rowsInGroup - 1) * cardGap;
                 if (g < SlotGroups.Length - 1) {
                     total += groupGap;
                 }
@@ -330,35 +358,105 @@ public static class ColorsDoc {
 
         node.Paint = (rect, _) => {
             Theme.Theme theme = RenderContext.Current.Theme;
-            int headingPx = Mathf.RoundToInt(new Rem(0.9375f).ToFontPx());
-            GUIStyle headingStyle = GuiStyleCache.GetOrCreate(theme.GetFont(FontRole.BodyBold), headingPx, FontStyle.Bold);
-            headingStyle.alignment = TextAnchor.MiddleLeft;
 
-            int columns = ComputeColumns(rect.width, minColumnWidth, columnGap);
-            float columnWidth = (rect.width - columnGap * (columns - 1)) / columns;
+            int headingPx = Mathf.RoundToInt(new Rem(1.0f).ToFontPx());
+            GUIStyle headingStyle = GuiStyleCache.GetOrCreate(theme.GetFont(FontRole.BodyBold), headingPx, FontStyle.Normal);
+            headingStyle.alignment = TextAnchor.LowerLeft;
+
+            GUIStyle nameStyle = GuiStyleCache.GetOrCreate(theme.GetFont(FontRole.Body), namePx, FontStyle.Normal);
+            nameStyle.alignment = TextAnchor.MiddleLeft;
+            nameStyle.wordWrap = false;
+            nameStyle.clipping = TextClipping.Clip;
+
+            GUIStyle tokenStyle = GuiStyleCache.GetOrCreate(theme.GetFont(FontRole.Mono), monoPx, FontStyle.Normal);
+            tokenStyle.alignment = TextAnchor.MiddleLeft;
+            tokenStyle.wordWrap = false;
+            tokenStyle.clipping = TextClipping.Clip;
+
+            GUIStyle valStyle = GuiStyleCache.GetOrCreate(theme.GetFont(FontRole.Mono), monoPx, FontStyle.Normal);
+            valStyle.alignment = TextAnchor.MiddleLeft;
+            valStyle.wordWrap = false;
+            valStyle.clipping = TextClipping.Clip;
+
+            Color textPrimary = theme.GetColor(ThemeSlot.TextPrimary);
+            Color textMuted = theme.GetColor(ThemeSlot.TextMuted);
+            Color accentColor = theme.GetColor(ThemeSlot.SurfaceAccent);
+            Color checkerDark = theme.GetColor(ThemeSlot.SurfaceSunken);
+            Color checkerLight = theme.GetColor(ThemeSlot.SurfaceRaised);
+            Color dividerColor = theme.GetColor(ThemeSlot.BorderSubtle);
+            const int checkerCell = 12;
+            Texture2D checkerTex = PatternTextureCache.Checker(checkerLight, checkerDark, checkerCell);
+
+            BackgroundSpec cardBg = BackgroundSpec.Of(ThemeSlot.Glass1);
+            BorderSpec cardBorder = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderSubtle);
+            RadiusSpec cardRadius = RadiusSpec.All(RadiusScale.Sm);
+
+            int columns = ComputeColumns(rect.width, minColumnWidth, cardGap);
+            float columnWidth = (rect.width - cardGap * (columns - 1)) / columns;
 
             float y = rect.y;
+            Color savedColor = GUI.color;
+
             for (int g = 0; g < SlotGroups.Length; g++) {
                 (string headingKey, ThemeSlot[] slots) = SlotGroups[g];
+
                 Rect headingRect = new Rect(rect.x, y, rect.width, headingHeight);
-                Color savedColor = GUI.color;
-                GUI.color = theme.GetColor(ThemeSlot.TextPrimary);
+                GUI.color = textPrimary;
                 GUI.Label(RectSnap.Snap(headingRect), headingKey.Translate(), headingStyle);
                 GUI.color = savedColor;
-                y += headingHeight + rowGap;
+                y += headingHeight + headingGap;
 
-                LightweaveNode[] cells = cellsByGroup[g];
-                for (int i = 0; i < cells.Length; i++) {
+                for (int i = 0; i < slots.Length; i++) {
+                    ThemeSlot slot = slots[i];
                     int col = i % columns;
                     int row = i / columns;
-                    float cellX = rect.x + col * (columnWidth + columnGap);
-                    float cellY = y + row * (rowHeight + rowGap);
+                    float cardX = rect.x + col * (columnWidth + cardGap);
+                    float cardY = y + row * (cardHeight + cardGap);
+                    Rect cardRect = new Rect(cardX, cardY, columnWidth, cardHeight);
 
-                    Rect cellRect = new Rect(cellX, cellY, columnWidth, rowHeight);
-                    LightweaveRoot.PaintSubtree(cells[i], cellRect);
+                    PaintBox.Draw(cardRect, cardBg, cardBorder, cardRadius);
+
+                    Rect chipRect = new Rect(cardRect.x + 1f, cardRect.y + 1f, cardRect.width - 2f, chipHeight);
+                    float tileSize = checkerCell * 2f;
+                    GUI.DrawTextureWithTexCoords(
+                        chipRect,
+                        checkerTex,
+                        new Rect(0f, 0f, chipRect.width / tileSize, chipRect.height / tileSize)
+                    );
+                    Color slotColor = theme.GetColor(slot);
+                    Widgets.DrawBoxSolid(chipRect, slotColor);
+
+                    Rect divider = new Rect(cardRect.x + 1f, chipRect.yMax, cardRect.width - 2f, 1f);
+                    Widgets.DrawBoxSolid(divider, dividerColor);
+
+                    int r8 = Mathf.Clamp(Mathf.RoundToInt(slotColor.r * 255f), 0, 255);
+                    int g8 = Mathf.Clamp(Mathf.RoundToInt(slotColor.g * 255f), 0, 255);
+                    int b8 = Mathf.Clamp(Mathf.RoundToInt(slotColor.b * 255f), 0, 255);
+                    string slotName = SlotNames[(int)slot];
+                    string hexLine = $"#{r8:X2}{g8:X2}{b8:X2}";
+                    string rgbaLine = $"rgba({r8}, {g8}, {b8}, {slotColor.a:0.00})";
+
+                    float metaTop = chipRect.yMax + 1f + metaPadY;
+                    float metaLeft = cardRect.x + metaPadX;
+                    float metaWidth = Mathf.Max(0f, cardRect.width - metaPadX * 2f);
+
+                    Rect nameRect = new Rect(metaLeft, metaTop, metaWidth, nameLine);
+                    GUI.color = textPrimary;
+                    GUI.Label(RectSnap.Snap(nameRect), slotName, nameStyle);
+
+                    Rect hexRect = new Rect(metaLeft, nameRect.yMax + metaLineGap, metaWidth, monoLine);
+                    GUI.color = accentColor;
+                    GUI.Label(RectSnap.Snap(hexRect), hexLine, tokenStyle);
+
+                    Rect rgbaRect = new Rect(metaLeft, hexRect.yMax + metaLineGap, metaWidth, monoLine);
+                    GUI.color = textMuted;
+                    GUI.Label(RectSnap.Snap(rgbaRect), rgbaLine, valStyle);
+
+                    GUI.color = savedColor;
                 }
-                int rowsInGroup = Mathf.CeilToInt((float)cells.Length / columns);
-                y += rowsInGroup * rowHeight + Mathf.Max(0, rowsInGroup - 1) * rowGap;
+
+                int rowsInGroup = Mathf.CeilToInt((float)slots.Length / columns);
+                y += rowsInGroup * cardHeight + Mathf.Max(0, rowsInGroup - 1) * cardGap;
                 if (g < SlotGroups.Length - 1) {
                     y += groupGap;
                 }
@@ -366,39 +464,6 @@ public static class ColorsDoc {
         };
 
         return node;
-    }
-
-    private static LightweaveNode BuildSwatchCell(
-        ThemeSlot slot,
-        float swatchSize,
-        float labelGap,
-        float rowHeight,
-        Action<Rect>? reportSwatchRect = null
-    ) {
-        LightweaveNode cell = NodeBuilder.New("ColorsSwatchCell");
-        cell.Measure = _ => rowHeight;
-        cell.MeasureWidth = () => swatchSize + labelGap + new Rem(6f).ToPixels();
-        cell.Paint = (rect, _) => {
-            Theme.Theme theme = RenderContext.Current.Theme;
-            RadiusSpec radius = RadiusSpec.All(RadiusScale.Sm);
-            BorderSpec swatchBorder = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderSubtle);
-            Rect swatchRect = new Rect(rect.x, rect.y, swatchSize, swatchSize);
-            reportSwatchRect?.Invoke(swatchRect);
-            PaintBox.Draw(swatchRect, BackgroundSpec.Of(slot), swatchBorder, radius);
-
-            int labelPx = Mathf.RoundToInt(new Rem(0.75f).ToFontPx());
-            GUIStyle labelStyle = GuiStyleCache.GetOrCreate(theme.GetFont(FontRole.Mono), labelPx, FontStyle.Normal);
-            labelStyle.alignment = TextAnchor.MiddleLeft;
-            labelStyle.wordWrap = false;
-            labelStyle.clipping = TextClipping.Clip;
-
-            Rect labelRect = new Rect(rect.x + swatchSize + labelGap, rect.y, Mathf.Max(0f, rect.width - swatchSize - labelGap), rect.height);
-            Color savedLabel = GUI.color;
-            GUI.color = theme.GetColor(ThemeSlot.TextSecondary);
-            GUI.Label(RectSnap.Snap(labelRect), slot.ToString(), labelStyle);
-            GUI.color = savedLabel;
-        };
-        return cell;
     }
 
     private static int ComputeColumns(float availableWidth, float minColumnWidth, float columnGap) {

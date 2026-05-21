@@ -57,7 +57,9 @@ public static class MoreButton {
         node.Children.Add(menu);
 
         node.Paint = (rect, _) => {
-            anchor.Set(rect);
+            if (anchor.Value != rect) {
+                anchor.Set(rect);
+            }
             tile.MeasuredRect = rect;
             menu.MeasuredRect = rect;
             LightweaveRoot.PaintSubtree(tile, rect);

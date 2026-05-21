@@ -449,7 +449,7 @@ public static class Tooltip {
                 Vector2 anchorLocal = GUIUtility.ScreenToGUIPoint(new Vector2(anchorScreenRect.x, anchorScreenRect.y));
                 Rect anchorLocalRect = new Rect(anchorLocal.x, anchorLocal.y, anchorScreenRect.width, anchorScreenRect.height);
 
-                DrawSoftShadow(tooltipRect);
+                PaintBox.DrawShadow(tooltipRect, ShadowSpec.Of(ThemeSlot.ShadowTooltip));
                 DrawArrow(tooltipRect, anchorLocalRect, resolvedSide);
 
                 PaintBox.Draw(
@@ -486,24 +486,9 @@ public static class Tooltip {
         );
     }
 
-    private static void DrawSoftShadow(Rect tooltipRect) {
-        Color shadowBase = RenderContext.Current.Theme.GetColor(ThemeSlot.SurfaceShadow);
-        DrawShadowLayer(tooltipRect, 1f, 2f, shadowBase.a);
-        DrawShadowLayer(tooltipRect, 2f, 4f, shadowBase.a * 0.66f);
-        DrawShadowLayer(tooltipRect, 3f, 6f, shadowBase.a * 0.33f);
-    }
+    
 
-    private static void DrawShadowLayer(Rect tooltipRect, float dx, float dy, float alpha) {
-        Color baseColor = RenderContext.Current.Theme.GetColor(ThemeSlot.SurfaceShadow);
-        Color layer = new Color(baseColor.r, baseColor.g, baseColor.b, alpha);
-        Rect shadowRect = new Rect(
-            tooltipRect.x + dx,
-            tooltipRect.y + dy,
-            tooltipRect.width,
-            tooltipRect.height
-        );
-        PaintBox.Draw(shadowRect, BackgroundSpec.Of(layer), null, RadiusSpec.All(RadiusScale.Sm));
-    }
+    
 
     private static void DrawArrow(Rect tooltipRect, Rect anchorRect, TooltipSide resolvedSide) {
         float arrowFill = new Rem(0.5f).ToPixels();

@@ -876,6 +876,11 @@
     <CL_Playground_colors_Group_Border>Borders</CL_Playground_colors_Group_Border>
     <CL_Playground_colors_Group_Status>Status</CL_Playground_colors_Group_Status>
     <CL_Playground_colors_Group_Interaction>Interaction and overlays</CL_Playground_colors_Group_Interaction>
+    <CL_Playground_colors_Group_Glass>Glass tiers</CL_Playground_colors_Group_Glass>
+    <CL_Playground_colors_Group_GradientTints>Gradient tints</CL_Playground_colors_Group_GradientTints>
+    <CL_Playground_colors_Group_Shadows>Drop and inset shadows</CL_Playground_colors_Group_Shadows>
+    <CL_Playground_colors_Group_TextShadows>Text shadows</CL_Playground_colors_Group_TextShadows>
+    <CL_Playground_colors_Group_Grain>Grain</CL_Playground_colors_Group_Grain>
     <CL_Playground_colors_VariantsAsButtons>Variants applied to buttons</CL_Playground_colors_VariantsAsButtons>
     <CL_Playground_colors_StatusBadges>Status colors as badges</CL_Playground_colors_StatusBadges>
     <CL_Playground_colors_SurfaceLayering>Surface layering</CL_Playground_colors_SurfaceLayering>
@@ -894,6 +899,17 @@
     <CL_Playground_colors_Border_Hover_Label>BorderHover</CL_Playground_colors_Border_Hover_Label>
     <CL_Playground_colors_Border_Off_Label>BorderOff</CL_Playground_colors_Border_Off_Label>
     <CL_Playground_colors_Border_Danger_Label>BorderDanger</CL_Playground_colors_Border_Danger_Label>
+    <CL_Playground_shadows_Title>Shadows</CL_Playground_shadows_Title>
+    <CL_Playground_shadows_What>Drop shadows anchor surfaces in vertical space, inset highlights catch a candlelit lip on raised elements. Both resolve through a ThemeSlot via ShadowSpec.Of(slot), so a single theme swap retunes every elevation cue at once.</CL_Playground_shadows_What>
+    <CL_Playground_shadows_When>Set Style.Shadow when a primitive should sit above its container - modals, cards, popovers, tooltips, toasts, rim chrome. Inset slots layer onto interactive surfaces (primary buttons, raised rows) for a tactile edge.</CL_Playground_shadows_When>
+    <CL_Playground_shadows_Modal>ShadowModal - 0 40px 80px</CL_Playground_shadows_Modal>
+    <CL_Playground_shadows_Card>ShadowCard - 0 20px 60px</CL_Playground_shadows_Card>
+    <CL_Playground_shadows_Popover>ShadowPopover - 0 24px 60px</CL_Playground_shadows_Popover>
+    <CL_Playground_shadows_Tooltip>ShadowTooltip - 0 6px 22px</CL_Playground_shadows_Tooltip>
+    <CL_Playground_shadows_Toast>ShadowToast - 0 8px 28px</CL_Playground_shadows_Toast>
+    <CL_Playground_shadows_Rim>ShadowRim - 0 4px 22px</CL_Playground_shadows_Rim>
+    <CL_Playground_shadows_InsetTop>ShadowInsetTop - inset 0 1px 0</CL_Playground_shadows_InsetTop>
+    <CL_Playground_shadows_InsetTopStrong>ShadowInsetTopStrong - inset 0 1px 0</CL_Playground_shadows_InsetTopStrong>
     <CL_Playground_fonts_Title>Fonts</CL_Playground_fonts_Title>
     <CL_Playground_fonts_What>FontRoles (Body, BodyBold, Heading, Display, Label, Caption, Mono) abstract over the underlying typeface. Each theme maps roles to concrete Font assets, so swapping themes restyles every primitive without re-touching call sites.</CL_Playground_fonts_What>
     <CL_Playground_fonts_When>Always resolve fonts through Theme.GetFont(FontRole) at paint time. Never assign GameFont or a raw Font instance from a primitive.</CL_Playground_fonts_When>

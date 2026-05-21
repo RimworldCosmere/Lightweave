@@ -37,7 +37,7 @@ internal static class ModKindResolver {
         return kind switch {
             ModKind.Core => ThemeSlot.SurfaceAccent,
             ModKind.Expansion => ThemeSlot.SurfaceAccent,
-            ModKind.Library => ThemeSlot.AccentMuted,
+            ModKind.Library => ThemeSlot.AccentSoft,
             _ => ThemeSlot.SurfaceAccent,
         };
     }

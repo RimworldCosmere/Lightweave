@@ -26,7 +26,7 @@ internal static class InteractionFeedback {
     }
 
     public static Color OverlayColor(Theme.Theme theme, bool pressed, float alpha) {
-        ThemeSlot slot = pressed ? ThemeSlot.InteractionPress : ThemeSlot.InteractionHover;
+        ThemeSlot slot = pressed ? ThemeSlot.ActiveTint : ThemeSlot.HoverTint;
         Color baseColor = theme.GetColor(slot);
         return new Color(baseColor.r, baseColor.g, baseColor.b, alpha);
     }

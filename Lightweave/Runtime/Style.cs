@@ -25,6 +25,7 @@ public readonly record struct Style {
     public BackgroundSpec? Background { get; init; }
     public BorderSpec? Border { get; init; }
     public RadiusSpec? Radius { get; init; }
+    public ShadowSpec? Shadow { get; init; }
     public float? Opacity { get; init; }
     public bool? Visible { get; init; }
 
@@ -59,6 +60,7 @@ public readonly record struct Style {
             Background = overrides.Background ?? baseStyle.Background,
             Border = overrides.Border ?? baseStyle.Border,
             Radius = overrides.Radius ?? baseStyle.Radius,
+            Shadow = overrides.Shadow ?? baseStyle.Shadow,
             Opacity = overrides.Opacity ?? baseStyle.Opacity,
             Visible = overrides.Visible ?? baseStyle.Visible,
             TextColor = overrides.TextColor ?? baseStyle.TextColor,

@@ -30,6 +30,10 @@
     <CL_Settings_ReduceMotion>Reduce motion</CL_Settings_ReduceMotion>
     <CL_Settings_ReduceMotion_Tip>Disable the staggered fade-in and hover-lift animations on the Lightweave main menu.</CL_Settings_ReduceMotion_Tip>
 
+    <CL_Settings_Diagnostics_Heading>Diagnostics</CL_Settings_Diagnostics_Heading>
+    <CL_Settings_PerfOverlay>Show performance metrics</CL_Settings_PerfOverlay>
+    <CL_Settings_PerfOverlay_Tip>Draw a small FPS/CPU/GPU/latency readout in the top-right corner, above every window and vignette.</CL_Settings_PerfOverlay_Tip>
+
     <CL_MainMenu_Continue>Continue</CL_MainMenu_Continue>
     <CL_MainMenu_Continue_LastPlayed>Last played {WHEN}</CL_MainMenu_Continue_LastPlayed>
     <CL_MainMenu_Continue_NoSaves>No saves yet</CL_MainMenu_Continue_NoSaves>

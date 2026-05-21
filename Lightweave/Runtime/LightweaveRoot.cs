@@ -19,7 +19,7 @@ public static class LightweaveRoot {
         public LightweaveNode Root;
     }
 
-    public static bool DiagnosticsEnabled = false;
+    public static bool DiagnosticsEnabled = true;
     private static readonly int[] diagEventCounts = new int[16];
     private static int diagBuildHits;
     private static int diagBuildMisses;
@@ -27,6 +27,13 @@ public static class LightweaveRoot {
     private static long diagBuildTicks;
     private static long diagPaintTicks;
     private static float diagNextReportTime = -1f;
+
+    private static int missAnimating;
+    private static int missVersionBumped;
+    private static int missRectChanged;
+    private static int missNoCache;
+    private static int missLastVersionDelta;
+    private static EventType missLastEvent;
 
     private static void DiagReport() {
         float msPerTick = 1000f / System.Diagnostics.Stopwatch.Frequency;
@@ -45,10 +52,14 @@ public static class LightweaveRoot {
                 evtBreakdown += $" {((EventType)i).ToString()}={diagEventCounts[i]}";
             }
         }
+        string missBreakdown = "";
+        if (diagBuildMisses > 0) {
+            missBreakdown = $" misses[anim={missAnimating},ver={missVersionBumped},rect={missRectChanged},new={missNoCache},lastDelta={missLastVersionDelta},lastEvt={missLastEvent}]";
+        }
         Verse.Log.Message(
             $"[Lightweave/diag] {totalCalls} calls/s ({hitRate:0.0}% cache hit) "
             + $"total={totalMs:0.0}ms build={buildMs:0.0}ms paint={paintMs:0.0}ms "
-            + $"perCall={perCallMs:0.00}ms events:{evtBreakdown}"
+            + $"perCall={perCallMs:0.00}ms events:{evtBreakdown}{missBreakdown}"
         );
         for (int i = 0; i < diagEventCounts.Length; i++) {
             diagEventCounts[i] = 0;
@@ -58,6 +69,10 @@ public static class LightweaveRoot {
         diagTotalRenderTicks = 0;
         diagBuildTicks = 0;
         diagPaintTicks = 0;
+        missAnimating = 0;
+        missVersionBumped = 0;
+        missRectChanged = 0;
+        missNoCache = 0;
     }
 
     public static void Render(
@@ -98,16 +113,33 @@ public static class LightweaveRoot {
                 LightweaveNode root;
                 long buildStart = DiagnosticsEnabled ? System.Diagnostics.Stopwatch.GetTimestamp() : 0L;
                 bool animating = AnimationClock.WasActiveLastFrame(rootId);
-                if (!animating
-                    && buildCache.TryGetValue(rootId, out BuildCache cached)
+                bool hasCached = buildCache.TryGetValue(rootId, out BuildCache cached);
+                if (hasCached
                     && cached.HookVersion == version
-                    && cached.InRect == inRect) {
+                    && cached.InRect == inRect
+                    && (!animating || cached.FrameCount == frame)) {
                     root = cached.Root;
                     if (DiagnosticsEnabled) {
                         diagBuildHits++;
                     }
                 }
                 else {
+                    if (DiagnosticsEnabled) {
+                        if (!hasCached) {
+                            missNoCache++;
+                        }
+                        else if (cached.HookVersion != version) {
+                            missVersionBumped++;
+                            missLastVersionDelta = version - cached.HookVersion;
+                            missLastEvent = Event.current?.type ?? EventType.Used;
+                        }
+                        else if (cached.InRect != inRect) {
+                            missRectChanged++;
+                        }
+                        else {
+                            missAnimating++;
+                        }
+                    }
                     root = build();
                     didBuild = true;
                     buildCache[rootId] = new BuildCache {
@@ -125,15 +157,18 @@ public static class LightweaveRoot {
                 }
                 root.MeasuredRect = inRect;
                 root.ContentRect = inRect;
-                long paintStart = DiagnosticsEnabled ? System.Diagnostics.Stopwatch.GetTimestamp() : 0L;
-                Paint(root);
-                if (DiagnosticsEnabled) {
-                    diagPaintTicks += System.Diagnostics.Stopwatch.GetTimestamp() - paintStart;
+                EventType currentEvent = Event.current?.type ?? EventType.Used;
+                if (currentEvent != EventType.Layout) {
+                    long paintStart = DiagnosticsEnabled ? System.Diagnostics.Stopwatch.GetTimestamp() : 0L;
+                    Paint(root);
+                    if (DiagnosticsEnabled) {
+                        diagPaintTicks += System.Diagnostics.Stopwatch.GetTimestamp() - paintStart;
+                    }
+                    afterContent?.Invoke();
+                    ctx.FlushHotkeys();
+                    ctx.PendingOverlays.Flush();
+                    CursorOverrides.ApplyForFrame();
                 }
-                afterContent?.Invoke();
-                ctx.FlushHotkeys();
-                ctx.PendingOverlays.Flush();
-                CursorOverrides.ApplyForFrame();
             }
             finally {
                 ctx.PendingOverlays.Clear();
@@ -382,13 +417,31 @@ public static class LightweaveRoot {
         }
 
         try {
-            if (style.Background != null || style.Border.HasValue || style.Radius.HasValue) {
-                PaintBox.Draw(node.MeasuredRect, style.Background, style.Border, style.Radius);
+            bool isRepaint = Event.current?.type == EventType.Repaint;
+
+            if (isRepaint) {
+                if (style.Shadow != null) {
+                    PaintBox.DrawShadow(node.MeasuredRect, style.Shadow);
+                }
+
+                if (style.Background != null || style.Border.HasValue || style.Radius.HasValue) {
+                    PaintBox.Draw(node.MeasuredRect, style.Background, style.Border, style.Radius);
+                }
+
+                if (style.Shadow != null) {
+                    PaintBox.DrawInsetHighlight(node.MeasuredRect, style.Shadow);
+                }
             }
 
             Rect innerRect = node.MeasuredRect;
             if (style.Padding.HasValue) {
                 innerRect = style.Padding.Value.Shrink(innerRect, rc?.Direction ?? Direction.Ltr);
+            }
+
+            node.Layout?.Invoke(innerRect);
+
+            if (isRepaint) {
+                node.Draw?.Invoke(innerRect);
             }
 
             if (node.Paint != null) {

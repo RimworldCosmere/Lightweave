@@ -121,49 +121,53 @@ public static class Button {
                 ? BorderSpec.All(new Rem(1f / 16f), borderSlot.Value)
                 : null;
 
-            if (variant == Variant.Frosted && !ghost) {
-                bool active = state.Hovered || state.Pressed;
-                BackdropBlur.Draw(rect, active ? 8f : 6f);
-                Color translucentBase = theme.GetColor(ThemeSlot.SurfaceTranslucentDark);
-                Color translucent = new Color(translucentBase.r, translucentBase.g, translucentBase.b, active ? 0.88f : 0.78f);
-                PaintBox.Draw(rect, BackgroundSpec.Of(translucent), border, radius);
-            }
-            else {
-                ThemeSlot? bgSlot = VariantPalette.Background(variant, state, ghost);
-                BackgroundSpec? bg;
-                if (!bgSlot.HasValue) {
-                    if (variant == Variant.Ghost && state.Hovered && !disabled) {
-                        Color ghostHoverBase = theme.GetColor(ThemeSlot.SurfaceGhostHover);
-                        bg = BackgroundSpec.Of(new Color(ghostHoverBase.r, ghostHoverBase.g, ghostHoverBase.b, 0.4f));
-                    }
-                    else {
-                        bg = null;
-                    }
-                }
-                else if (variant == Variant.Primary && !ghost && !state.Pressed && !disabled) {
-                    Color top = theme.GetColor(bgSlot.Value);
-                    Color.RGBToHSV(top, out float hue, out float sat, out float val);
-                    Color bottom = Color.HSVToRGB(hue, sat, val * 0.78f);
-                    bottom.a = top.a;
-                    bg = new BackgroundSpec.Gradient(GradientTextureCache.Vertical(top, bottom));
-                }
-                else if (variant == Variant.Secondary && state.Hovered && !state.Pressed && !disabled) {
-                    Color accent = theme.GetColor(ThemeSlot.SurfaceAccent);
-                    Color top = new Color(accent.r, accent.g, accent.b, 0.42f);
-                    Color bottom = new Color(accent.r * 0.62f, accent.g * 0.62f, accent.b * 0.62f, 0.28f);
-                    bg = new BackgroundSpec.Gradient(GradientTextureCache.Vertical(top, bottom));
+            bool isRepaint = Event.current?.type == EventType.Repaint;
+
+            if (isRepaint) {
+                if (variant == Variant.Frosted && !ghost) {
+                    bool active = state.Hovered || state.Pressed;
+                    BackdropBlur.Draw(rect, active ? 8f : 6f);
+                    Color translucentBase = theme.GetColor(ThemeSlot.SurfaceTranslucentDark);
+                    Color translucent = new Color(translucentBase.r, translucentBase.g, translucentBase.b, active ? 0.88f : 0.78f);
+                    PaintBox.Draw(rect, BackgroundSpec.Of(translucent), border, radius);
                 }
                 else {
-                    bg = BackgroundSpec.Of(bgSlot.Value);
+                    ThemeSlot? bgSlot = VariantPalette.Background(variant, state, ghost);
+                    BackgroundSpec? bg;
+                    if (!bgSlot.HasValue) {
+                        if (variant == Variant.Ghost && state.Hovered && !disabled) {
+                            Color ghostHoverBase = theme.GetColor(ThemeSlot.SurfaceGhostHover);
+                            bg = BackgroundSpec.Of(new Color(ghostHoverBase.r, ghostHoverBase.g, ghostHoverBase.b, 0.4f));
+                        }
+                        else {
+                            bg = null;
+                        }
+                    }
+                    else if (variant == Variant.Primary && !ghost && !state.Pressed && !disabled) {
+                        Color top = theme.GetColor(bgSlot.Value);
+                        Color.RGBToHSV(top, out float hue, out float sat, out float val);
+                        Color bottom = Color.HSVToRGB(hue, sat, val * 0.78f);
+                        bottom.a = top.a;
+                        bg = new BackgroundSpec.Gradient(GradientTextureCache.Vertical(top, bottom));
+                    }
+                    else if (variant == Variant.Secondary && state.Hovered && !state.Pressed && !disabled) {
+                        Color accent = theme.GetColor(ThemeSlot.SurfaceAccent);
+                        Color top = new Color(accent.r, accent.g, accent.b, 0.42f);
+                        Color bottom = new Color(accent.r * 0.62f, accent.g * 0.62f, accent.b * 0.62f, 0.28f);
+                        bg = new BackgroundSpec.Gradient(GradientTextureCache.Vertical(top, bottom));
+                    }
+                    else {
+                        bg = BackgroundSpec.Of(bgSlot.Value);
+                    }
+
+                    PaintBox.Draw(rect, bg, border, radius);
                 }
 
-                PaintBox.Draw(rect, bg, border, radius);
-            }
-
-            float overlay = VariantPalette.OverlayAlpha(state);
-            if (overlay > 0f) {
-                Color overlayColor = InteractionFeedback.OverlayColor(theme, state, overlay);
-                PaintBox.Draw(rect, BackgroundSpec.Of(overlayColor), null, radius);
+                float overlay = VariantPalette.OverlayAlpha(state);
+                if (overlay > 0f) {
+                    Color overlayColor = InteractionFeedback.OverlayColor(theme, state, overlay);
+                    PaintBox.Draw(rect, BackgroundSpec.Of(overlayColor), null, radius);
+                }
             }
 
             bool rtl = dir == Direction.Rtl;
@@ -216,7 +220,7 @@ public static class Button {
                 body.MeasuredRect = rect;
                 LightweaveRoot.PaintSubtree(body, rect);
             }
-            else {
+            else if (isRepaint) {
                 Color fg = s.TextColor switch {
                     ColorRef.Literal lit => lit.Value,
                     ColorRef.Token tok => theme.GetColor(tok.Slot),

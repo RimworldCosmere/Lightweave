@@ -53,7 +53,9 @@ public static class LangButton {
         node.Children.Add(popover);
 
         node.Paint = (rect, _) => {
-            anchor.Set(rect);
+            if (anchor.Value != rect) {
+                anchor.Set(rect);
+            }
             trigger.MeasuredRect = rect;
             popover.MeasuredRect = rect;
             LightweaveRoot.PaintSubtree(trigger, rect);

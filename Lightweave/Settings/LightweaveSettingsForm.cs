@@ -41,6 +41,9 @@ public static class LightweaveSettingsForm {
                 stack.Add(Divider.Horizontal());
 
                 stack.Add(BuildAccessibilitySection(settings));
+                stack.Add(Divider.Horizontal());
+
+                stack.Add(BuildDiagnosticsSection(settings));
             }
         );
     }
@@ -160,6 +163,24 @@ public static class LightweaveSettingsForm {
                         LightweaveMod.Save();
                     },
                     tooltipKey: "CL_Settings_ReduceMotion_Tip"
+                ));
+            }
+        );
+    }
+
+    private static LightweaveNode BuildDiagnosticsSection(LightweaveSettings settings) {
+        return Stack.Create(
+            new Rem(0.5f),
+            section => {
+                section.Add(Heading.Create(3, "CL_Settings_Diagnostics_Heading".Translate()));
+                section.Add(Checkbox.Create(
+                    label: "CL_Settings_PerfOverlay".Translate(),
+                    value: settings.ShowPerformanceMetrics,
+                    onChange: v => {
+                        settings.ShowPerformanceMetrics = v;
+                        LightweaveMod.Save();
+                    },
+                    tooltipKey: "CL_Settings_PerfOverlay_Tip"
                 ));
             }
         );

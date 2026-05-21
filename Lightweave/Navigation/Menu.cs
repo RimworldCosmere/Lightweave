@@ -553,7 +553,7 @@ public static class Menu {
             int checkSize = Mathf.RoundToInt(new Rem(0.875f).ToFontPx());
             GUIStyle checkStyle = GuiStyleCache.GetOrCreate(checkFont, checkSize);
             checkStyle.alignment = rtl ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight;
-            TextDraw.DrawWithStyle(checkRect, "✓", checkStyle, theme.GetColor(ThemeSlot.AccentMuted));
+            TextDraw.DrawWithStyle(checkRect, "✓", checkStyle, theme.GetColor(ThemeSlot.AccentSoft));
             if (rtl) {
                 labelStartX = checkX + checkPx + gap;
             }
@@ -593,7 +593,7 @@ public static class Menu {
             labelSlot = ThemeSlot.StatusDanger;
         }
         else if (item.Active) {
-            labelSlot = ThemeSlot.AccentMuted;
+            labelSlot = ThemeSlot.AccentSoft;
         }
         else {
             labelSlot = ThemeSlot.TextPrimary;

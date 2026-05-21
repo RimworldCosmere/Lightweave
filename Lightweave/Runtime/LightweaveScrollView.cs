@@ -445,6 +445,7 @@ public readonly record struct LightweaveScrollView : IDisposable {
                 status.Dragging = true;
                 status.DragAnchor = e.mousePosition.y - thumbRect.y;
                 status.LastScrollAtRealtime = Time.realtimeSinceStartup;
+                ActiveDragRegistry.Acquire(RenderContext.Current.RootId);
                 e.Use();
                 return;
             }
@@ -470,9 +471,12 @@ public readonly record struct LightweaveScrollView : IDisposable {
                 return;
             }
 
-            if (e.type == EventType.MouseUp) {
+            if (e.type == EventType.MouseUp || e.rawType == EventType.MouseUp) {
                 status.Dragging = false;
-                e.Use();
+                ActiveDragRegistry.Release();
+                if (e.type == EventType.MouseUp) {
+                    e.Use();
+                }
                 return;
             }
         }

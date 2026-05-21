@@ -202,7 +202,7 @@ public abstract class LightweaveWindow : Verse.Window {
 
     public override void WindowOnGUI() {
         bool selfActive = isWindowDragging || activeResize != ResizeEdge.None;
-        if (!selfActive && ActiveDragRegistry.IsActive) {
+        if (!selfActive && ActiveDragRegistry.IsActiveFromOther(RootId)) {
             EventType et = Event.current.type;
             if (et == EventType.MouseDrag || et == EventType.Used) {
                 return;
@@ -218,7 +218,7 @@ public abstract class LightweaveWindow : Verse.Window {
             || et == EventType.MouseDrag
             || et == EventType.Used;
 
-        if (!selfActive && ActiveDragRegistry.IsActive && isHotEvent) {
+        if (!selfActive && ActiveDragRegistry.IsActiveFromOther(RootId) && isHotEvent) {
             return;
         }
 
@@ -363,7 +363,7 @@ public abstract class LightweaveWindow : Verse.Window {
             lastDragClickTime = now;
             lastDragClickPos = windowLocal;
             isWindowDragging = true;
-            ActiveDragRegistry.Acquire();
+            ActiveDragRegistry.Acquire(RootId);
         }
 
         if (LightweaveHitTracker.IsOver(windowLocal)) {
@@ -425,7 +425,7 @@ public abstract class LightweaveWindow : Verse.Window {
                     activeResize = edge;
                     resizeAnchorScreen = screenTL;
                     resizeStartRect = windowRect;
-                    ActiveDragRegistry.Acquire();
+                    ActiveDragRegistry.Acquire(RootId);
                     if (e.type == EventType.MouseDown && e.button == 0) {
                         e.Use();
                     }

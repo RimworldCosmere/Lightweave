@@ -41,7 +41,9 @@ public static class LangSelectField {
             StateHandle<Rect> anchor = UseState(Rect.zero, line, anchorKey);
             StateHandle<string> query = UseState(string.Empty, line, queryKey);
 
-            anchor.Set(rect);
+            if (anchor.Value != rect) {
+                anchor.Set(rect);
+            }
 
             if (open.Value && SingletonOverlayRegistry.ShouldClose(openKey)) {
                 open.Set(false);

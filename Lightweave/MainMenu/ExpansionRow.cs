@@ -42,7 +42,7 @@ public static class ExpansionRow {
             style: new Style {
                 Padding = new EdgeInsets(SpacingScale.Xs, SpacingScale.Md, SpacingScale.Xs, SpacingScale.Md),
                 Background = BackgroundSpec.Blur(new Color(0f, 0f, 0f, 0.65f)),
-                Border = BorderSpec.All(new Rem(0.0625f), ThemeSlot.AccentMuted),
+                Border = BorderSpec.All(new Rem(0.0625f), ThemeSlot.AccentSoft),
                 Radius = RadiusSpec.All(RadiusScale.None),
             }
         );
@@ -79,7 +79,7 @@ public static class ExpansionRow {
             style: new Style {
                 Padding = new EdgeInsets(Top: SpacingScale.Xs, Right: SpacingScale.Sm, Bottom: SpacingScale.Xs, Left: SpacingScale.Sm),
                 Background = BackgroundSpec.Of(new Color(28f / 255f, 22f / 255f, 14f / 255f, 0.85f)),
-                Border = BorderSpec.All(new Rem(0.0625f), ThemeSlot.AccentMuted),
+                Border = BorderSpec.All(new Rem(0.0625f), ThemeSlot.AccentSoft),
                 Radius = RadiusSpec.All(RadiusScale.None),
             }
         );

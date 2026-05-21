@@ -14,7 +14,15 @@ public static class StyleExtensions {
             return node.Style ?? default;
         }
 
-        return theme.ResolveStyle(node);
+        int currentEpoch = Theme.ThemeRegistry.StyleEpoch;
+        if (node._resolvedStyleEpoch == currentEpoch) {
+            return node._resolvedStyleCache;
+        }
+
+        Style resolved = theme.ResolveStyle(node);
+        node._resolvedStyleCache = resolved;
+        node._resolvedStyleEpoch = currentEpoch;
+        return resolved;
     }
 
     public static Style GetResolvedStyle(this LightweaveNode node, bool hovered, bool pressed, bool focused, bool disabled) {
