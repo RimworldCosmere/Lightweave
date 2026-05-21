@@ -1,0 +1,23 @@
+using System;
+using Cosmere.Lightweave.Redesign.LoadColony;
+using Cosmere.Lightweave.Runtime;
+using HarmonyLib;
+using RimWorld;
+using Verse;
+
+namespace Cosmere.Lightweave.Redesign.Patch;
+
+[HarmonyPatch(typeof(GameDataSaveLoader), nameof(GameDataSaveLoader.SaveGame))]
+public static class SaveGameMetadataPatch {
+    public static void Postfix(string fileName) {
+        try {
+            string saveFilePath = GenFilePaths.FilePathForSavedGame(fileName);
+            SaveSidecarData data = SaveSidecar.CaptureFromCurrentGame();
+            SaveSidecar.Write(saveFilePath, data);
+            ColonyScreenshotCapture.ScheduleForSave(saveFilePath);
+        }
+        catch (Exception ex) {
+            LightweaveLog.Warning("SaveGameMetadataPatch failed: " + ex);
+        }
+    }
+}
