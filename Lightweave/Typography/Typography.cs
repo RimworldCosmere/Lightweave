@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Cosmere.Lightweave.Typography;
 
 public static partial class Typography {
-    internal static TextAnchor ResolveAnchor(TextAlign align, Direction dir) {
+    public static TextAnchor ResolveAnchor(TextAlign align, Direction dir) {
         return align switch {
             TextAlign.Start => dir == Direction.Ltr ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight,
             TextAlign.End => dir == Direction.Ltr ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft,

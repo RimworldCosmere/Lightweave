@@ -11,7 +11,7 @@ using Verse;
 namespace Cosmere.Lightweave.Playground;
 
 public sealed class LightweavePlayground : LightweaveWindow {
-    internal static readonly IReadOnlyList<PlaygroundCategory> Categories = new[] {
+    public static readonly IReadOnlyList<PlaygroundCategory> Categories = new[] {
         new PlaygroundCategory(
             "foundation",
             "CL_Playground_Category_Foundation",
