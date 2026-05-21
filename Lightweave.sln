@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lightweave", "Lightweave\Lightweave.csproj", "{19860185-A4BE-4CCE-AAE3-B03065A753B2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lightweave", "Lightweave\Lightweave\Lightweave.csproj", "{19860185-A4BE-4CCE-AAE3-B03065A753B2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
