@@ -20,7 +20,7 @@ namespace Cosmere.Lightweave.Adapter;
 public abstract class AsInspectTab : ITab {
     protected abstract LightweaveNode Build();
 
-    protected override void FillTab() {
+    public override void FillTab() {
         int entityId = SelThing?.thingIDNumber ?? 0;
         Guid id = AdapterStoreRegistry.GetOrCreate(entityId, AdapterKind.InspectTab);
         float titleBarPx = TitleBarHeight;
