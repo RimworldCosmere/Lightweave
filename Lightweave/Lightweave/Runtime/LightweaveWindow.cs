@@ -115,7 +115,7 @@ public abstract class LightweaveWindow : Verse.Window {
     [DocOverride("Hard upper bound for card height.", TypeOverride = "float", DefaultOverride = "1300")]
     protected virtual float MaxCardHeight => 1300f;
 
-    protected override float Margin => 0f;
+    public override float Margin => 0f;
 
     [DocOverride("Allow the user to drag any window edge to resize.", TypeOverride = "bool", DefaultOverride = "false")]
     protected virtual bool EdgeResizable => true;

@@ -30,7 +30,7 @@ internal sealed class GlobalOverlayContainer : Window {
 
     public override Vector2 InitialSize => new Vector2(UI.screenWidth, UI.screenHeight);
 
-    protected override void SetInitialSizeAndPosition() {
+    public override void SetInitialSizeAndPosition() {
         windowRect = new Rect(0f, 0f, UI.screenWidth, UI.screenHeight);
     }
 
