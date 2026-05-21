@@ -37,9 +37,6 @@ public static class LightweaveSettingsForm {
                 stack.Add(BuildFontSizeSection(settings));
                 stack.Add(Divider.Horizontal());
 
-                stack.Add(BuildMainMenuSection(settings));
-                stack.Add(Divider.Horizontal());
-
                 stack.Add(BuildAccessibilitySection(settings));
                 stack.Add(Divider.Horizontal());
 
@@ -105,49 +102,6 @@ public static class LightweaveSettingsForm {
                 ));
             }
         );
-    }
-
-    private static LightweaveNode BuildMainMenuSection(LightweaveSettings settings) {
-        return Stack.Create(
-            new Rem(0.5f),
-            section => {
-                section.Add(Heading.Create(3, "CL_Settings_MainMenu_Heading".Translate()));
-                section.Add(Checkbox.Create(
-                    label: "CL_Settings_MainMenu_Redesign".Translate(),
-                    value: settings.RedesignMainMenu,
-                    onChange: v => {
-                        settings.RedesignMainMenu = v;
-                        LightweaveMod.Save();
-                        PromptRestartIfBootDiff(settings);
-                    },
-                    tooltipKey: "CL_Settings_MainMenu_Redesign_Tip"
-                ));
-                section.Add(Checkbox.Create(
-                    label: "CL_Settings_MainMenu_ParseSaves".Translate(),
-                    value: settings.ParseSaveMetadata,
-                    onChange: v => {
-                        settings.ParseSaveMetadata = v;
-                        LightweaveMod.Save();
-                    },
-                    disabled: !settings.RedesignMainMenu,
-                    tooltipKey: "CL_Settings_MainMenu_ParseSaves_Tip"
-                ));
-            }
-        );
-    }
-
-    private static void PromptRestartIfBootDiff(LightweaveSettings settings) {
-        if (settings.RedesignMainMenu == LightweaveMod.BootRedesignMainMenu) {
-            return;
-        }
-        Find.WindowStack.Add(new Dialog_MessageBox(
-            "CL_Settings_Restart_Body".Translate(),
-            "CL_Settings_Restart_Confirm".Translate(),
-            () => GenCommandLine.Restart(),
-            "CL_Settings_Restart_Later".Translate(),
-            null,
-            "CL_Settings_Restart_Title".Translate()
-        ));
     }
 
     private static LightweaveNode BuildAccessibilitySection(LightweaveSettings settings) {

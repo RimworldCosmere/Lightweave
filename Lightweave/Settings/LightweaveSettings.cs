@@ -4,11 +4,7 @@ namespace Cosmere.Lightweave.Settings;
 
 public class LightweaveSettings : ModSettings {
     public int FontScalePercent = 100;
-    public bool RedesignMainMenu = true;
     public bool ReduceMotion;
-    public bool ParseSaveMetadata = true;
-    public bool TranslationToastDismissed;
-    public bool DevBuildToastDismissed;
     public string SelectedThemeId = "default";
     public bool ShowPerformanceMetrics;
 
@@ -16,11 +12,7 @@ public class LightweaveSettings : ModSettings {
 
     public override void ExposeData() {
         Scribe_Values.Look(ref FontScalePercent, "fontScalePercent", 100);
-        Scribe_Values.Look(ref RedesignMainMenu, "redesignMainMenu", true);
         Scribe_Values.Look(ref ReduceMotion, "reduceMotion");
-        Scribe_Values.Look(ref ParseSaveMetadata, "parseSaveMetadata", true);
-        Scribe_Values.Look(ref TranslationToastDismissed, "translationToastDismissed");
-        Scribe_Values.Look(ref DevBuildToastDismissed, "devBuildToastDismissed");
         Scribe_Values.Look(ref SelectedThemeId, "selectedThemeId", "default");
         Scribe_Values.Look(ref ShowPerformanceMetrics, "showPerformanceMetrics");
         base.ExposeData();
