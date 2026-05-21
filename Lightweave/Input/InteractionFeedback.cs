@@ -6,7 +6,7 @@ using Verse.Sound;
 
 namespace Cosmere.Lightweave.Input;
 
-internal static class InteractionFeedback {
+public static class InteractionFeedback {
     public static void Apply(Rect rect, bool enabled, bool playSound) {
         if (!enabled) {
             if (Mouse.IsOver(rect)) {

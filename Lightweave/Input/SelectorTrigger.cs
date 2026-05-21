@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Cosmere.Lightweave.Input;
 
-internal static class SelectorTrigger {
+public static class SelectorTrigger {
     public static readonly Rem Height = new Rem(2.875f);
     public static readonly Rem PaddingX = new Rem(1f);
     public static readonly Rem ChevronWidth = new Rem(1.25f);
