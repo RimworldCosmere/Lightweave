@@ -68,9 +68,9 @@
             <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
 
-        <Reference Include="..\..\Lightweave\Assemblies\Lightweave.dll">
+        <ProjectReference Include="..\..\Lightweave\Lightweave\Lightweave.csproj">
             <Private>False</Private>
-        </Reference>
+        </ProjectReference>
 
         <Reference Include="..\..\RimWorldWin64_Data\Managed\*.dll" Condition="Exists('..\..\RimWorldWin64_Data\Managed')">
             <Private>False</Private>
