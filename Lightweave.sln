@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lightweave", "Lightweave\Lightweave\Lightweave.csproj", "{19860185-A4BE-4CCE-AAE3-B03065A753B2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LightweaveRedesign", "LightweaveRedesign\LightweaveRedesign\LightweaveRedesign.csproj", "{810D1361-A791-4052-81DA-E469A1E3D338}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,18 @@ Global
 		{19860185-A4BE-4CCE-AAE3-B03065A753B2}.Release|x64.Build.0 = Release|Any CPU
 		{19860185-A4BE-4CCE-AAE3-B03065A753B2}.Release|x86.ActiveCfg = Release|Any CPU
 		{19860185-A4BE-4CCE-AAE3-B03065A753B2}.Release|x86.Build.0 = Release|Any CPU
+		{810D1361-A791-4052-81DA-E469A1E3D338}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{810D1361-A791-4052-81DA-E469A1E3D338}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{810D1361-A791-4052-81DA-E469A1E3D338}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{810D1361-A791-4052-81DA-E469A1E3D338}.Debug|x64.Build.0 = Debug|Any CPU
+		{810D1361-A791-4052-81DA-E469A1E3D338}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{810D1361-A791-4052-81DA-E469A1E3D338}.Debug|x86.Build.0 = Debug|Any CPU
+		{810D1361-A791-4052-81DA-E469A1E3D338}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{810D1361-A791-4052-81DA-E469A1E3D338}.Release|Any CPU.Build.0 = Release|Any CPU
+		{810D1361-A791-4052-81DA-E469A1E3D338}.Release|x64.ActiveCfg = Release|Any CPU
+		{810D1361-A791-4052-81DA-E469A1E3D338}.Release|x64.Build.0 = Release|Any CPU
+		{810D1361-A791-4052-81DA-E469A1E3D338}.Release|x86.ActiveCfg = Release|Any CPU
+		{810D1361-A791-4052-81DA-E469A1E3D338}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
