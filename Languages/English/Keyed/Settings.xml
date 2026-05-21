@@ -3,6 +3,9 @@
     <CL_Settings_Title>Lightweave</CL_Settings_Title>
     <CL_Settings_Subtitle>UI library and main-menu redesign.</CL_Settings_Subtitle>
 
+    <CL_RedesignSettings_Title>Lightweave Redesign</CL_RedesignSettings_Title>
+    <CL_RedesignSettings_Subtitle>Toggle the screens that Lightweave replaces.</CL_RedesignSettings_Subtitle>
+
     <CL_Settings_Theme_Heading>Theme</CL_Settings_Theme_Heading>
     <CL_Settings_Theme_Help>Pick the color palette and surface treatments used across every Lightweave-rendered surface.</CL_Settings_Theme_Help>
     <CL_Settings_Theme_None>No themes are registered.</CL_Settings_Theme_None>
