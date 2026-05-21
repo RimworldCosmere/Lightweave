@@ -19,7 +19,7 @@ public static class LightweaveRoot {
         public LightweaveNode Root;
     }
 
-    public static bool DiagnosticsEnabled = true;
+    public static bool DiagnosticsEnabled = false;
     private static readonly int[] diagEventCounts = new int[16];
     private static int diagBuildHits;
     private static int diagBuildMisses;
