@@ -18,6 +18,15 @@ public static class ThemeRegistry {
     private static readonly Dictionary<string, Theme> cachedThemes = new Dictionary<string, Theme>(StringComparer.Ordinal);
     private static readonly Dictionary<string, MethodInfo> cachedBuilders = new Dictionary<string, MethodInfo>(StringComparer.Ordinal);
 
+    private static int styleEpoch;
+    private static string? lastActiveId;
+
+    public static int StyleEpoch => styleEpoch;
+
+    public static void BumpStyleEpoch() {
+        unchecked { styleEpoch++; }
+    }
+
     public static IReadOnlyList<ThemeDescriptor> All => GetDescriptors();
 
     public static Theme Get(string id) {
@@ -46,7 +55,12 @@ public static class ThemeRegistry {
     public static Theme Active {
         get {
             string id = LightweaveMod.Settings?.SelectedThemeId ?? DefaultId;
-            return Get(string.IsNullOrEmpty(id) ? DefaultId : id);
+            string resolved = string.IsNullOrEmpty(id) ? DefaultId : id;
+            if (!string.Equals(resolved, lastActiveId, StringComparison.Ordinal)) {
+                lastActiveId = resolved;
+                BumpStyleEpoch();
+            }
+            return Get(resolved);
         }
     }
 

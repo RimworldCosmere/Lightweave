@@ -110,6 +110,97 @@ public static class PaintBox {
         }
     }
 
+    public static void DrawShadow(Rect rect, ShadowSpec? spec) {
+        if (spec == null) {
+            return;
+        }
+        DrawShadowResolved(rect, spec, RenderContext.Current.Theme, isInset: false);
+    }
+
+    public static void DrawInsetHighlight(Rect rect, ShadowSpec? spec) {
+        if (spec == null) {
+            return;
+        }
+        DrawShadowResolved(rect, spec, RenderContext.Current.Theme, isInset: true);
+    }
+
+    private static void DrawShadowResolved(Rect rect, ShadowSpec spec, Theme.Theme theme, bool isInset) {
+        switch (spec) {
+            case ShadowSpec.SlotRef slotRef: {
+                ShadowSpec? resolved = theme.GetShadow(slotRef.Slot);
+                if (resolved != null) {
+                    DrawShadowResolved(rect, resolved, theme, isInset);
+                }
+                break;
+            }
+            case ShadowSpec.Layered layered: {
+                for (int i = 0; i < layered.Stops.Length; i++) {
+                    DrawShadowResolved(rect, layered.Stops[i], theme, isInset);
+                }
+                break;
+            }
+            case ShadowSpec.Drop drop: {
+                if (!isInset) {
+                    DrawDropShadow(rect, drop);
+                }
+                break;
+            }
+            case ShadowSpec.Inset inset: {
+                if (isInset) {
+                    DrawInsetEdge(rect, inset);
+                }
+                break;
+            }
+        }
+    }
+
+    private static void DrawDropShadow(Rect rect, ShadowSpec.Drop drop) {
+        float blur = Mathf.Max(1f, drop.BlurPx);
+        float spread = Mathf.Max(0f, drop.SpreadPx);
+        float margin = blur + spread;
+        int bw = Mathf.Max(1, Mathf.RoundToInt(rect.width + 2f * spread));
+        int bh = Mathf.Max(1, Mathf.RoundToInt(rect.height + 2f * spread));
+        Rect shadowRect = new Rect(
+            rect.x - margin + drop.OffsetPx.x,
+            rect.y - margin + drop.OffsetPx.y,
+            rect.width + margin * 2f,
+            rect.height + margin * 2f
+        );
+        Texture2D tex = ShadowTextureCache.Drop(bw, bh, blur);
+        Color color = ResolveColor(drop.Color);
+        GUI.DrawTexture(
+            shadowRect,
+            tex,
+            ScaleMode.StretchToFill,
+            true,
+            0,
+            color,
+            Vector4.zero,
+            Vector4.zero
+        );
+    }
+
+    private static void DrawInsetEdge(Rect rect, ShadowSpec.Inset inset) {
+        int heightPx = Mathf.Max(1, Mathf.RoundToInt(inset.HeightPx));
+        Texture2D tex = ShadowTextureCache.InsetEdge(heightPx);
+        Color color = ResolveColor(inset.Color);
+        Rect r;
+        if (inset.Edge == InsetEdge.Top) {
+            r = new Rect(rect.x, rect.y, rect.width, heightPx);
+            GUI.DrawTexture(r, tex, ScaleMode.StretchToFill, true, 0, color, Vector4.zero, Vector4.zero);
+        }
+        else {
+            r = new Rect(rect.x, rect.yMax - heightPx, rect.width, heightPx);
+            Color saved = GUI.color;
+            GUI.color = color;
+            Matrix4x4 savedMatrix = GUI.matrix;
+            GUIUtility.RotateAroundPivot(180f, new Vector2(r.x + r.width * 0.5f, r.y + r.height * 0.5f));
+            GUI.DrawTexture(r, tex, ScaleMode.StretchToFill, true, 0);
+            GUI.matrix = savedMatrix;
+            GUI.color = saved;
+        }
+    }
+
     private static void DrawFill(Rect r, BackgroundSpec? bg, Vector4 rad) {
         if (bg is BackgroundSpec.Solid solid) {
             Color c = ResolveColor(solid.Color);

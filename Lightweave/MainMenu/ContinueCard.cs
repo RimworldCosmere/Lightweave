@@ -176,7 +176,7 @@ public static class ContinueCard {
                 AddStat(when, "saved", ThemeSlot.TextPrimary);
                 if (save.Permadeath) {
                     AddSep();
-                    AddStat((string)"CL_MainMenu_Stat_Permadeath".Translate(), string.Empty, ThemeSlot.AccentMuted);
+                    AddStat((string)"CL_MainMenu_Stat_Permadeath".Translate(), string.Empty, ThemeSlot.AccentSoft);
                 }
                 return;
             }
@@ -196,7 +196,7 @@ public static class ContinueCard {
             AddStat(threatPct + "%", "difficulty", ThemeSlot.TextPrimary);
             if (save.Permadeath) {
                 AddSep();
-                AddStat((string)"CL_MainMenu_Stat_Permadeath".Translate(), string.Empty, ThemeSlot.AccentMuted);
+                AddStat((string)"CL_MainMenu_Stat_Permadeath".Translate(), string.Empty, ThemeSlot.AccentSoft);
             }
         });
     }

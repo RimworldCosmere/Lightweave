@@ -83,7 +83,7 @@ public static partial class Typography {
                 return Mathf.Ceil(gs.CalcSize(new GUIContent(content)).x);
             };
 
-            node.Paint = (rect, _) => {
+            node.Draw = rect => {
                 Theme.Theme theme = RenderContext.Current.Theme;
                 Style s = node.GetResolvedStyle();
                 GUIStyle gs = ResolveGuiStyle();

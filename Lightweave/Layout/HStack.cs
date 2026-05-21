@@ -78,8 +78,7 @@ public static class HStack {
 
         node.PreferredHeight = maxChildHeight;
 
-        float[] AllocateWidths(float availableWidth, float gapPx, bool[] inFlow) {
-            float[] widths = new float[count];
+        void FillWidths(float availableWidth, float gapPx, bool[] inFlow, float[] widths) {
             float fixedTotal = 0f;
             int flexCount = 0;
             int flowCount = 0;
@@ -112,8 +111,6 @@ public static class HStack {
                     widths[i] = flexEach;
                 }
             }
-
-            return widths;
         }
 
         float MeasureChildHeight(LightweaveNode child, float width) {
@@ -156,11 +153,12 @@ public static class HStack {
             float contentH = 0f;
             if (count > 0) {
                 bool[] inFlow = new bool[count];
+                float[] widths = new float[count];
                 for (int i = 0; i < count; i++) {
                     inFlow[i] = builder.Items[i].node.IsInFlow();
                 }
 
-                float[] widths = AllocateWidths(innerWidth, ResolveGapPx(), inFlow);
+                FillWidths(innerWidth, ResolveGapPx(), inFlow, widths);
                 for (int i = 0; i < count; i++) {
                     if (!inFlow[i]) {
                         continue;
@@ -175,34 +173,39 @@ public static class HStack {
             return contentH + top + bottom;
         };
 
-        node.Paint = (rect, paintChildren) => {
+        bool[]? layoutInFlow = null;
+        float[]? layoutWidths = null;
+
+        node.Layout = rect => {
             if (count == 0) {
                 return;
+            }
+
+            if (layoutInFlow == null || layoutInFlow.Length != count) {
+                layoutInFlow = new bool[count];
+                layoutWidths = new float[count];
             }
 
             Direction dir = RenderContext.Current.Direction;
             bool reverse = dir == Direction.Rtl;
 
             float gapPx = ResolveGapPx();
-            bool[] inFlow = new bool[count];
             for (int i = 0; i < count; i++) {
-                inFlow[i] = builder.Items[i].node.IsInFlow();
+                layoutInFlow![i] = builder.Items[i].node.IsInFlow();
             }
-            float[] widths = AllocateWidths(rect.width, gapPx, inFlow);
+            FillWidths(rect.width, gapPx, layoutInFlow!, layoutWidths!);
 
             float x = rect.x;
             for (int i = 0; i < count; i++) {
                 int idx = reverse ? count - 1 - i : i;
-                if (!inFlow[idx]) {
+                if (!layoutInFlow![idx]) {
                     continue;
                 }
                 LightweaveNode child = builder.Items[idx].node;
-                float w = widths[idx];
+                float w = layoutWidths![idx];
                 child.MeasuredRect = new Rect(x, rect.y, w, rect.height);
                 x += w + gapPx;
             }
-
-            paintChildren();
         };
 
         return node;

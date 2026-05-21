@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
+using Cosmere.Lightweave.Types;
 using UnityEngine;
 
 namespace Cosmere.Lightweave.Theme;
@@ -10,7 +11,7 @@ public sealed record Theme(
     IReadOnlyDictionary<ThemeSlot, Color> Colors,
     IReadOnlyDictionary<FontRole, Font> Fonts,
     IReadOnlyDictionary<RadiusScale, float> Radii,
-    IReadOnlyDictionary<ElevationScale, float> Elevations,
+    IReadOnlyDictionary<ThemeSlot, ShadowSpec> ShadowSpecs,
     IReadOnlyDictionary<string, Style>? Classes = null
 ) {
     private readonly bool _validated = ValidateConstruction(Fonts);
@@ -41,8 +42,8 @@ public sealed record Theme(
         return Radii.TryGetValue(s, out float r) ? r : 0f;
     }
 
-    public float GetElevation(ElevationScale s) {
-        return Elevations.TryGetValue(s, out float e) ? e : 0f;
+    public ShadowSpec? GetShadow(ThemeSlot slot) {
+        return ShadowSpecs.TryGetValue(slot, out ShadowSpec? spec) ? spec : null;
     }
 
     public Style ResolveStyle(LightweaveNode node) {
@@ -81,7 +82,7 @@ public sealed record Theme(
         IReadOnlyDictionary<ThemeSlot, Color>? colors = null,
         IReadOnlyDictionary<FontRole, Font>? fonts = null,
         IReadOnlyDictionary<RadiusScale, float>? radii = null,
-        IReadOnlyDictionary<ElevationScale, float>? elevations = null,
+        IReadOnlyDictionary<ThemeSlot, ShadowSpec>? shadows = null,
         IReadOnlyDictionary<string, Style>? classes = null
     ) {
         Dictionary<ThemeSlot, Color> newColors = new Dictionary<ThemeSlot, Color>(Colors);
@@ -105,10 +106,10 @@ public sealed record Theme(
             }
         }
 
-        Dictionary<ElevationScale, float> newElev = new Dictionary<ElevationScale, float>(Elevations);
-        if (elevations != null) {
-            foreach (KeyValuePair<ElevationScale, float> kv in elevations) {
-                newElev[kv.Key] = kv.Value;
+        Dictionary<ThemeSlot, ShadowSpec> newShadows = new Dictionary<ThemeSlot, ShadowSpec>(ShadowSpecs);
+        if (shadows != null) {
+            foreach (KeyValuePair<ThemeSlot, ShadowSpec> kv in shadows) {
+                newShadows[kv.Key] = kv.Value;
             }
         }
 
@@ -121,7 +122,7 @@ public sealed record Theme(
             }
         }
 
-        return new Theme(newColors, newFonts, newRadii, newElev, newClasses);
+        return new Theme(newColors, newFonts, newRadii, newShadows, newClasses);
     }
 
 }

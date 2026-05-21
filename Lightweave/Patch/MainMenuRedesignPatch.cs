@@ -30,7 +30,7 @@ public static class MainMenuRedesignPatch {
         bool isHotEvent = et == EventType.Layout
             || et == EventType.MouseDrag
             || et == EventType.Used;
-        if (Runtime.ActiveDragRegistry.IsActive && isHotEvent) {
+        if (Runtime.ActiveDragRegistry.IsActiveFromOther(RootId) && isHotEvent) {
             return false;
         }
 

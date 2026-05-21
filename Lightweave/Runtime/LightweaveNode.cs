@@ -17,8 +17,30 @@ public sealed class LightweaveNode {
     public Func<Rect, List<Rect>>? MeasureChildren;
     public Rect MeasuredRect;
     public Action<Rect, Action>? Paint;
+    public Action<Rect>? Layout;
+    public Action<Rect>? Draw;
     public float? PreferredHeight;
-    public Style? Style;
+
+    private Style? _style;
+    public Style? Style {
+        get => _style;
+        set {
+            _style = value;
+            _resolvedStyleEpoch = -1;
+        }
+    }
+
     public string? Id;
-    public string[]? Classes;
+
+    private string[]? _classes;
+    public string[]? Classes {
+        get => _classes;
+        set {
+            _classes = value;
+            _resolvedStyleEpoch = -1;
+        }
+    }
+
+    internal Style _resolvedStyleCache;
+    internal int _resolvedStyleEpoch = -1;
 }

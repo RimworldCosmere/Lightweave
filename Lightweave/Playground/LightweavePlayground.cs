@@ -16,7 +16,7 @@ public sealed class LightweavePlayground : LightweaveWindow {
             "foundation",
             "CL_Playground_Category_Foundation",
             "CL_Playground_Category_Foundation_Desc",
-            new[] { "colors", "fonts", "rem-spacing", "responsive" }
+            new[] { "colors", "shadows", "fonts", "rem-spacing", "responsive" }
         ),
         new PlaygroundCategory(
             "layout",
@@ -94,6 +94,7 @@ public sealed class LightweavePlayground : LightweaveWindow {
 
     private static readonly Dictionary<string, string> SourcePaths = new Dictionary<string, string> {
         { "colors", "Lightweave/Tokens/ThemeSlot.cs" },
+        { "shadows", "Lightweave/Types/ShadowSpec.cs" },
         { "fonts", "Lightweave/Tokens/FontRole.cs" },
         { "rem-spacing", "Lightweave/Types/Rem.cs" },
         { "responsive", "Lightweave/Tokens/Breakpoint.cs" },
