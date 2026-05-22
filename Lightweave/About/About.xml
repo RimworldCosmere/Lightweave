@@ -9,4 +9,14 @@
         <li>1.6</li>
     </supportedVersions>
     <packageId>Cosmere.Lightweave</packageId>
+    <modDependencies>
+        <li>
+            <packageId>cryptiklemur.rimlogging</packageId>
+            <displayName>RimLogging</displayName>
+            <downloadUrl>https://github.com/cryptiklemur/rimworld-logging-framework</downloadUrl>
+        </li>
+    </modDependencies>
+    <loadAfter>
+        <li>cryptiklemur.rimlogging</li>
+    </loadAfter>
 </ModMetaData>

@@ -29,6 +29,7 @@ public static class ScadrialTheme {
             [ThemeSlot.StatusWarning] = new Color(0.900f, 0.720f, 0.300f),
             [ThemeSlot.StatusDanger] = new Color(0.820f, 0.340f, 0.300f),
             [ThemeSlot.StatusSuccess] = new Color(0.500f, 0.720f, 0.460f),
+            [ThemeSlot.StatusInfo] = new Color(0.400f, 0.560f, 0.700f),
             [ThemeSlot.HoverTint] = new Color(0.761f, 0.353f, 0.180f, 0.14f),
             [ThemeSlot.ActiveTint] = new Color(0.761f, 0.353f, 0.180f, 0.18f),
             [ThemeSlot.AccentSoft] = new Color(0.761f, 0.353f, 0.180f, 0.10f),

@@ -74,8 +74,9 @@ public static class PaintBox {
                          (bw.x > 0f || bw.y > 0f || bw.z > 0f || bw.w > 0f);
         bool rounded = rad.x > 0f || rad.y > 0f || rad.z > 0f || rad.w > 0f;
         bool bgVisible = IsBgVisible(bg);
+        bool bgOpaque = IsBgOpaque(bg);
 
-        if (hasBorder && rounded && bgVisible) {
+        if (hasBorder && rounded && bgVisible && bgOpaque) {
             Color bc = ResolveColor(border!.Value.Color!);
             DrawSolidRounded(r, bc, rad);
 
@@ -333,6 +334,13 @@ public static class PaintBox {
         if (bg is BackgroundSpec.Solid solid) {
             Color c = ResolveColor(solid.Color);
             return c.a > 0f;
+        }
+        return true;
+    }
+
+    private static bool IsBgOpaque(BackgroundSpec? bg) {
+        if (bg is BackgroundSpec.Solid solid) {
+            return ResolveColor(solid.Color).a >= 0.999f;
         }
         return true;
     }

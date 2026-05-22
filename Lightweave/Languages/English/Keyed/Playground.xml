@@ -560,6 +560,8 @@
     <!-- Task D2b: variant and state labels -->
     <CL_Playground_Layout_Wrap_Badges>Badges</CL_Playground_Layout_Wrap_Badges>
     <CL_Playground_Label_Default>Default</CL_Playground_Label_Default>
+    <CL_Playground_Label_Virtualized>Virtualized</CL_Playground_Label_Virtualized>
+    <CL_Playground_List_HudRow>Row {INDEX}</CL_Playground_List_HudRow>
     <CL_Playground_Label_Disabled>Disabled</CL_Playground_Label_Disabled>
     <CL_Playground_Label_Hover>Hover</CL_Playground_Label_Hover>
     <CL_Playground_Label_Normal>Normal</CL_Playground_Label_Normal>
@@ -588,6 +590,9 @@
     <CL_Playground_Label_Justify>Justify</CL_Playground_Label_Justify>
     <CL_Playground_Label_Horizontal>Horizontal</CL_Playground_Label_Horizontal>
     <CL_Playground_Label_Vertical>Vertical</CL_Playground_Label_Vertical>
+    <CL_Playground_Label_Nested>Nested</CL_Playground_Label_Nested>
+    <CL_Playground_Label_Rest>Rest</CL_Playground_Label_Rest>
+    <CL_Playground_Label_Dragging>Dragging</CL_Playground_Label_Dragging>
     <CL_Playground_Label_Empty>Empty</CL_Playground_Label_Empty>
     <CL_Playground_Label_Filled>Filled</CL_Playground_Label_Filled>
     <CL_Playground_Label_Borderless>Borderless</CL_Playground_Label_Borderless>
@@ -602,6 +607,8 @@
     <CL_Playground_Label_Closed>Closed</CL_Playground_Label_Closed>
     <CL_Playground_Label_On>On</CL_Playground_Label_On>
     <CL_Playground_Label_Off>Off</CL_Playground_Label_Off>
+    <CL_Playground_Label_Severity>Severity</CL_Playground_Label_Severity>
+    <CL_Playground_Label_Filter>Filter</CL_Playground_Label_Filter>
     <CL_Playground_Label_WithHeaderAndSearch>With header and search</CL_Playground_Label_WithHeaderAndSearch>
     <CL_Playground_Label_Confirm>Confirm</CL_Playground_Label_Confirm>
     <CL_Playground_Label_Cancel>Cancel</CL_Playground_Label_Cancel>
@@ -723,6 +730,44 @@
     <CL_Playground_container_Title>Container</CL_Playground_container_Title>
     <CL_Playground_container_What>Width-constrained wrapper that caps its child at a maximum width and centers it horizontally. Optional horizontal padding defines the gutter.</CL_Playground_container_What>
     <CL_Playground_container_When>Wrap long-form bodies and dashboards in a Container so their content stays readable on wide windows. Skip it for full-bleed surfaces like HUD panes.</CL_Playground_container_When>
+    <CL_Playground_chip_Title>Chip</CL_Playground_chip_Title>
+    <CL_Playground_chip_What>A clickable toggle pill that persists a pressed state. Default for generic on/off, Severity for colour-coded log levels, Filter for facets with a count.</CL_Playground_chip_What>
+    <CL_Playground_chip_When>Use to filter a list by facet or severity, or to expose a sticky tag. Reach for it over a static Badge whenever the player can click to change state.</CL_Playground_chip_When>
+    <CL_Playground_Chip_Trace>Trace</CL_Playground_Chip_Trace>
+    <CL_Playground_Chip_Debug>Debug</CL_Playground_Chip_Debug>
+    <CL_Playground_Chip_Info>Info</CL_Playground_Chip_Info>
+    <CL_Playground_Chip_Warn>Warn</CL_Playground_Chip_Warn>
+    <CL_Playground_Chip_Error>Error</CL_Playground_Chip_Error>
+    <CL_Playground_Chip_Pinned>Pinned</CL_Playground_Chip_Pinned>
+    <CL_Playground_Chip_Archived>Archived</CL_Playground_Chip_Archived>
+    <CL_Playground_Chip_MineOnly>Mine only</CL_Playground_Chip_MineOnly>
+    <CL_Playground_Chip_Vanilla>Vanilla</CL_Playground_Chip_Vanilla>
+    <CL_Playground_Chip_Workshop>Workshop</CL_Playground_Chip_Workshop>
+    <CL_Playground_Chip_Dlc>DLC</CL_Playground_Chip_Dlc>
+    <CL_Playground_splitpane_Title>Split Pane</CL_Playground_splitpane_Title>
+    <CL_Playground_splitpane_What>Two panes separated by a draggable divider. Drag the hairline to trade space; a floating badge shows the live split while dragging.</CL_Playground_splitpane_What>
+    <CL_Playground_splitpane_When>Use for tree | list, list | detail, or viewport | inspector layouts where the player should control the balance. Nest two for a three-pane shell.</CL_Playground_splitpane_When>
+    <CL_Playground_SplitPane_Pane1Tag>FIRST</CL_Playground_SplitPane_Pane1Tag>
+    <CL_Playground_SplitPane_Pane1Title>Left pane</CL_Playground_SplitPane_Pane1Title>
+    <CL_Playground_SplitPane_Pane1Body>Drag the divider to the right to grow this pane.</CL_Playground_SplitPane_Pane1Body>
+    <CL_Playground_SplitPane_Pane2Tag>SECOND</CL_Playground_SplitPane_Pane2Tag>
+    <CL_Playground_SplitPane_Pane2Title>Right pane</CL_Playground_SplitPane_Pane2Title>
+    <CL_Playground_SplitPane_Pane2Body>This pane takes whatever space the first one leaves.</CL_Playground_SplitPane_Pane2Body>
+    <CL_Playground_SplitPane_TopTag>TOP</CL_Playground_SplitPane_TopTag>
+    <CL_Playground_SplitPane_TopTitle>Upper pane</CL_Playground_SplitPane_TopTitle>
+    <CL_Playground_SplitPane_TopBody>A vertical split runs the divider horizontally.</CL_Playground_SplitPane_TopBody>
+    <CL_Playground_SplitPane_BottomTag>BOTTOM</CL_Playground_SplitPane_BottomTag>
+    <CL_Playground_SplitPane_BottomTitle>Lower pane</CL_Playground_SplitPane_BottomTitle>
+    <CL_Playground_SplitPane_BottomBody>Drag up or down to rebalance the two stacked panes.</CL_Playground_SplitPane_BottomBody>
+    <CL_Playground_SplitPane_TreeTag>TREE</CL_Playground_SplitPane_TreeTag>
+    <CL_Playground_SplitPane_TreeTitle>Navigator</CL_Playground_SplitPane_TreeTitle>
+    <CL_Playground_SplitPane_TreeBody>Outer split holds the tree on the left.</CL_Playground_SplitPane_TreeBody>
+    <CL_Playground_SplitPane_ListTag>LIST</CL_Playground_SplitPane_ListTag>
+    <CL_Playground_SplitPane_ListTitle>Results</CL_Playground_SplitPane_ListTitle>
+    <CL_Playground_SplitPane_ListBody>Inner split divides list and detail.</CL_Playground_SplitPane_ListBody>
+    <CL_Playground_SplitPane_DetailTag>DETAIL</CL_Playground_SplitPane_DetailTag>
+    <CL_Playground_SplitPane_DetailTitle>Inspector</CL_Playground_SplitPane_DetailTitle>
+    <CL_Playground_SplitPane_DetailBody>The selected item's detail fills the rest.</CL_Playground_SplitPane_DetailBody>
     <CL_Playground_Container_Centered>Center</CL_Playground_Container_Centered>
     <CL_Playground_Container_Centered_Body>max 8rem</CL_Playground_Container_Centered_Body>
     <CL_Playground_Container_Start>Start</CL_Playground_Container_Start>

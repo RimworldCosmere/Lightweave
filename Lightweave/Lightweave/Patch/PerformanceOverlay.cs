@@ -5,7 +5,12 @@ using Verse;
 
 namespace Cosmere.Lightweave.Patch;
 
+[StaticConstructorOnStartup]
 internal static class PerformanceOverlay {
+    static PerformanceOverlay() {
+        EnsureTextures();
+    }
+
     private const int SampleCapacity = 120;
     private const float TargetFrameMs = 1000f / 60f;
     private const float FpsEmaAlpha = 0.12f;
