@@ -29,6 +29,7 @@ public static class CosmereTheme {
             [ThemeSlot.StatusWarning] = new Color(0.722f, 0.573f, 0.227f),
             [ThemeSlot.StatusDanger] = new Color(0.557f, 0.133f, 0.192f),
             [ThemeSlot.StatusSuccess] = new Color(0.290f, 0.420f, 0.361f),
+            [ThemeSlot.StatusInfo] = new Color(0.330f, 0.480f, 0.610f),
             [ThemeSlot.HoverTint] = new Color(0.722f, 0.573f, 0.227f, 0.18f),
             [ThemeSlot.ActiveTint] = new Color(0.722f, 0.573f, 0.227f, 0.16f),
             [ThemeSlot.AccentSoft] = new Color(0.557f, 0.133f, 0.192f, 0.08f),

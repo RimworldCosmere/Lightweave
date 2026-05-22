@@ -29,6 +29,7 @@ public static class RosharTheme {
             [ThemeSlot.StatusWarning] = new Color(0.720f, 0.540f, 0.180f),
             [ThemeSlot.StatusDanger] = new Color(0.680f, 0.220f, 0.200f),
             [ThemeSlot.StatusSuccess] = new Color(0.300f, 0.560f, 0.340f),
+            [ThemeSlot.StatusInfo] = new Color(0.350f, 0.640f, 0.730f),
             [ThemeSlot.HoverTint] = new Color(0.141f, 0.239f, 0.420f, 0.12f),
             [ThemeSlot.ActiveTint] = new Color(0.141f, 0.239f, 0.420f, 0.15f),
             [ThemeSlot.AccentSoft] = new Color(0.141f, 0.239f, 0.420f, 0.08f),

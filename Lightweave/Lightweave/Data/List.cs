@@ -1,6 +1,8 @@
 using System;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using Cosmere.Lightweave.Doc;
+using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
@@ -37,6 +39,10 @@ public static class List {
         Func<T, object>? keyFn = null,
         [DocParam("When true, only rows in view are built. Requires rowHeight.")]
         bool virtualize = true,
+        [DocParam("Extra rows built above and below the viewport to absorb fast scrolling.")]
+        int overscan = 2,
+        [DocParam("Draws a debug overlay reporting the painted row range over the total.")]
+        bool showHud = false,
         Style? style = null,
         string[]? classes = null,
         string? id = null,
@@ -78,6 +84,8 @@ public static class List {
             float totalHeight = rowHeight.HasValue
                 ? items.Count * rowHeight.Value
                 : items.Count * 36f;
+            int paintedStart = 0;
+            int paintedEnd = items.Count;
 
             statusRef.Current.Height = totalHeight;
             using (new LightweaveScrollView(rect, statusRef.Current)) {
@@ -89,11 +97,12 @@ public static class List {
                 if (doVirtualize) {
                     float rh = Mathf.Max(1f, rowHeight!.Value);
                     float scrollY = statusRef.Current.Position.y;
+                    int pad = Math.Max(0, overscan);
 
-                    int startIdx = Math.Max(0, (int)Math.Floor(scrollY / rh) - 2);
-                    int endIdx = Math.Min(items.Count, (int)Math.Ceiling((scrollY + rect.height) / rh) + 2);
+                    paintedStart = Math.Max(0, (int)Math.Floor(scrollY / rh) - pad);
+                    paintedEnd = Math.Min(items.Count, (int)Math.Ceiling((scrollY + rect.height) / rh) + pad);
 
-                    for (int i = startIdx; i < endIdx; i++) {
+                    for (int i = paintedStart; i < paintedEnd; i++) {
                         LightweaveNode row = rowBuilder(items[i], i);
                         row.ExplicitKey = keyFn?.Invoke(items[i]) ?? i;
                         row.MeasuredRect = new Rect(0f, i * rh, innerWidth, rh);
@@ -112,14 +121,56 @@ public static class List {
 
                 paintChildren();
             }
+
+            if (showHud) {
+                DrawHud(rect, paintedStart, paintedEnd, items.Count);
+            }
         };
 
         return node;
     }
 
-    
+    private static void DrawHud(Rect rect, int start, int end, int total) {
+        Theme.Theme theme = RenderContext.Current.Theme;
+        int painted = Mathf.Max(0, end - start);
+        int last = end > start ? end - 1 : start;
+        string text = string.Format(
+            CultureInfo.InvariantCulture,
+            "{0}–{1} of {2} · {3} painted",
+            start,
+            last,
+            total,
+            painted
+        );
 
-    
+        Font font = theme.GetFont(FontRole.Mono);
+        int px = Mathf.RoundToInt(new Rem(0.68f).ToFontPx());
+        GUIStyle textStyle = GuiStyleCache.GetOrCreate(font, px, FontStyle.Normal);
+        textStyle.alignment = TextAnchor.MiddleCenter;
+
+        float padX = SpacingScale.Sm.ToPixels();
+        float padY = new Rem(0.25f).ToPixels();
+        Vector2 textSize = textStyle.CalcSize(new GUIContent(text));
+        float w = textSize.x + padX * 2f;
+        float h = textSize.y + padY * 2f;
+        float offset = SpacingScale.Sm.ToPixels();
+        float gutter = LightweaveScrollView.GutterPixels(true);
+
+        Rect badge = new Rect(
+            rect.xMax - w - offset - gutter,
+            rect.yMax - h - offset,
+            w,
+            h
+        );
+
+        PaintBox.Draw(
+            badge,
+            BackgroundSpec.Of(ThemeSlot.SurfaceTooltip),
+            BorderSpec.All(new Rem(0.0625f), ThemeSlot.BorderTooltip),
+            RadiusSpec.All(RadiusScale.Sm)
+        );
+        TextDraw.DrawWithStyle(badge, text, textStyle, theme.GetColor(ThemeSlot.TextSecondary));
+    }
 
     [DocVariant("CL_Playground_Label_Default")]
     public static DocSample DocsDefault() {
@@ -148,6 +199,34 @@ public static class List {
                     }
                 ),
                 rowHeight: new Rem(2.25f).ToPixels()
+            );
+        });
+    }
+
+    [DocVariant("CL_Playground_Label_Virtualized")]
+    public static DocSample DocsVirtualized() {
+        return new DocSample(() => {
+            int[] items = new int[2048];
+            for (int i = 0; i < items.Length; i++) {
+                items[i] = i;
+            }
+            return List.Create(
+                items,
+                (item, _) => Box.Create(
+                    k => k.Add(
+                        Text.Create(
+                            (string)"CL_Playground_List_HudRow".Translate(item.Named("INDEX")),
+                            style: new Style { FontFamily = FontRole.Mono, FontSize = new Rem(0.875f), TextColor = ThemeSlot.TextSecondary }
+                        )
+                    ),
+                    style: new Style {
+                        Padding = new EdgeInsets(SpacingScale.Xs, Bottom: SpacingScale.Xs, Left: SpacingScale.Md, Right: SpacingScale.Md),
+                    }
+                ),
+                rowHeight: new Rem(1.625f).ToPixels(),
+                overscan: 6,
+                showHud: true,
+                style: new Style { Height = Length.Stretch }
             );
         });
     }

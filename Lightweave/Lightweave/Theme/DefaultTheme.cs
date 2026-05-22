@@ -29,6 +29,7 @@ public static class DefaultTheme {
             [ThemeSlot.StatusWarning] = new Color(0.940f, 0.720f, 0.280f),
             [ThemeSlot.StatusDanger] = new Color(0.780f, 0.280f, 0.260f),
             [ThemeSlot.StatusSuccess] = new Color(0.550f, 0.720f, 0.360f),
+            [ThemeSlot.StatusInfo] = new Color(0.420f, 0.610f, 0.760f),
             [ThemeSlot.HoverTint] = new Color(0.157f, 0.125f, 0.086f, 0.60f),
             [ThemeSlot.ActiveTint] = new Color(0.157f, 0.125f, 0.086f, 0.50f),
             [ThemeSlot.AccentSoft] = new Color(0.831f, 0.659f, 0.341f, 0.08f),

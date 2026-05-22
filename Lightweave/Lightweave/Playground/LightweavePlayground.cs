@@ -24,7 +24,7 @@ public sealed class LightweavePlayground : LightweaveWindow {
             "CL_Playground_Category_Layout_Desc",
             new[] {
                 "stack", "column", "row", "hstack", "grid", "wrap", "scrollarea", "divider", "spacer",
-                "carousel", "container", "card", "box", "vignette",
+                "carousel", "container", "card", "box", "vignette", "splitpane",
             }
         ),
         new PlaygroundCategory(
@@ -45,7 +45,7 @@ public sealed class LightweavePlayground : LightweaveWindow {
             "CL_Playground_Category_Inputs_Desc",
             new[] {
                 "textfield", "checkbox", "switch", "radio", "slider", "textarea", "numberfield", "searchfield",
-                "dropdown", "colorpicker", "keybinding",
+                "dropdown", "colorpicker", "keybinding", "chip",
             }
         ),
         new PlaygroundCategory(
@@ -109,6 +109,7 @@ public sealed class LightweavePlayground : LightweaveWindow {
         { "spacer", "Lightweave/Layout/Spacer.cs" },
         { "carousel", "Lightweave/Layout/Carousel.cs" },
         { "container", "Lightweave/Layout/Container.cs" },
+        { "splitpane", "Lightweave/Layout/SplitPane.cs" },
         { "card", "Lightweave/Layout/Card.cs" },
         { "box", "Lightweave/Layout/Box.cs" },
         { "vignette", "Lightweave/Layout/Vignette.cs" },
@@ -136,6 +137,7 @@ public sealed class LightweavePlayground : LightweaveWindow {
         { "dropdown", "Lightweave/Input/Dropdown.cs" },
         { "colorpicker", "Lightweave/Input/ColorPicker.cs" },
         { "keybinding", "Lightweave/Input/KeyBindingField.cs" },
+        { "chip", "Lightweave/Input/Chip.cs" },
         { "spinner", "Lightweave/Feedback/Spinner.cs" },
         { "progressbar", "Lightweave/Feedback/ProgressBar.cs" },
         { "ringgauge", "Lightweave/Feedback/RingGauge.cs" },
@@ -175,6 +177,8 @@ public sealed class LightweavePlayground : LightweaveWindow {
         { "sidenav", 340f },
         { "carousel", 200f },
         { "container", 96f },
+        { "splitpane", 360f },
+        { "chip", 120f },
         { "card", 280f },
         { "vignette", 160f },
         { "dialog", 280f },

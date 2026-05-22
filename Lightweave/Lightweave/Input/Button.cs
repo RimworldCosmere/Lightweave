@@ -235,7 +235,6 @@ public static class Button {
             InteractionFeedback.Apply(rect, !disabled, playHoverSound ?? true);
 
             if (!disabled && onClick != null && Widgets.ButtonInvisible(rect, doMouseoverSound: false)) {
-                LightweaveLog.Message($"[Button] onClick fired: label={label}, rect={rect}");
                 onClick.Invoke();
             }
         };
