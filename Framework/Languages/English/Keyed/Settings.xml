@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+    <CL_Settings_Title>Lightweave</CL_Settings_Title>
+    <CL_Settings_Subtitle>IMGUI framework for RimWorld mods.</CL_Settings_Subtitle>
+
+    <CL_Settings_Theme_Heading>Theme</CL_Settings_Theme_Heading>
+    <CL_Settings_Theme_Help>Pick the color palette and surface treatments used across every Lightweave-rendered surface.</CL_Settings_Theme_Help>
+    <CL_Settings_Theme_None>No themes are registered.</CL_Settings_Theme_None>
+
+    <CL_Theme_Default>Default</CL_Theme_Default>
+    <CL_Theme_Cosmere>Cosmere</CL_Theme_Cosmere>
+    <CL_Theme_Scadrial>Scadrial</CL_Theme_Scadrial>
+    <CL_Theme_Roshar>Roshar</CL_Theme_Roshar>
+
+    <CL_Settings_FontSize_Heading>Font size</CL_Settings_FontSize_Heading>
+    <CL_Settings_FontSize_Help>Scales every Lightweave-rendered surface. Vanilla UI is unaffected.</CL_Settings_FontSize_Help>
+
+    <CL_Settings_Accessibility_Heading>Accessibility</CL_Settings_Accessibility_Heading>
+    <CL_Settings_ReduceMotion>Reduce motion</CL_Settings_ReduceMotion>
+    <CL_Settings_ReduceMotion_Tip>Disable the staggered fade-in and hover-lift animations on Lightweave-rendered surfaces.</CL_Settings_ReduceMotion_Tip>
+
+    <CL_Settings_Diagnostics_Heading>Diagnostics</CL_Settings_Diagnostics_Heading>
+    <CL_Settings_PerfOverlay>Show performance metrics</CL_Settings_PerfOverlay>
+    <CL_Settings_PerfOverlay_Tip>Draw a small FPS/CPU/GPU/latency readout in the top-right corner, above every window and vignette.</CL_Settings_PerfOverlay_Tip>
+    <CL_Settings_RenderDiagnostics>Render diagnostics</CL_Settings_RenderDiagnostics>
+    <CL_Settings_RenderDiagnostics_Tip>Emit a once-per-second trace log of render-pipeline timings (call rate, cache hit rate, build/paint cost, event breakdown) on the Lightweave channel. While enabled, the global log level is lowered to Trace so the diagnostics are visible, and restored when disabled.</CL_Settings_RenderDiagnostics_Tip>
+</LanguageData>
