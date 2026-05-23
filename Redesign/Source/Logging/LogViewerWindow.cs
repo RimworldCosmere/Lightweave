@@ -65,9 +65,24 @@ internal sealed class LogViewerWindow : LightweaveWindow {
 
     protected override LightweaveNode Body() {
         Action invalidate = MakeInvalidate();
-        IReadOnlyList<LogEntry> snapshot = sink.Snapshot();
-        List<LogEntry> filtered = LogFilter.Apply(snapshot, state);
-        List<LogChannel> channels = LogFilter.BuildChannels(snapshot, state);
+
+        int sinkRev = sink.Revision;
+        int levelsSig = PackLevels(state.Levels);
+        bool dslOk = string.IsNullOrEmpty(state.DslSource) || state.DslError == null;
+        int expandedSig = SignExpandedChannels(state.ExpandedChannels);
+
+        IReadOnlyList<LogEntry> snapshot = Hooks.Hooks.UseMemo(
+            () => sink.Snapshot(),
+            new object[] { sinkRev }
+        );
+        List<LogEntry> filtered = Hooks.Hooks.UseMemo(
+            () => LogFilter.Apply(snapshot, state),
+            new object[] { sinkRev, state.ActiveChannel, levelsSig, state.DslSource, dslOk }
+        );
+        List<LogChannel> channels = Hooks.Hooks.UseMemo(
+            () => LogFilter.BuildChannels(snapshot, state),
+            new object[] { sinkRev, state.ChannelFilter, expandedSig }
+        );
 
         LightweaveNode listAndDetail = SplitPane.Create(
             first: BuildListColumn(filtered, invalidate),
@@ -92,6 +107,28 @@ internal sealed class LogViewerWindow : LightweaveWindow {
             minSecond: new Rem(24f),
             style: Fill
         );
+    }
+
+    private static int PackLevels(bool[] levels) {
+        int sig = 0;
+        for (int i = 0; i < levels.Length && i < 32; i++) {
+            if (levels[i]) {
+                sig |= (1 << i);
+            }
+        }
+        return sig;
+    }
+
+    private static int SignExpandedChannels(Dictionary<string, bool> map) {
+        int sig = map.Count;
+        foreach (KeyValuePair<string, bool> kvp in map) {
+            int h = kvp.Key.GetHashCode();
+            if (kvp.Value) {
+                h = ~h;
+            }
+            sig = sig * 31 + h;
+        }
+        return sig;
     }
 
     private static Style Fill => new Style { Width = Length.Stretch, Height = Length.Stretch };
