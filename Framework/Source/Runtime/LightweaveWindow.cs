@@ -508,6 +508,10 @@ public abstract class LightweaveWindow : Verse.Window {
     }
 
     private void UpdateCursor(Rect inRect) {
+        if (Event.current.type != EventType.Repaint) {
+            return;
+        }
+
         if (activeResize != ResizeEdge.None) {
             ApplyCursor(ResizeCursorFor(activeResize));
             return;

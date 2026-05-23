@@ -35,6 +35,14 @@ public static class MainMenuRedesignPatch {
             return false;
         }
 
+        WindowStack? stack = Find.WindowStack;
+        if (stack != null && Event.current != null) {
+            bool mouseEvent = Event.current.isMouse || Event.current.type == EventType.ScrollWheel;
+            if (mouseEvent && (stack.AnyWindowAbsorbingAllInput || stack.GetWindowAt(UI.MousePositionOnUIInverted) != null)) {
+                Event.current.Use();
+            }
+        }
+
         try {
             Rect screen = new Rect(0f, 0f, UI.screenWidth, UI.screenHeight);
             bool anyMapFiles = AnyMapFilesField?.GetValue(null) is bool b && b;
