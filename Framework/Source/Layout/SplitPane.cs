@@ -155,14 +155,16 @@ public static class SplitPane {
                 ? new Rect(rect.x, boundary - half, rect.width, thickness)
                 : new Rect(boundary - half, rect.y, thickness, rect.height);
 
+            float threadHalf = ThreadWidth.ToPixels() * 0.5f;
+
             if (first.IsInFlow()) {
                 first.MeasuredRect = isV
-                    ? new Rect(rect.x, rect.y, rect.width, Mathf.Max(0f, boundary - half - rect.y))
-                    : new Rect(rect.x, rect.y, Mathf.Max(0f, boundary - half - rect.x), rect.height);
+                    ? new Rect(rect.x, rect.y, rect.width, Mathf.Max(0f, boundary - threadHalf - rect.y))
+                    : new Rect(rect.x, rect.y, Mathf.Max(0f, boundary - threadHalf - rect.x), rect.height);
             }
 
             if (second.IsInFlow()) {
-                float start = boundary + half;
+                float start = boundary + threadHalf;
                 second.MeasuredRect = isV
                     ? new Rect(rect.x, start, rect.width, Mathf.Max(0f, extent - start))
                     : new Rect(start, rect.y, Mathf.Max(0f, extent - start), rect.height);
