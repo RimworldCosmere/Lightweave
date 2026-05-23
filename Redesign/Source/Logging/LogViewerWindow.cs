@@ -125,34 +125,29 @@ internal sealed class LogViewerWindow : LightweaveWindow {
                         (string)"CL_LogViewer_Title".Translate(),
                         style: new Style {
                             FontFamily = RenderContext.Current.Theme.GetFont(FontRole.Display),
-                            FontSize = new Rem(1.5f),
+                            FontSize = new Rem(1.75f),
                             TextColor = ThemeSlot.TextPrimary,
                             LetterSpacing = Tracking.Of(0.04f),
                         }
                     ));
 
-                    row.AddHug(Column.Create(
-                        justify: FlexJustify.Center,
-                        align: FlexAlign.Start,
-                        children: liveCell => liveCell.Add(HStack.Create(
-                            gap: new Rem(0.25f),
-                            children: live => {
-                                live.AddHug(PulseDot.Create(
-                                    color: ThemeSlot.StatusSuccess,
-                                    size: new Rem(0.4375f)
-                                ));
-                                live.AddHug(Text.Create(
-                                    (string)"CL_LogViewer_Tailing".Translate(),
-                                    style: new Style {
-                                        FontFamily = RenderContext.Current.Theme.GetFont(FontRole.Heading),
-                                        FontSize = new Rem(1f),
-                                        TextColor = ThemeSlot.StatusSuccess,
-                                        LetterSpacing = Tracking.Of(0.22f),
-                                        Padding = EdgeInsets.FromStart(new Rem(0.25f)),
-                                    }
-                                ));
-                            }
-                        ))
+                    row.AddHug(HStack.Create(
+                        gap: new Rem(0.375f),
+                        children: live => {
+                            live.AddHug(PulseDot.Create(
+                                color: ThemeSlot.StatusSuccess,
+                                size: new Rem(0.375f)
+                            ));
+                            live.AddHug(Text.Create(
+                                (string)"CL_LogViewer_Tailing".Translate(),
+                                style: new Style {
+                                    FontFamily = RenderContext.Current.Theme.GetFont(FontRole.Mono),
+                                    FontSize = new Rem(0.625f),
+                                    TextColor = ThemeSlot.StatusSuccess,
+                                    LetterSpacing = Tracking.Of(0.22f),
+                                }
+                            ));
+                        }
                     ));
 
                     row.AddFlex(Box.Create());
@@ -204,7 +199,7 @@ internal sealed class LogViewerWindow : LightweaveWindow {
                         Width = Length.Stretch,
                         Background = BackgroundSpec.Of(ThemeSlot.ShelfTint),
                         Border = new BorderSpec(Bottom: new Rem(1f / 16f), Color: ThemeSlot.BorderSubtle),
-                        Padding = EdgeInsets.FromStart(new Rem(0.875f)),
+                        Padding = EdgeInsets.Horizontal(new Rem(0.875f)),
                     }
                 ));
                 col.AddFlex(LwList.Create(
@@ -334,7 +329,7 @@ internal sealed class LogViewerWindow : LightweaveWindow {
                         Width = Length.Stretch,
                         Background = BackgroundSpec.Of(ThemeSlot.ShelfTint),
                         Border = new BorderSpec(Bottom: new Rem(1f / 16f), Color: ThemeSlot.BorderSubtle),
-                        Padding = EdgeInsets.FromStart(new Rem(0.875f)),
+                        Padding = EdgeInsets.Horizontal(new Rem(0.875f)),
                     }
                 ));
 
