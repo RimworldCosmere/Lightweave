@@ -16,6 +16,8 @@ public sealed class LightweaveLogSink : ILogSink {
     public string Name => "LightweaveLogSink";
     public LogLevel MinLevel { get; set; } = LogLevel.Trace;
 
+    public int Revision { get; private set; }
+
     public IReadOnlyList<LogEntry> Snapshot() {
         lock (syncRoot) {
             LogEntry[] snapshot = new LogEntry[count];
@@ -37,6 +39,7 @@ public sealed class LightweaveLogSink : ILogSink {
             if (count < ring.Length) {
                 count++;
             }
+            Revision++;
         }
         EntryAdded?.Invoke(entry);
     }
