@@ -113,6 +113,10 @@ public static class OptionsRoot {
     }
 
     private static LightweaveNode BuildContent(OptionsTab tab, Dialog_Options dialog) {
+        if (tab == OptionsTab.ModSettings) {
+            return ModSettingsTab.Build();
+        }
+
         LightweaveNode body = tab switch {
             OptionsTab.General => GeneralTab.Build(),
             OptionsTab.Graphics => GraphicsTab.Build(),
@@ -121,7 +125,6 @@ public static class OptionsRoot {
             OptionsTab.Interface => InterfaceTab.Build(),
             OptionsTab.Controls => ControlsTab.Build(),
             OptionsTab.Developer => DeveloperTab.Build(),
-            OptionsTab.ModSettings => ModSettingsTab.Build(),
             _ => GeneralTab.Build(),
         };
 

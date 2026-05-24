@@ -32,6 +32,10 @@
     <CL_Options_Section_Display_Modes>Display modes</CL_Options_Section_Display_Modes>
     <CL_Options_Section_Background>Background</CL_Options_Section_Background>
     <CL_Options_Section_ModSettings>Installed mods</CL_Options_Section_ModSettings>
+    <CL_ModSettings_SearchPlaceholder>Search mods</CL_ModSettings_SearchPlaceholder>
+    <CL_ModSettings_NoMatches>No matching mods.</CL_ModSettings_NoMatches>
+    <CL_ModSettings_NoSelection>Select a mod from the list to edit its settings.</CL_ModSettings_NoSelection>
+    <CL_ModSettings_PopOut>Pop out to full window</CL_ModSettings_PopOut>
     <CL_Options_Section_Developer>Developer</CL_Options_Section_Developer>
     <CL_Options_Section_Files>Files</CL_Options_Section_Files>
     <CL_Options_Section_Reset>Reset</CL_Options_Section_Reset>

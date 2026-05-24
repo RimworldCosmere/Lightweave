@@ -19,7 +19,7 @@ public static class LightweaveRedesignSettingsForm {
         LightweaveRoot.Render(inRect, RootId, Build);
     }
 
-    private static LightweaveNode Build() {
+    public static LightweaveNode Build() {
         LightweaveRedesignSettings settings = LightweaveRedesignMod.Settings;
 
         return Stack.Create(

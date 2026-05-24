@@ -22,7 +22,7 @@ public static class LightweaveSettingsForm {
         LightweaveRoot.Render(inRect, RootId, Build);
     }
 
-    private static LightweaveNode Build() {
+    public static LightweaveNode Build() {
         LightweaveSettings settings = LightweaveMod.Settings;
 
         return Stack.Create(
