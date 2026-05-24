@@ -35,8 +35,7 @@ public static class SaveDetailPane {
         return Box.Create(
             children: c => c.Add(Stack.Create(SpacingScale.Md, s => {
                 s.AddFlex(ScrollArea.Create(
-                    content: BuildBody(status),
-                    showScrollbar: true
+                    content: BuildBody(status)
                 ));
                 s.Add(BuildActionBar(file, onClose, onAfterDelete));
             })),

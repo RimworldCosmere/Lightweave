@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Cosmere.Lightweave.Doc;
 using Cosmere.Lightweave.Runtime;
@@ -21,12 +22,14 @@ public static class ScrollArea {
         LightweaveNode content,
         [DocParam("Optional reset key. When changed, scroll position resets.", TypeOverride = "object?", DefaultOverride = "null")]
         object? resetKey = null,
-        [DocParam("Show the vertical scrollbar gutter.")]
-        bool showScrollbar = true,
-        [DocParam("Scrollbar visibility mode. Auto: hidden until scroll/hover; Always: visible; Never: hidden.")]
-        ScrollbarMode scrollbarMode = ScrollbarMode.Auto,
-        [DocParam("Scrollbar visual style. Slim: thin overlay; Standard: full-width with arrows; Minimal: thinnest, no track.")]
-        ScrollbarStyle scrollbarStyle = ScrollbarStyle.Slim,
+        [DocParam("Visual variant. Slim (default): always-visible accent rail. Auto: rail fades in on hover/scroll. Bare: no rail, top/bottom mask fades. Ticks: rail with clickable section markers. Progress: single growing accent bar.")]
+        ScrollAreaVariant variant = ScrollAreaVariant.Slim,
+        [DocParam("Tone of the rail/thumb. Accent (default) uses the surface accent color; Neutral uses a muted text color.")]
+        ScrollAreaTone tone = ScrollAreaTone.Accent,
+        [DocParam("Draw a 14px gradient at the top/bottom edges of the viewport when content overflows in that direction. Subtle hint of scrollability.")]
+        bool edge = false,
+        [DocParam("Sections used by the Ticks variant. Each section is rendered as a clickable tick marker at its Pct position (0..1).", TypeOverride = "IReadOnlyList<ScrollAreaSection>?", DefaultOverride = "null")]
+        IReadOnlyList<ScrollAreaSection>? sections = null,
         [DocParam("Inline style override.", TypeOverride = "Style?", DefaultOverride = "null")]
         Style? style = null,
         [DocParam("Additional class names merged after the base 'scroll-area' class.", TypeOverride = "string[]?", DefaultOverride = "null")]
@@ -45,8 +48,7 @@ public static class ScrollArea {
             lastResetKey.Current = resetKey;
         }
 
-        ScrollbarMode effectiveMode = showScrollbar ? scrollbarMode : ScrollbarMode.Never;
-        LightweaveNode node = BuildScrollArea(content, statusRef.Current, effectiveMode, scrollbarStyle, line, file);
+        LightweaveNode node = BuildScrollArea(content, statusRef.Current, variant, tone, edge, sections, line, file);
         node.ApplyStyling("scroll-area", style, classes, id);
         return node;
     }
@@ -54,17 +56,17 @@ public static class ScrollArea {
     public static LightweaveNode External(
         LightweaveNode content,
         LightweaveScrollStatus status,
-        bool showScrollbar = true,
-        ScrollbarMode scrollbarMode = ScrollbarMode.Auto,
-        ScrollbarStyle scrollbarStyle = ScrollbarStyle.Slim,
+        ScrollAreaVariant variant = ScrollAreaVariant.Slim,
+        ScrollAreaTone tone = ScrollAreaTone.Accent,
+        bool edge = false,
+        IReadOnlyList<ScrollAreaSection>? sections = null,
         Style? style = null,
         string[]? classes = null,
         string? id = null,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = ""
     ) {
-        ScrollbarMode effectiveMode = showScrollbar ? scrollbarMode : ScrollbarMode.Never;
-        LightweaveNode node = BuildScrollArea(content, status, effectiveMode, scrollbarStyle, line, file);
+        LightweaveNode node = BuildScrollArea(content, status, variant, tone, edge, sections, line, file);
         node.ApplyStyling("scroll-area", style, classes, id);
         return node;
     }
@@ -72,21 +74,23 @@ public static class ScrollArea {
     private static LightweaveNode BuildScrollArea(
         LightweaveNode content,
         LightweaveScrollStatus status,
-        ScrollbarMode mode,
-        ScrollbarStyle style,
+        ScrollAreaVariant variant,
+        ScrollAreaTone tone,
+        bool edge,
+        IReadOnlyList<ScrollAreaSection>? sections,
         int line,
         string file
     ) {
         LightweaveNode node = NodeBuilder.New("ScrollArea", line, file);
         node.Children.Add(content);
         node.Paint = (rect, paintChildren) => {
-            float scrollbarGutter = LightweaveScrollView.GutterPixels(status.VerticalVisible, mode, style);
+            float scrollbarGutter = LightweaveScrollView.GutterPixels(status.VerticalVisible, variant);
             float innerWidth = rect.width - scrollbarGutter;
             float contentHeight = content.IsInFlow()
                 ? content.Measure?.Invoke(innerWidth) ?? content.PreferredHeight ?? rect.height
                 : rect.height;
             status.Height = contentHeight;
-            using (new LightweaveScrollView(rect, status, mode, style)) {
+            using (new LightweaveScrollView(rect, status, variant, tone, edge, sections)) {
                 if (content.IsInFlow()) {
                     content.MeasuredRect = new Rect(0f, 0f, innerWidth, contentHeight);
                 }
@@ -107,48 +111,68 @@ public static class ScrollArea {
         );
     }
 
-    [DocVariant("CL_Playground_ScrollArea_AutoSlim")]
-    public static DocSample DocsAutoSlim() {
+    [DocVariant("CL_Playground_ScrollArea_Slim")]
+    public static DocSample DocsSlim() {
         return new DocSample(() =>
             ScrollArea.Create(DocsRows(20))
         );
     }
 
-    [DocVariant("CL_Playground_ScrollArea_AutoMinimal")]
-    public static DocSample DocsAutoMinimal() {
+    [DocVariant("CL_Playground_ScrollArea_Auto")]
+    public static DocSample DocsAuto() {
         return new DocSample(() =>
-            ScrollArea.Create(DocsRows(20), scrollbarStyle: ScrollbarStyle.Minimal)
+            ScrollArea.Create(DocsRows(20), variant: ScrollAreaVariant.Auto)
         );
     }
 
-    [DocVariant("CL_Playground_ScrollArea_AlwaysSlim")]
-    public static DocSample DocsAlwaysSlim() {
+    [DocVariant("CL_Playground_ScrollArea_Bare")]
+    public static DocSample DocsBare() {
         return new DocSample(() =>
-            ScrollArea.Create(DocsRows(20), scrollbarMode: ScrollbarMode.Always)
+            ScrollArea.Create(DocsRows(20), variant: ScrollAreaVariant.Bare)
         );
     }
 
-    [DocVariant("CL_Playground_ScrollArea_AlwaysStandard")]
-    public static DocSample DocsAlwaysStandard() {
+    [DocVariant("CL_Playground_ScrollArea_Ticks")]
+    public static DocSample DocsTicks() {
         return new DocSample(() =>
             ScrollArea.Create(
                 DocsRows(20),
-                scrollbarMode: ScrollbarMode.Always,
-                scrollbarStyle: ScrollbarStyle.Standard
+                variant: ScrollAreaVariant.Ticks,
+                sections: new[] {
+                    new ScrollAreaSection("display", "DISPLAY", 0.05f),
+                    new ScrollAreaSection("audio", "AUDIO", 0.25f),
+                    new ScrollAreaSection("input", "INPUT", 0.5f),
+                    new ScrollAreaSection("gameplay", "GAMEPLAY", 0.75f),
+                    new ScrollAreaSection("network", "NETWORK", 0.95f),
+                }
             )
         );
     }
 
-    [DocVariant("CL_Playground_ScrollArea_NoBar")]
-    public static DocSample DocsNoBar() {
+    [DocVariant("CL_Playground_ScrollArea_Progress")]
+    public static DocSample DocsProgress() {
         return new DocSample(() =>
-            ScrollArea.Create(DocsRows(20), showScrollbar: false)
+            ScrollArea.Create(DocsRows(20), variant: ScrollAreaVariant.Progress)
+        );
+    }
+
+    [DocVariant("CL_Playground_ScrollArea_Edge")]
+    public static DocSample DocsEdge() {
+        return new DocSample(() =>
+            ScrollArea.Create(DocsRows(20), variant: ScrollAreaVariant.Slim, edge: true)
+        );
+    }
+
+    [DocVariant("CL_Playground_ScrollArea_Neutral")]
+    public static DocSample DocsNeutral() {
+        return new DocSample(() =>
+            ScrollArea.Create(DocsRows(20), tone: ScrollAreaTone.Neutral)
         );
     }
 
     [DocUsage]
     public static DocSample DocsUsage() {
-        return new DocSample(() => 
+        return new DocSample(() =>
             ScrollArea.Create(DocsRows(8))
         );
     }

@@ -347,11 +347,13 @@
     <CL_Playground_scrollarea_Title>ScrollArea</CL_Playground_scrollarea_Title>
     <CL_Playground_scrollarea_What>Wraps content taller than its rect in a vertical scroll view.</CL_Playground_scrollarea_What>
     <CL_Playground_scrollarea_When>Use when content height exceeds the available space. Wrap a Stack to scroll the whole body.</CL_Playground_scrollarea_When>
-    <CL_Playground_ScrollArea_AutoSlim>Auto + slim (default)</CL_Playground_ScrollArea_AutoSlim>
-    <CL_Playground_ScrollArea_AutoMinimal>Auto + minimal</CL_Playground_ScrollArea_AutoMinimal>
-    <CL_Playground_ScrollArea_AlwaysSlim>Always + slim</CL_Playground_ScrollArea_AlwaysSlim>
-    <CL_Playground_ScrollArea_AlwaysStandard>Always + standard</CL_Playground_ScrollArea_AlwaysStandard>
-    <CL_Playground_ScrollArea_NoBar>No scrollbar</CL_Playground_ScrollArea_NoBar>
+    <CL_Playground_ScrollArea_Slim>Slim (default) - always-visible accent rail</CL_Playground_ScrollArea_Slim>
+    <CL_Playground_ScrollArea_Auto>Auto - rail fades in on hover or while scrolling</CL_Playground_ScrollArea_Auto>
+    <CL_Playground_ScrollArea_Bare>Bare - no rail, top/bottom mask fades hint at more content</CL_Playground_ScrollArea_Bare>
+    <CL_Playground_ScrollArea_Ticks>Ticks - hairline rail with clickable section markers</CL_Playground_ScrollArea_Ticks>
+    <CL_Playground_ScrollArea_Progress>Progress - 2px accent bar grows from top as you scroll</CL_Playground_ScrollArea_Progress>
+    <CL_Playground_ScrollArea_Edge>Slim + edge fades</CL_Playground_ScrollArea_Edge>
+    <CL_Playground_ScrollArea_Neutral>Slim + neutral tone (no accent)</CL_Playground_ScrollArea_Neutral>
     <CL_Playground_divider_Title>Divider</CL_Playground_divider_Title>
     <CL_Playground_divider_What>A thin horizontal or vertical rule in the theme's subtle border color.</CL_Playground_divider_What>
     <CL_Playground_divider_When>Use between logical sections that share a surface. Skip it when a gap already separates them.</CL_Playground_divider_When>

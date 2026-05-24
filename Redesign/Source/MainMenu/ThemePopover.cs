@@ -35,7 +35,7 @@ public static class ThemePopover {
         else {
             listOrEmpty = ScrollArea.Create(
                 BuildList(all, activeId, onDismiss),
-                scrollbarMode: ScrollbarMode.Auto
+                variant: ScrollAreaVariant.Auto
             );
         }
 

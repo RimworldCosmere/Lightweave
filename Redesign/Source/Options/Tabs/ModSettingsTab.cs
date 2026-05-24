@@ -105,8 +105,7 @@ public static class ModSettingsTab {
                     placeholder: "CL_ModSettings_SearchPlaceholder".Translate()
                 ));
                 s.AddFlex(ScrollArea.Create(
-                    content: BuildMasterList(filtered, selectedKey),
-                    showScrollbar: true
+                    content: BuildMasterList(filtered, selectedKey)
                 ));
             },
             style: new Style { Width = Length.Stretch, Height = Length.Stretch }
@@ -229,7 +228,6 @@ public static class ModSettingsTab {
         if (IsOwnFrameworkMod(mod)) {
             return ScrollArea.Create(
                 content: LightweaveSettingsForm.Build(),
-                showScrollbar: true,
                 style: new Style { Width = Length.Stretch, Height = Length.Stretch }
             );
         }
@@ -237,7 +235,6 @@ public static class ModSettingsTab {
         if (IsOwnRedesignMod(mod)) {
             return ScrollArea.Create(
                 content: LightweaveRedesignSettingsForm.Build(),
-                showScrollbar: true,
                 style: new Style { Width = Length.Stretch, Height = Length.Stretch }
             );
         }
@@ -270,7 +267,6 @@ public static class ModSettingsTab {
                         },
                         height: new Rem(40f)
                     ),
-                    showScrollbar: true,
                     style: new Style { Width = Length.Stretch, Height = Length.Stretch }
                 ));
             },
