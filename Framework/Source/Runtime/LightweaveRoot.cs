@@ -21,61 +21,6 @@ public static class LightweaveRoot {
     }
 
     public static bool DiagnosticsEnabled => LightweaveMod.Settings?.RenderDiagnostics ?? false;
-    private static readonly int[] diagEventCounts = new int[16];
-    private static int diagBuildHits;
-    private static int diagBuildMisses;
-    private static long diagTotalRenderTicks;
-    private static long diagBuildTicks;
-    private static long diagPaintTicks;
-    private static float diagNextReportTime = -1f;
-
-    private static int missAnimating;
-    private static int missVersionBumped;
-    private static int missRectChanged;
-    private static int missNoCache;
-    private static int missLastVersionDelta;
-    private static EventType missLastEvent;
-
-    private static void DiagReport() {
-        float msPerTick = 1000f / System.Diagnostics.Stopwatch.Frequency;
-        int totalCalls = diagBuildHits + diagBuildMisses;
-        if (totalCalls == 0) {
-            return;
-        }
-        float hitRate = totalCalls > 0 ? (diagBuildHits * 100f / totalCalls) : 0f;
-        double totalMs = diagTotalRenderTicks * msPerTick;
-        double buildMs = diagBuildTicks * msPerTick;
-        double paintMs = diagPaintTicks * msPerTick;
-        double perCallMs = totalMs / totalCalls;
-        string evtBreakdown = "";
-        for (int i = 0; i < diagEventCounts.Length; i++) {
-            if (diagEventCounts[i] > 0) {
-                evtBreakdown += $" {((EventType)i).ToString()}={diagEventCounts[i]}";
-            }
-        }
-        string missBreakdown = "";
-        if (diagBuildMisses > 0) {
-            missBreakdown = $" misses[anim={missAnimating},ver={missVersionBumped},rect={missRectChanged},new={missNoCache},lastDelta={missLastVersionDelta},lastEvt={missLastEvent}]";
-        }
-        LightweaveLog.Trace(
-            LightweaveLog.DiagnosticsChannel,
-            $"{totalCalls} calls/s ({hitRate:0.0}% cache hit) "
-            + $"total={totalMs:0.0}ms build={buildMs:0.0}ms paint={paintMs:0.0}ms "
-            + $"perCall={perCallMs:0.00}ms events:{evtBreakdown}{missBreakdown}"
-        );
-        for (int i = 0; i < diagEventCounts.Length; i++) {
-            diagEventCounts[i] = 0;
-        }
-        diagBuildHits = 0;
-        diagBuildMisses = 0;
-        diagTotalRenderTicks = 0;
-        diagBuildTicks = 0;
-        diagPaintTicks = 0;
-        missAnimating = 0;
-        missVersionBumped = 0;
-        missRectChanged = 0;
-        missNoCache = 0;
-    }
 
     public static void Render(
         Rect inRect,
@@ -89,10 +34,7 @@ public static class LightweaveRoot {
         long renderStart = DiagnosticsEnabled ? System.Diagnostics.Stopwatch.GetTimestamp() : 0L;
         if (DiagnosticsEnabled) {
             EventType evt = Event.current?.type ?? EventType.Used;
-            int evtIdx = (int)evt;
-            if (evtIdx >= 0 && evtIdx < diagEventCounts.Length) {
-                diagEventCounts[evtIdx]++;
-            }
+            Cryptiklemur.RimObs.Api.Obs.Metrics.Add(LightweaveTelemetry.RenderCalls, 1L, "event", evt.ToString());
         }
 
         if (!stores.TryGetValue(rootId, out HookStore store)) {
@@ -123,25 +65,22 @@ public static class LightweaveRoot {
                     && (!animating || cached.FrameCount == frame)) {
                     root = cached.Root;
                     if (DiagnosticsEnabled) {
-                        diagBuildHits++;
+                        Cryptiklemur.RimObs.Api.Obs.Metrics.Add(LightweaveTelemetry.RenderBuildHits, 1L);
                     }
                 }
                 else {
-                    if (DiagnosticsEnabled) {
-                        if (!hasCached) {
-                            missNoCache++;
-                        }
-                        else if (cached.HookVersion != version) {
-                            missVersionBumped++;
-                            missLastVersionDelta = version - cached.HookVersion;
-                            missLastEvent = Event.current?.type ?? EventType.Used;
-                        }
-                        else if (cached.InRect != inRect) {
-                            missRectChanged++;
-                        }
-                        else {
-                            missAnimating++;
-                        }
+                    string missReason;
+                    if (!hasCached) {
+                        missReason = "new";
+                    }
+                    else if (cached.HookVersion != version) {
+                        missReason = "version";
+                    }
+                    else if (cached.InRect != inRect) {
+                        missReason = "rect";
+                    }
+                    else {
+                        missReason = "animating";
                     }
                     root = build();
                     didBuild = true;
@@ -152,11 +91,11 @@ public static class LightweaveRoot {
                         Root = root,
                     };
                     if (DiagnosticsEnabled) {
-                        diagBuildMisses++;
+                        Cryptiklemur.RimObs.Api.Obs.Metrics.Add(LightweaveTelemetry.RenderBuildMisses, 1L, "reason", missReason);
                     }
                 }
                 if (DiagnosticsEnabled) {
-                    diagBuildTicks += System.Diagnostics.Stopwatch.GetTimestamp() - buildStart;
+                    Cryptiklemur.RimObs.Api.Obs.Metrics.Observe(LightweaveTelemetry.RenderBuildTicks, System.Diagnostics.Stopwatch.GetTimestamp() - buildStart);
                 }
                 root.MeasuredRect = inRect;
                 root.ContentRect = inRect;
@@ -165,7 +104,7 @@ public static class LightweaveRoot {
                     long paintStart = DiagnosticsEnabled ? System.Diagnostics.Stopwatch.GetTimestamp() : 0L;
                     Paint(root);
                     if (DiagnosticsEnabled) {
-                        diagPaintTicks += System.Diagnostics.Stopwatch.GetTimestamp() - paintStart;
+                        Cryptiklemur.RimObs.Api.Obs.Metrics.Observe(LightweaveTelemetry.RenderPaintTicks, System.Diagnostics.Stopwatch.GetTimestamp() - paintStart);
                     }
                     afterContent?.Invoke();
                     ctx.FlushHotkeys();
@@ -183,15 +122,7 @@ public static class LightweaveRoot {
         finally {
             RenderContext.Clear();
             if (DiagnosticsEnabled) {
-                diagTotalRenderTicks += System.Diagnostics.Stopwatch.GetTimestamp() - renderStart;
-                float now = Time.realtimeSinceStartup;
-                if (diagNextReportTime < 0f) {
-                    diagNextReportTime = now + 1f;
-                }
-                else if (now >= diagNextReportTime) {
-                    DiagReport();
-                    diagNextReportTime = now + 1f;
-                }
+                Cryptiklemur.RimObs.Api.Obs.Metrics.Observe(LightweaveTelemetry.RenderTotalTicks, System.Diagnostics.Stopwatch.GetTimestamp() - renderStart);
             }
         }
     }
