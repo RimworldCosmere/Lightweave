@@ -136,7 +136,7 @@ public static class OptionsRoot {
         );
 
         return Box.Create(
-            children: c => c.Add(ScrollArea.Create(content: paddedBody, showScrollbar: true)),
+            children: c => c.Add(ScrollArea.Create(content: paddedBody)),
             style: new Style {
                 Padding = EdgeInsets.All(SpacingScale.Lg),
             }

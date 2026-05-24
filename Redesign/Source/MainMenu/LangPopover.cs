@@ -45,7 +45,7 @@ public static class LangPopover {
         else {
             listOrEmpty = ScrollArea.Create(
                 BuildList(filtered, active, onDismiss),
-                scrollbarMode: ScrollbarMode.Auto
+                variant: ScrollAreaVariant.Auto
             );
         }
 

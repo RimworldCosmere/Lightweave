@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using Cosmere.Lightweave.Layout;
+using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
 using UnityEngine;
@@ -22,92 +25,84 @@ public sealed class LightweaveScrollStatus {
     public float LastObservedPositionY;
 }
 
-public readonly record struct LightweaveScrollView : IDisposable {
-    private const float StandardWidth = 10f;
-    private const float SlimWidth = 6f;
-    private const float MinimalWidth = 4f;
-
-    private const float ScrollbarRightGap = 0f;
+public struct LightweaveScrollView : IDisposable {
+    private const float SlimRailWidth = 4f;
+    private const float TicksHitWidth = 12f;
+    private const float TicksHairlineRightInset = 4f;
+    private const float TickMarkerLength = 8f;
+    private const float TickMarkerHoverLength = 10f;
+    private const float TickHitHeight = 12f;
+    private const float ProgressRailWidth = 2f;
+    private const float EdgeFadeHeight = 14f;
+    private const float BareMaskHeight = 26f;
     private const float MinThumbHeight = 24f;
-    private const float ArrowSize = 18f;
-    private const float BarGapFromArrow = 2f;
-    private const float ThumbHorizontalPadding = 2f;
-    private const float ArrowStepPixels = 40f;
-    private const float ArrowRepeatInitialDelay = 0.35f;
-    private const float ArrowRepeatInterval = 0.04f;
 
     private const float RevealAfterScrollDuration = 0.5f;
     private const float RevealAfterMouseEnterDuration = 0.8f;
     private const float RevealFadeOutDuration = 0.2f;
 
-    private static float ScrollbarLeftGap => new Rem(1f).ToPixels();
-    private static float ArrowOuterPadding => new Rem(0.5f).ToPixels();
-    private static float ArrowInnerPadding => new Rem(0.25f).ToPixels();
-    private const float ArrowSidePadding = 1f;
+    private static float RailLeftGap => new Rem(0.5f).ToPixels();
+    private static float RailRightInset => new Rem(0.125f).ToPixels();
 
     [ThreadStatic] private static float _pendingWheelDeltaY;
     [ThreadStatic] private static bool _pendingWheel;
 
-    public static float WidthFor(ScrollbarStyle style) {
-        switch (style) {
-            case ScrollbarStyle.Slim:
-                return SlimWidth;
-            case ScrollbarStyle.Minimal:
-                return MinimalWidth;
-            case ScrollbarStyle.Standard:
-            default:
-                return StandardWidth;
-        }
+    public static float WidthFor(ScrollAreaVariant variant) {
+        return variant switch {
+            ScrollAreaVariant.Slim => SlimRailWidth,
+            ScrollAreaVariant.Auto => SlimRailWidth,
+            ScrollAreaVariant.Bare => 0f,
+            ScrollAreaVariant.Ticks => TicksHitWidth,
+            ScrollAreaVariant.Progress => ProgressRailWidth,
+            _ => SlimRailWidth,
+        };
     }
 
-
-    private static float ScrollbarRightInsetFor(ScrollbarMode mode) {
-        return mode == ScrollbarMode.Auto ? new Rem(0.375f).ToPixels() : ScrollbarRightGap;
-    }
-
-    public const float ContentRightPadding = 10f;
-
-    public static float GutterPixels(bool verticalVisible, ScrollbarMode mode, ScrollbarStyle style) {
-        if (!verticalVisible || mode == ScrollbarMode.Never) {
+    public static float GutterPixels(bool verticalVisible, ScrollAreaVariant variant) {
+        if (!verticalVisible || variant == ScrollAreaVariant.Bare) {
             return 0f;
         }
 
-        if (mode == ScrollbarMode.Auto) {
-            return ScrollbarLeftGap + ContentRightPadding;
-        }
-
-        return ScrollbarLeftGap + WidthFor(style) + ScrollbarRightGap + ContentRightPadding;
+        return WidthFor(variant) + RailLeftGap;
     }
 
     public static float GutterPixels(bool verticalVisible) {
-        return GutterPixels(verticalVisible, ScrollbarMode.Always, ScrollbarStyle.Standard);
+        return GutterPixels(verticalVisible, ScrollAreaVariant.Slim);
     }
+
+    public const float ContentRightPadding = 10f;
 
     private readonly Rect outRect;
     private readonly float viewHeight;
     private readonly float contentHeight;
     private readonly LightweaveScrollStatus status;
-    private readonly ScrollbarMode mode;
-    private readonly ScrollbarStyle style;
+    private readonly ScrollAreaVariant variant;
+    private readonly ScrollAreaTone tone;
+    private readonly bool edge;
+    private readonly IReadOnlyList<ScrollAreaSection>? sections;
 
-    public readonly Rect rect;
+    private readonly Rect rect;
 
     public LightweaveScrollView(
         Rect outRect,
         LightweaveScrollStatus status,
-        ScrollbarMode mode = ScrollbarMode.Auto,
-        ScrollbarStyle style = ScrollbarStyle.Slim
+        ScrollAreaVariant variant = ScrollAreaVariant.Slim,
+        ScrollAreaTone tone = ScrollAreaTone.Accent,
+        bool edge = false,
+        IReadOnlyList<ScrollAreaSection>? sections = null
     ) {
         this.outRect = outRect;
         this.status = status;
-        this.mode = mode;
-        this.style = style;
+        this.variant = variant;
+        this.tone = tone;
+        this.edge = edge;
+        this.sections = sections;
 
         float declared = Math.Max(status.Height, outRect.height);
         bool overflows = declared - 0.1f >= outRect.height;
         status.VerticalVisible = overflows;
 
-        float gutter = GutterPixels(status.VerticalVisible, mode, style);
+        float gutter = GutterPixels(status.VerticalVisible, variant);
         contentHeight = declared;
         viewHeight = outRect.height;
         rect = new Rect(0f, 0f, outRect.width - gutter, declared);
@@ -128,15 +123,11 @@ public readonly record struct LightweaveScrollView : IDisposable {
         Widgets.BeginScrollView(outRect, ref status.Position, rect, false);
     }
 
-    public LightweaveScrollView(Rect outRect, LightweaveScrollStatus status, bool showScrollbar)
-        : this(outRect, status, showScrollbar ? ScrollbarMode.Auto : ScrollbarMode.Never, ScrollbarStyle.Slim) {
-    }
+    public float Height => contentHeight;
 
-    public ref float Height => ref status.Height;
-
-    public bool CanCull(float entryHeight, float entryY) {
-        return entryY + entryHeight < status.Position.y ||
-               entryY > status.Position.y + viewHeight;
+    public bool CanCull(Rect itemRect) {
+        return itemRect.yMax < status.Position.y
+            || itemRect.y > status.Position.y + viewHeight;
     }
 
     public void Dispose() {
@@ -155,17 +146,39 @@ public readonly record struct LightweaveScrollView : IDisposable {
             _pendingWheelDeltaY = 0f;
         }
 
-        if (!status.VerticalVisible || mode == ScrollbarMode.Never) {
+        if (!status.VerticalVisible) {
             return;
         }
 
         UpdateMouseHoverState();
+
+        if (variant == ScrollAreaVariant.Bare) {
+            PaintBareMasks();
+            return;
+        }
+
+        if (edge) {
+            PaintEdgeFades();
+        }
+
         float alpha = ComputeRevealAlpha();
         if (alpha <= 0.001f) {
             return;
         }
 
-        PaintScrollbar(alpha);
+        switch (variant) {
+            case ScrollAreaVariant.Progress:
+                PaintProgressRail(alpha);
+                break;
+            case ScrollAreaVariant.Ticks:
+                PaintTicksRail(alpha);
+                break;
+            case ScrollAreaVariant.Slim:
+            case ScrollAreaVariant.Auto:
+            default:
+                PaintSlimRail(alpha);
+                break;
+        }
     }
 
     private void UpdateMouseHoverState() {
@@ -182,22 +195,17 @@ public readonly record struct LightweaveScrollView : IDisposable {
     }
 
     private float ComputeRevealAlpha() {
-        if (mode == ScrollbarMode.Always) {
+        if (variant != ScrollAreaVariant.Auto) {
             return 1f;
-        }
-
-        if (mode == ScrollbarMode.Never) {
-            return 0f;
         }
 
         if (status.Dragging || status.ArrowHeld != 0) {
             return 1f;
         }
 
-        float width = WidthFor(style);
-        float rightInset = ScrollbarRightInsetFor(mode);
+        float width = WidthFor(variant);
         Rect scrollbarZone = new Rect(
-            outRect.xMax - width - rightInset,
+            outRect.xMax - width - RailRightInset,
             outRect.y,
             width,
             outRect.height
@@ -231,24 +239,18 @@ public readonly record struct LightweaveScrollView : IDisposable {
         return 0f;
     }
 
-    private void PaintScrollbar(float alpha) {
+    private ThemeSlot ThumbSlot() {
+        return tone == ScrollAreaTone.Neutral ? ThemeSlot.TextMuted : ThemeSlot.SurfaceAccent;
+    }
+
+    private void PaintSlimRail(float alpha) {
         Theme.Theme theme = RenderContext.Current.Theme;
         Event e = Event.current;
 
-        float width = WidthFor(style);
-        bool showArrows = style == ScrollbarStyle.Standard;
-        bool showTrackBg = style != ScrollbarStyle.Minimal;
-
-        float rightInset = ScrollbarRightInsetFor(mode);
-        float trackX = outRect.xMax - width - rightInset;
-
-        Rect upArrow = new Rect(trackX, outRect.y, width, ArrowSize);
-        Rect downArrow = new Rect(trackX, outRect.yMax - ArrowSize, width, ArrowSize);
-
-        float overlayMargin = mode == ScrollbarMode.Auto ? new Rem(0.125f).ToPixels() : 0f;
-        float trackY = showArrows ? upArrow.yMax + BarGapFromArrow : outRect.y + overlayMargin;
-        float trackBottom = showArrows ? downArrow.y - BarGapFromArrow : outRect.yMax - overlayMargin;
-        float trackHeight = Mathf.Max(0f, trackBottom - trackY);
+        float width = SlimRailWidth;
+        float trackX = outRect.xMax - width - RailRightInset;
+        float trackY = outRect.y + new Rem(0.125f).ToPixels();
+        float trackHeight = Mathf.Max(0f, outRect.height - new Rem(0.25f).ToPixels());
         Rect trackRect = new Rect(trackX, trackY, width, trackHeight);
 
         float scrollRange = Mathf.Max(0f, contentHeight - viewHeight);
@@ -258,11 +260,10 @@ public readonly record struct LightweaveScrollView : IDisposable {
         thumbHeight = Mathf.Min(thumbHeight, trackRect.height);
         float trackRange = Mathf.Max(0f, trackRect.height - thumbHeight);
         float scrollNorm = scrollRange > 0f ? Mathf.Clamp01(status.Position.y / scrollRange) : 0f;
-        float thumbInset = style == ScrollbarStyle.Standard ? ThumbHorizontalPadding : 0f;
         Rect thumbRect = new Rect(
-            trackRect.x + thumbInset,
+            trackRect.x,
             trackRect.y + trackRange * scrollNorm,
-            trackRect.width - thumbInset * 2f,
+            trackRect.width,
             thumbHeight
         );
 
@@ -272,34 +273,23 @@ public readonly record struct LightweaveScrollView : IDisposable {
         Color saved = GUI.color;
         float pillRadius = width * 0.5f;
 
-        if (showTrackBg) {
-            Rect columnRect = showArrows
-                ? new Rect(trackX, outRect.y, width, outRect.height)
-                : trackRect;
-            Color bgColor = theme.GetColor(ThemeSlot.SurfaceSunken);
-            bgColor.a *= 0.35f * alpha;
-            GUI.DrawTexture(
-                columnRect,
-                Texture2D.whiteTexture,
-                ScaleMode.StretchToFill,
-                true,
-                0f,
-                bgColor,
-                Vector4.zero,
-                new Vector4(pillRadius, pillRadius, pillRadius, pillRadius)
-            );
-        }
+        Color trackColor = theme.GetColor(ThemeSlot.ShelfTint);
+        trackColor.a *= 0.7f * alpha;
+        GUI.DrawTexture(
+            trackRect,
+            Texture2D.whiteTexture,
+            ScaleMode.StretchToFill,
+            true,
+            0f,
+            trackColor,
+            Vector4.zero,
+            new Vector4(pillRadius, pillRadius, pillRadius, pillRadius)
+        );
 
-        ThemeSlot thumbSlot = active
-            ? ThemeSlot.BorderFocus
-            : hovering
-                ? ThemeSlot.BorderHover
-                : ThemeSlot.BorderDefault;
-        Color thumbColor = theme.GetColor(thumbSlot);
+        Color thumbColor = theme.GetColor(ThumbSlot());
         if (!active && !hovering) {
-            thumbColor.a *= 0.85f;
+            thumbColor.a *= 0.9f;
         }
-
         thumbColor.a *= alpha;
 
         GUI.DrawTexture(
@@ -313,134 +303,179 @@ public readonly record struct LightweaveScrollView : IDisposable {
             new Vector4(pillRadius, pillRadius, pillRadius, pillRadius)
         );
 
-        if (showArrows) {
-            PaintArrow(upArrow, true, theme, e, alpha);
-            PaintArrow(downArrow, false, theme, e, alpha);
+        GUI.color = saved;
+
+        HandleThumbDrag(e, trackRect, thumbRect, scrollRange, trackRange);
+    }
+
+    private void PaintProgressRail(float alpha) {
+        Theme.Theme theme = RenderContext.Current.Theme;
+
+        float width = ProgressRailWidth;
+        float trackX = outRect.xMax - width - RailRightInset;
+        float trackY = outRect.y;
+        float trackHeight = outRect.height;
+
+        float scrollRange = Mathf.Max(0f, contentHeight - viewHeight);
+        float scrollNorm = scrollRange > 0f ? Mathf.Clamp01(status.Position.y / scrollRange) : 0f;
+        float fillHeight = trackHeight * scrollNorm;
+        Rect fillRect = new Rect(trackX, trackY, width, fillHeight);
+
+        Color saved = GUI.color;
+        Color fillColor = theme.GetColor(ThumbSlot());
+        fillColor.a *= alpha;
+        GUI.color = fillColor;
+        GUI.DrawTexture(fillRect, Texture2D.whiteTexture);
+        GUI.color = saved;
+    }
+
+    private void PaintTicksRail(float alpha) {
+        Theme.Theme theme = RenderContext.Current.Theme;
+        Event e = Event.current;
+
+        float hitWidth = TicksHitWidth;
+        float hitX = outRect.xMax - hitWidth - RailRightInset;
+
+        float hairlineX = outRect.xMax - TicksHairlineRightInset - RailRightInset;
+        Rect hairlineRect = new Rect(hairlineX, outRect.y, 1f, outRect.height);
+
+        Color saved = GUI.color;
+        Color hairlineColor = theme.GetColor(ThemeSlot.BorderDefault);
+        hairlineColor.a *= alpha;
+        GUI.color = hairlineColor;
+        GUI.DrawTexture(hairlineRect, Texture2D.whiteTexture);
+
+        float scrollRange = Mathf.Max(0f, contentHeight - viewHeight);
+        float thumbWidth = SlimRailWidth;
+        float thumbX = outRect.xMax - thumbWidth - RailRightInset;
+        float thumbTrackHeight = Mathf.Max(0f, outRect.height);
+        float thumbHeight = thumbTrackHeight > 0f
+            ? Mathf.Max(MinThumbHeight, thumbTrackHeight * Mathf.Clamp01(viewHeight / contentHeight))
+            : 0f;
+        thumbHeight = Mathf.Min(thumbHeight, thumbTrackHeight);
+        float thumbRange = Mathf.Max(0f, thumbTrackHeight - thumbHeight);
+        float scrollNorm = scrollRange > 0f ? Mathf.Clamp01(status.Position.y / scrollRange) : 0f;
+        Rect thumbRect = new Rect(
+            thumbX,
+            outRect.y + thumbRange * scrollNorm,
+            thumbWidth,
+            thumbHeight
+        );
+
+        Color thumbColor = theme.GetColor(ThumbSlot());
+        thumbColor.a *= alpha;
+        GUI.color = thumbColor;
+        float pillRadius = thumbWidth * 0.5f;
+        GUI.DrawTexture(
+            thumbRect,
+            Texture2D.whiteTexture,
+            ScaleMode.StretchToFill,
+            true,
+            0f,
+            thumbColor,
+            Vector4.zero,
+            new Vector4(pillRadius, pillRadius, pillRadius, pillRadius)
+        );
+
+        GUI.color = saved;
+
+        PaintAndHandleTicks(e, alpha, scrollRange);
+        HandleThumbDrag(e, new Rect(hitX, outRect.y, hitWidth, outRect.height), thumbRect, scrollRange, thumbRange);
+    }
+
+    private void PaintAndHandleTicks(Event e, float alpha, float scrollRange) {
+        if (sections == null || sections.Count == 0) {
+            return;
+        }
+
+        Theme.Theme theme = RenderContext.Current.Theme;
+        Color saved = GUI.color;
+
+        float scrollNorm = scrollRange > 0f ? Mathf.Clamp01(status.Position.y / scrollRange) : 0f;
+        int activeIndex = ResolveActiveSection(scrollNorm);
+
+        int hoverIndex = -1;
+        for (int i = 0; i < sections.Count; i++) {
+            ScrollAreaSection s = sections[i];
+            float y = outRect.y + outRect.height * Mathf.Clamp01(s.Pct);
+            Rect tickHit = new Rect(outRect.xMax - TicksHitWidth - RailRightInset, y - TickHitHeight * 0.5f, TicksHitWidth, TickHitHeight);
+            if (tickHit.Contains(e.mousePosition)) {
+                hoverIndex = i;
+            }
+        }
+
+        for (int i = 0; i < sections.Count; i++) {
+            ScrollAreaSection s = sections[i];
+            float y = outRect.y + outRect.height * Mathf.Clamp01(s.Pct);
+            bool isHover = i == hoverIndex;
+            bool isActive = i == activeIndex;
+            float markerLength = isHover || isActive ? TickMarkerHoverLength : TickMarkerLength;
+            float markerX = outRect.xMax - RailRightInset - TicksHairlineRightInset - markerLength + 1f;
+            Rect markerRect = new Rect(markerX, y - 0.5f, markerLength, 1f);
+
+            ThemeSlot markerSlot = isHover || isActive ? ThumbSlot() : ThemeSlot.TextMuted;
+            Color markerColor = theme.GetColor(markerSlot);
+            markerColor.a *= alpha;
+            GUI.color = markerColor;
+            GUI.DrawTexture(markerRect, Texture2D.whiteTexture);
+        }
+
+        if (hoverIndex >= 0) {
+            DrawTickLabel(sections[hoverIndex], alpha);
         }
 
         GUI.color = saved;
 
-        HandleScrollbarEvents(e, trackRect, thumbRect, upArrow, downArrow, scrollRange, trackRange, showArrows);
-        if (showArrows) {
-            HandleArrowHold(scrollRange, upArrow, downArrow);
+        if (e.type == EventType.MouseDown && e.button == 0 && hoverIndex >= 0) {
+            ScrollAreaSection s = sections[hoverIndex];
+            float targetY = scrollRange * Mathf.Clamp01(s.Pct);
+            status.Position = new Vector2(status.Position.x, targetY);
+            status.LastScrollAtRealtime = Time.realtimeSinceStartup;
+            e.Use();
         }
     }
 
-    private void PaintArrow(Rect rect, bool up, Theme.Theme theme, Event e, float alpha) {
-        bool hovering = rect.Contains(e.mousePosition);
-        bool held = status.ArrowHeld == (up ? 1 : 2);
-
-        ThemeSlot slot = held
-            ? ThemeSlot.BorderFocus
-            : hovering
-                ? ThemeSlot.BorderHover
-                : ThemeSlot.BorderDefault;
-        Color fill = theme.GetColor(slot);
-        if (!held && !hovering) {
-            fill.a *= 0.85f;
+    private int ResolveActiveSection(float scrollNorm) {
+        if (sections == null || sections.Count == 0) {
+            return -1;
         }
 
-        fill.a *= alpha;
-
-        float outerPad = ArrowOuterPadding;
-        float innerPad = ArrowInnerPadding;
-        Rect triRect = up
-            ? new Rect(
-                rect.x + ArrowSidePadding,
-                rect.y + outerPad,
-                rect.width - ArrowSidePadding * 2f,
-                rect.height - outerPad - innerPad
-            )
-            : new Rect(
-                rect.x + ArrowSidePadding,
-                rect.y + innerPad,
-                rect.width - ArrowSidePadding * 2f,
-                rect.height - innerPad - outerPad
-            );
-
-        if (triRect.width <= 0f || triRect.height <= 0f) {
-            return;
-        }
-
-        GUI.DrawTexture(
-            triRect,
-            GetArrowTexture(up),
-            ScaleMode.StretchToFill,
-            true,
-            0f,
-            fill,
-            Vector4.zero,
-            Vector4.zero
-        );
-    }
-
-    private static Texture2D GetArrowTexture(bool up) {
-        if (up) {
-            return LightweaveScrollArrows.UpArrowTex ??= BuildArrowTexture(true);
-        }
-
-        return LightweaveScrollArrows.DownArrowTex ??= BuildArrowTexture(false);
-    }
-
-    /// Generates a 128x128 RGBA texture containing an antialiased filled triangle
-    /// (apex at GUI-top for up-arrows, apex at GUI-bottom for down-arrows). The
-    /// texture is tinted via GUI.DrawTexture's color parameter at draw time.
-    private static Texture2D BuildArrowTexture(bool up) {
-        const int size = 128;
-        Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false, false);
-        tex.filterMode = FilterMode.Bilinear;
-        tex.wrapMode = TextureWrapMode.Clamp;
-
-        Color32[] pixels = new Color32[size * size];
-        for (int py = 0; py < size; py++) {
-            int guiRow = size - 1 - py;
-            float t = guiRow / (float)(size - 1);
-            float apexFrac = up ? t : 1f - t;
-            float halfWidth = apexFrac * 0.5f;
-            for (int px = 0; px < size; px++) {
-                float normX = (px + 0.5f) / size;
-                float dist = Mathf.Abs(normX - 0.5f);
-                float edge = halfWidth - dist;
-                float alpha = Mathf.Clamp01(edge * size);
-                byte a = (byte)Mathf.RoundToInt(alpha * 255f);
-                pixels[py * size + px] = new Color32(255, 255, 255, a);
+        int active = 0;
+        for (int i = 0; i < sections.Count; i++) {
+            if (sections[i].Pct <= scrollNorm + 0.01f) {
+                active = i;
             }
         }
-
-        tex.SetPixels32(pixels);
-        tex.Apply(false, false);
-        return tex;
+        return active;
     }
 
-    private void HandleScrollbarEvents(
-        Event e,
-        Rect trackRect,
-        Rect thumbRect,
-        Rect upArrow,
-        Rect downArrow,
-        float scrollRange,
-        float trackRange,
-        bool showArrows
-    ) {
+    private void DrawTickLabel(ScrollAreaSection section, float alpha) {
+        Theme.Theme theme = RenderContext.Current.Theme;
+        float fontPx = 9.5f;
+        float padX = 8f;
+        float padY = 3f;
+
+        float anchorX = outRect.xMax - RailRightInset - TicksHairlineRightInset - TickMarkerHoverLength - 6f;
+        float anchorY = outRect.y + outRect.height * Mathf.Clamp01(section.Pct);
+
+        string label = section.Label ?? string.Empty;
+        GUIStyle measure = GuiStyleCache.GetOrCreate(theme.GetFont(FontRole.BodyBold), Mathf.RoundToInt(fontPx));
+        Vector2 size = measure.CalcSize(new GUIContent(label));
+        float labelW = size.x + padX * 2f;
+        float labelH = size.y + padY * 2f;
+        Rect labelRect = new Rect(anchorX - labelW, anchorY - labelH * 0.5f, labelW, labelH);
+
+        Color bg = theme.GetColor(ThemeSlot.Glass3);
+        bg.a *= alpha;
+        PaintBox.Draw(labelRect, BackgroundSpec.Of(bg), BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderSubtle), new RadiusSpec(new Rem(0.125f)));
+
+        Color textColor = theme.GetColor(ThemeSlot.TextSecondary);
+        textColor.a *= alpha;
+        TextDraw.Draw(labelRect, label, FontRole.BodyBold, new Rem(fontPx / 16f), TextAnchor.MiddleCenter, textColor);
+    }
+
+    private void HandleThumbDrag(Event e, Rect trackRect, Rect thumbRect, float scrollRange, float trackRange) {
         if (e.type == EventType.MouseDown && e.button == 0) {
-            if (showArrows && upArrow.Contains(e.mousePosition)) {
-                ScrollBy(-ArrowStepPixels, scrollRange);
-                status.ArrowHeld = 1;
-                status.NextArrowRepeatAt = Time.realtimeSinceStartup + ArrowRepeatInitialDelay;
-                status.LastScrollAtRealtime = Time.realtimeSinceStartup;
-                e.Use();
-                return;
-            }
-
-            if (showArrows && downArrow.Contains(e.mousePosition)) {
-                ScrollBy(ArrowStepPixels, scrollRange);
-                status.ArrowHeld = 2;
-                status.NextArrowRepeatAt = Time.realtimeSinceStartup + ArrowRepeatInitialDelay;
-                status.LastScrollAtRealtime = Time.realtimeSinceStartup;
-                e.Use();
-                return;
-            }
-
             if (thumbRect.Contains(e.mousePosition)) {
                 status.Dragging = true;
                 status.DragAnchor = e.mousePosition.y - thumbRect.y;
@@ -460,60 +495,79 @@ public readonly record struct LightweaveScrollView : IDisposable {
             }
         }
 
-        if (status.Dragging) {
-            if (e.type == EventType.MouseDrag) {
-                float desiredThumbY = e.mousePosition.y - status.DragAnchor;
-                float clampedY = Mathf.Clamp(desiredThumbY, trackRect.y, trackRect.y + trackRange);
-                float norm = trackRange > 0f ? (clampedY - trackRect.y) / trackRange : 0f;
-                status.Position = new Vector2(status.Position.x, norm * scrollRange);
-                status.LastScrollAtRealtime = Time.realtimeSinceStartup;
-                e.Use();
-                return;
-            }
-
-            if (e.type == EventType.MouseUp || e.rawType == EventType.MouseUp) {
-                status.Dragging = false;
-                ActiveDragRegistry.Release();
-                if (e.type == EventType.MouseUp) {
-                    e.Use();
-                }
-                return;
-            }
+        if (!status.Dragging) {
+            return;
         }
 
-        if (status.ArrowHeld != 0 && e.type == EventType.MouseUp) {
-            status.ArrowHeld = 0;
+        if (e.type == EventType.MouseDrag) {
+            float desiredThumbY = e.mousePosition.y - status.DragAnchor;
+            float clampedY = Mathf.Clamp(desiredThumbY, trackRect.y, trackRect.y + trackRange);
+            float norm = trackRange > 0f ? (clampedY - trackRect.y) / trackRange : 0f;
+            status.Position = new Vector2(status.Position.x, norm * scrollRange);
+            status.LastScrollAtRealtime = Time.realtimeSinceStartup;
             e.Use();
+            return;
+        }
+
+        if (e.type == EventType.MouseUp || e.rawType == EventType.MouseUp) {
+            status.Dragging = false;
+            ActiveDragRegistry.Release();
+            if (e.type == EventType.MouseUp) {
+                e.Use();
+            }
         }
     }
 
-    private void HandleArrowHold(float scrollRange, Rect upArrow, Rect downArrow) {
-        if (status.ArrowHeld == 0) {
+    private void PaintEdgeFades() {
+        if (Event.current.type != EventType.Repaint) {
             return;
         }
 
-        if (!UnityEngine.Input.GetMouseButton(0)) {
-            status.ArrowHeld = 0;
+        Theme.Theme theme = RenderContext.Current.Theme;
+        Color fadeColor = theme.GetColor(ThemeSlot.Glass3);
+        Color transparent = new Color(fadeColor.r, fadeColor.g, fadeColor.b, 0f);
+
+        float scrollRange = Mathf.Max(0f, contentHeight - viewHeight);
+        bool atTop = status.Position.y < 1f;
+        bool atBottom = scrollRange < 1f || status.Position.y >= scrollRange - 1f;
+
+        if (!atTop) {
+            Texture2D topTex = GradientTextureCache.Vertical(fadeColor, transparent);
+            Rect topRect = new Rect(outRect.x, outRect.y, outRect.width, EdgeFadeHeight);
+            GUI.DrawTexture(topRect, topTex, ScaleMode.StretchToFill, true);
+        }
+
+        if (!atBottom) {
+            Texture2D bottomTex = GradientTextureCache.Vertical(transparent, fadeColor);
+            Rect bottomRect = new Rect(outRect.x, outRect.yMax - EdgeFadeHeight, outRect.width, EdgeFadeHeight);
+            GUI.DrawTexture(bottomRect, bottomTex, ScaleMode.StretchToFill, true);
+        }
+    }
+
+    private void PaintBareMasks() {
+        if (Event.current.type != EventType.Repaint) {
             return;
         }
 
-        Vector2 mouse = Event.current.mousePosition;
-        bool stillInButton = status.ArrowHeld == 1
-            ? upArrow.Contains(mouse)
-            : downArrow.Contains(mouse);
-        if (!stillInButton) {
-            return;
+        Theme.Theme theme = RenderContext.Current.Theme;
+        Color maskColor = theme.GetColor(ThemeSlot.SurfacePrimary);
+        Color transparent = new Color(maskColor.r, maskColor.g, maskColor.b, 0f);
+
+        float scrollRange = Mathf.Max(0f, contentHeight - viewHeight);
+        bool atTop = status.Position.y < 1f;
+        bool atBottom = scrollRange < 1f || status.Position.y >= scrollRange - 1f;
+
+        if (!atTop) {
+            Texture2D topTex = GradientTextureCache.Vertical(maskColor, transparent);
+            Rect topRect = new Rect(outRect.x, outRect.y, outRect.width, BareMaskHeight);
+            GUI.DrawTexture(topRect, topTex, ScaleMode.StretchToFill, true);
         }
 
-        float now = Time.realtimeSinceStartup;
-        if (now < status.NextArrowRepeatAt) {
-            return;
+        if (!atBottom) {
+            Texture2D bottomTex = GradientTextureCache.Vertical(transparent, maskColor);
+            Rect bottomRect = new Rect(outRect.x, outRect.yMax - BareMaskHeight, outRect.width, BareMaskHeight);
+            GUI.DrawTexture(bottomRect, bottomTex, ScaleMode.StretchToFill, true);
         }
-
-        float delta = status.ArrowHeld == 1 ? -ArrowStepPixels : ArrowStepPixels;
-        ScrollBy(delta, scrollRange);
-        status.NextArrowRepeatAt = now + ArrowRepeatInterval;
-        status.LastScrollAtRealtime = now;
     }
 
     private void ScrollBy(float delta, float scrollRange) {
@@ -522,8 +576,4 @@ public readonly record struct LightweaveScrollView : IDisposable {
     }
 }
 
-[StaticConstructorOnStartup]
-internal static class LightweaveScrollArrows {
-    internal static Texture2D? UpArrowTex;
-    internal static Texture2D? DownArrowTex;
-}
+
