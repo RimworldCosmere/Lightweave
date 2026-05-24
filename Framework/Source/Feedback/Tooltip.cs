@@ -42,6 +42,7 @@ public enum TooltipAlign {
 public static class Tooltip {
     private const float DefaultDelaySeconds = 0.5f;
     private const float DefaultSideOffsetPx = 4f;
+    private const float DefaultMaxWidthRem = 20f;
 
     [DocVariant("CL_Playground_Label_Default")]
     public static DocSample DocsDefault() {
@@ -220,11 +221,11 @@ public static class Tooltip {
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = ""
     ) {
-        Vector2 size = MeasureText(text, style?.MaxWidth);
+        float maxWidthRem = ResolveMaxWidthRem(style?.MaxWidth);
         return CreateInternal(
             children,
             () => BuildTextNode(text),
-            () => size,
+            () => MeasureContent(BuildTextNode(text), maxWidthRem),
             side,
             align,
             delayDuration,
@@ -259,11 +260,11 @@ public static class Tooltip {
         [CallerFilePath] string file = ""
     ) {
         Func<string> resolver = text;
-        Length? widthCap = style?.MaxWidth;
+        float maxWidthRem = ResolveMaxWidthRem(style?.MaxWidth);
         return CreateInternal(
             children,
             () => BuildTextNode(resolver()),
-            () => MeasureText(resolver(), widthCap),
+            () => MeasureContent(BuildTextNode(resolver()), maxWidthRem),
             side,
             align,
             delayDuration,
@@ -463,13 +464,12 @@ public static class Tooltip {
 
                 EraseArrowJoin(tooltipRect, anchorLocalRect, resolvedSide);
 
-                float padX = new Rem(0.75f).ToPixels();
-                float padY = new Rem(0.5f).ToPixels();
+                float pad = new Rem(0.5f).ToPixels();
                 Rect innerRect = new Rect(
-                    tooltipRect.x + padX,
-                    tooltipRect.y + padY,
-                    tooltipRect.width - padX * 2f,
-                    tooltipRect.height - padY * 2f
+                    tooltipRect.x + pad,
+                    tooltipRect.y + pad,
+                    tooltipRect.width - pad * 2f,
+                    tooltipRect.height - pad * 2f
                 );
 
                 LightweaveRoot.PaintSubtree(content, innerRect);
@@ -583,36 +583,23 @@ public static class Tooltip {
         PaintBox.Fill(eraseRect, fillColor);
     }
 
-    private static Vector2 MeasureText(string text, Length? maxWidth) {
-        float padX = new Rem(0.75f).ToPixels() * 2f;
-        float padY = new Rem(0.5f).ToPixels() * 2f;
-        if (string.IsNullOrEmpty(text)) {
-            return new Vector2(new Rem(12f).ToPixels(), new Rem(1.75f).ToPixels());
-        }
-
-        float maxOuter = maxWidth.HasValue && maxWidth.Value.Mode == Length.Kind.Rem
-            ? maxWidth.Value.Value * Spacing.BaseUnit
-            : new Rem(20f).ToPixels();
-        float maxInner = maxOuter - padX;
-        GameFont saved = Text.Font;
-        Text.Font = GameFont.Small;
-        float h = Text.CalcHeight(text, maxInner);
-        Vector2 size = Text.CalcSize(text);
-        Text.Font = saved;
-        float width = Mathf.Min(size.x, maxInner) + padX;
-        float height = h + padY;
-        return new Vector2(width, height);
-    }
+    
 
     private static Vector2 MeasureContent(LightweaveNode content, float maxWidthRem) {
-        float padX = new Rem(0.75f).ToPixels() * 2f;
-        float padY = new Rem(0.5f).ToPixels() * 2f;
+        float pad = new Rem(0.5f).ToPixels() * 2f;
         float maxOuter = maxWidthRem * Spacing.BaseUnit;
-        float maxInner = Mathf.Max(0f, maxOuter - padX);
+        float maxInner = Mathf.Max(0f, maxOuter - pad);
         float w = content.MeasureWidth?.Invoke() ?? maxInner;
         w = Mathf.Min(w, maxInner);
         float h = content.Measure?.Invoke(w) ?? content.PreferredHeight ?? 0f;
-        return new Vector2(w + padX, h + padY);
+        return new Vector2(w + pad, h + pad);
+    }
+
+    private static float ResolveMaxWidthRem(Length? maxWidth) {
+        if (maxWidth.HasValue && maxWidth.Value.Mode == Length.Kind.Rem) {
+            return maxWidth.Value.Value;
+        }
+        return DefaultMaxWidthRem;
     }
 
     private static (Rect Tooltip, TooltipSide ResolvedSide, Rect AnchorScreen) ResolvePlacement(
