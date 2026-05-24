@@ -350,7 +350,8 @@
     <CL_Playground_ScrollArea_Slim>Slim (default) - always-visible accent rail</CL_Playground_ScrollArea_Slim>
     <CL_Playground_ScrollArea_Auto>Auto - rail fades in on hover or while scrolling</CL_Playground_ScrollArea_Auto>
     <CL_Playground_ScrollArea_Bare>Bare - no rail, top/bottom mask fades hint at more content</CL_Playground_ScrollArea_Bare>
-    <CL_Playground_ScrollArea_Ticks>Ticks - hairline rail with clickable section markers</CL_Playground_ScrollArea_Ticks>
+    <CL_Playground_ScrollArea_Ticks>Ticks - hairline rail with clickable section markers (explicit list)</CL_Playground_ScrollArea_Ticks>
+    <CL_Playground_ScrollArea_TicksFromAnchors>Ticks - section markers auto-derived from Section.Anchor children</CL_Playground_ScrollArea_TicksFromAnchors>
     <CL_Playground_ScrollArea_Progress>Progress - 2px accent bar grows from top as you scroll</CL_Playground_ScrollArea_Progress>
     <CL_Playground_ScrollArea_Edge>Slim + edge fades</CL_Playground_ScrollArea_Edge>
     <CL_Playground_ScrollArea_Neutral>Slim + neutral tone (no accent)</CL_Playground_ScrollArea_Neutral>
@@ -683,6 +684,10 @@
     <CL_Playground_Toast_TriggerAdd>Add toast</CL_Playground_Toast_TriggerAdd>
     <CL_Playground_Menu_TriggerOpen>Open menu</CL_Playground_Menu_TriggerOpen>
     <CL_Playground_ContextMenu_RightClick>Right-click</CL_Playground_ContextMenu_RightClick>
+
+    <CL_Playground_section_Title>Section</CL_Playground_section_Title>
+    <CL_Playground_section_What>Marks a region of content as a named anchor so an enclosing ScrollArea (variant: Ticks) can render a clickable tick marker for it.</CL_Playground_section_What>
+    <CL_Playground_section_When>Wrap each top-level section inside a Ticks ScrollArea so the rail picks up labels and positions automatically without the caller hand-supplying percentages.</CL_Playground_section_When>
 
     <CL_Playground_accordion_Title>Accordion</CL_Playground_accordion_Title>
     <CL_Playground_accordion_What>Stacked headers that reveal content when expanded. Single mode closes siblings; Multi mode lets any number stay open.</CL_Playground_accordion_What>

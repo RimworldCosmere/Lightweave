@@ -64,7 +64,7 @@ public sealed class LightweavePlayground : LightweaveWindow {
             "navigation",
             "CL_Playground_Category_Navigation",
             "CL_Playground_Category_Navigation_Desc",
-            new[] { "tabs", "segmented", "breadcrumbs", "menu", "contextmenu", "accordion", "sidenav" }
+            new[] { "tabs", "segmented", "breadcrumbs", "menu", "contextmenu", "accordion", "sidenav", "section" }
         ),
         new PlaygroundCategory(
             "overlay",
@@ -150,6 +150,7 @@ public sealed class LightweavePlayground : LightweaveWindow {
         { "menu", "Lightweave/Navigation/Menu.cs" },
         { "contextmenu", "Lightweave/Navigation/ContextMenu.cs" },
         { "accordion", "Lightweave/Navigation/Accordion.cs" },
+        { "section", "Lightweave/Navigation/Section.cs" },
         { "sidenav", "Lightweave/Playground/PlaygroundRail.cs" },
         { "window", "Lightweave/Runtime/LightweaveWindow.cs" },
         { "dialog", "Lightweave/Overlay/Dialog.cs" },
