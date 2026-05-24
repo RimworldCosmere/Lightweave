@@ -104,16 +104,8 @@ public static partial class Typography {
                 }
 
                 int letterSpacing = ResolveLetterSpacingPx();
-                float total = 0f;
-                GUIContent gc = new GUIContent();
-                for (int i = 0; i < content.Length; i++) {
-                    gc.text = content[i].ToString();
-                    total += gs.CalcSize(gc).x;
-                    if (i < content.Length - 1) {
-                        total += letterSpacing;
-                    }
-                }
-                return Mathf.Ceil(total);
+                TrackedGlyphRun run = TrackedTextGlyphCache.GetOrCreate(gs.font, gs.fontSize, gs.fontStyle, letterSpacing, content);
+                return Mathf.Ceil(run.TotalWidth);
             };
 
             node.Draw = rect => {
@@ -146,31 +138,8 @@ public static partial class Typography {
                 }
 
                 int letterSpacing = ResolveLetterSpacingPx();
-                gs.alignment = TextAnchor.MiddleLeft;
-                gs.clipping = TextClipping.Overflow;
-                GUIContent gc = new GUIContent();
-                float totalW = 0f;
-                for (int i = 0; i < content.Length; i++) {
-                    gc.text = content[i].ToString();
-                    totalW += Mathf.Ceil(gs.CalcSize(gc).x);
-                    if (i < content.Length - 1) {
-                        totalW += letterSpacing;
-                    }
-                }
-                float startX = anchor switch {
-                    TextAnchor.MiddleCenter or TextAnchor.UpperCenter or TextAnchor.LowerCenter
-                        => Mathf.Floor(rect.x + (rect.width - totalW) * 0.5f),
-                    TextAnchor.MiddleRight or TextAnchor.UpperRight or TextAnchor.LowerRight
-                        => Mathf.Floor(rect.xMax - totalW),
-                    _ => Mathf.Floor(rect.x),
-                };
-                float cursor = startX;
-                for (int i = 0; i < content.Length; i++) {
-                    gc.text = content[i].ToString();
-                    float w = Mathf.Ceil(gs.CalcSize(gc).x);
-                    TextDraw.DrawWithStyle(new Rect(cursor, rect.y, w, rect.height), gc.text, gs, c);
-                    cursor += w + letterSpacing;
-                }
+                TrackedGlyphRun run = TrackedTextGlyphCache.GetOrCreate(gs.font, gs.fontSize, gs.fontStyle, letterSpacing, content);
+                TrackedTextDraw.Draw(run, rect, anchor, c);
             };
             return node;
         }
