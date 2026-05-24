@@ -71,11 +71,20 @@
 
     <PropertyGroup>
         <RimLoggingAssembliesPath Condition="'$(RimLoggingAssembliesPath)' == ''">../../../../cryptiklemur/rimworld-logging-framework/Assemblies</RimLoggingAssembliesPath>
+        <RimObsAssembliesPath Condition="'$(RimObsAssembliesPath)' == ''">../../../../cryptiklemur/rimworld-observability-collector/Assemblies</RimObsAssembliesPath>
     </PropertyGroup>
 
     <ItemGroup>
         <Reference Include="CryptikLemur.RimLogging">
             <HintPath>$(RimLoggingAssembliesPath)/CryptikLemur.RimLogging.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="RimObs">
+            <HintPath>$(RimObsAssembliesPath)/RimObs.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="RimObs.Wire">
+            <HintPath>$(RimObsAssembliesPath)/RimObs.Wire.dll</HintPath>
             <Private>False</Private>
         </Reference>
     </ItemGroup>

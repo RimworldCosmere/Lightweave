@@ -1,5 +1,6 @@
 using System;
 using Cosmere.Lightweave.Runtime;
+using Cryptiklemur.RimObs.Api;
 using UnityEngine;
 using Verse;
 
@@ -23,24 +24,27 @@ public static class FontLoader {
             ("IMFellEnglishSC", f => LightweaveFonts.IMFellEnglishSC = f),
             ("JetBrainsMono", f => LightweaveFonts.JetBrainsMono = f),
             ("Phosphor-Bold", f => LightweaveFonts.PhosphorBold = f),
-            ("rpg-awesome", f => LightweaveFonts.RpgAwesome = f),
+            ("RpgAwesome", f => LightweaveFonts.RpgAwesome = f),
         ];
 
         Dictionary<string, Font> bundleFonts = LoadFromBundles();
 
         int loaded = 0;
         int fromBundle = 0;
-        int fromOs = 0;
+        List<string> osFallbackNames = new List<string>();
         foreach ((string assetName, Action<Font?> setter) entry in fonts) {
             Font? font = null;
+            string source = "missing";
             if (bundleFonts.TryGetValue(entry.assetName, out Font bundled)) {
                 font = bundled;
                 fromBundle++;
+                source = "bundle";
             }
             else {
                 font = TryLoadFromOs(entry.assetName);
                 if (font != null) {
-                    fromOs++;
+                    osFallbackNames.Add(entry.assetName);
+                    source = "os";
                 }
             }
 
@@ -51,10 +55,18 @@ public static class FontLoader {
             else {
                 LightweaveLog.Warning($"font {entry.assetName}: not in asset bundle and no dynamic OS match.");
             }
+
+            Obs.Metrics.Set(
+                LightweaveTelemetry.FontsLoaded,
+                font != null ? 1L : 0L,
+                ("name", entry.assetName),
+                ("source", source)
+            );
         }
 
+        string osDetail = osFallbackNames.Count == 0 ? string.Empty : " [" + string.Join(", ", osFallbackNames) + "]";
         LightweaveLog.Message(
-            $"fonts loaded: {loaded}/{fonts.Length} ({fromBundle} from bundle, {fromOs} from OS fallback)."
+            $"fonts loaded: {loaded}/{fonts.Length} ({fromBundle} from bundle, {osFallbackNames.Count} from OS fallback){osDetail}."
         );
 
         GameFontOverride.Apply();
