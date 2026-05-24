@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Cosmere.Lightweave.Layout;
+using Cosmere.Lightweave.Navigation;
 using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
@@ -23,6 +24,7 @@ public sealed class LightweaveScrollStatus {
     public float LastMouseEnterAtRealtime;
     public bool MouseInsideViewport;
     public float LastObservedPositionY;
+    public readonly List<ScrollAreaSection> ResolvedSectionsBuffer = new List<ScrollAreaSection>();
 }
 
 public struct LightweaveScrollView : IDisposable {
@@ -80,6 +82,7 @@ public struct LightweaveScrollView : IDisposable {
     private readonly ScrollAreaTone tone;
     private readonly bool edge;
     private readonly IReadOnlyList<ScrollAreaSection>? sections;
+    private readonly LightweaveNode? contentRoot;
 
     private readonly Rect rect;
 
@@ -89,7 +92,8 @@ public struct LightweaveScrollView : IDisposable {
         ScrollAreaVariant variant = ScrollAreaVariant.Slim,
         ScrollAreaTone tone = ScrollAreaTone.Accent,
         bool edge = false,
-        IReadOnlyList<ScrollAreaSection>? sections = null
+        IReadOnlyList<ScrollAreaSection>? sections = null,
+        LightweaveNode? contentRoot = null
     ) {
         this.outRect = outRect;
         this.status = status;
@@ -97,6 +101,7 @@ public struct LightweaveScrollView : IDisposable {
         this.tone = tone;
         this.edge = edge;
         this.sections = sections;
+        this.contentRoot = contentRoot;
 
         float declared = Math.Max(status.Height, outRect.height);
         bool overflows = declared - 0.1f >= outRect.height;
@@ -384,7 +389,8 @@ public struct LightweaveScrollView : IDisposable {
     }
 
     private void PaintAndHandleTicks(Event e, float alpha, float scrollRange) {
-        if (sections == null || sections.Count == 0) {
+        IReadOnlyList<ScrollAreaSection> active = EffectiveSections();
+        if (active.Count == 0) {
             return;
         }
 
@@ -392,11 +398,11 @@ public struct LightweaveScrollView : IDisposable {
         Color saved = GUI.color;
 
         float scrollNorm = scrollRange > 0f ? Mathf.Clamp01(status.Position.y / scrollRange) : 0f;
-        int activeIndex = ResolveActiveSection(scrollNorm);
+        int activeIndex = ResolveActiveSection(active, scrollNorm);
 
         int hoverIndex = -1;
-        for (int i = 0; i < sections.Count; i++) {
-            ScrollAreaSection s = sections[i];
+        for (int i = 0; i < active.Count; i++) {
+            ScrollAreaSection s = active[i];
             float y = outRect.y + outRect.height * Mathf.Clamp01(s.Pct);
             Rect tickHit = new Rect(outRect.xMax - TicksHitWidth - RailRightInset, y - TickHitHeight * 0.5f, TicksHitWidth, TickHitHeight);
             if (tickHit.Contains(e.mousePosition)) {
@@ -404,8 +410,8 @@ public struct LightweaveScrollView : IDisposable {
             }
         }
 
-        for (int i = 0; i < sections.Count; i++) {
-            ScrollAreaSection s = sections[i];
+        for (int i = 0; i < active.Count; i++) {
+            ScrollAreaSection s = active[i];
             float y = outRect.y + outRect.height * Mathf.Clamp01(s.Pct);
             bool isHover = i == hoverIndex;
             bool isActive = i == activeIndex;
@@ -421,13 +427,13 @@ public struct LightweaveScrollView : IDisposable {
         }
 
         if (hoverIndex >= 0) {
-            DrawTickLabel(sections[hoverIndex], alpha);
+            DrawTickLabel(active[hoverIndex], alpha);
         }
 
         GUI.color = saved;
 
         if (e.type == EventType.MouseDown && e.button == 0 && hoverIndex >= 0) {
-            ScrollAreaSection s = sections[hoverIndex];
+            ScrollAreaSection s = active[hoverIndex];
             float targetY = scrollRange * Mathf.Clamp01(s.Pct);
             status.Position = new Vector2(status.Position.x, targetY);
             status.LastScrollAtRealtime = Time.realtimeSinceStartup;
@@ -435,18 +441,40 @@ public struct LightweaveScrollView : IDisposable {
         }
     }
 
-    private int ResolveActiveSection(float scrollNorm) {
-        if (sections == null || sections.Count == 0) {
+    private IReadOnlyList<ScrollAreaSection> EffectiveSections() {
+        if (sections != null) {
+            return sections;
+        }
+        List<ScrollAreaSection> buffer = status.ResolvedSectionsBuffer;
+        buffer.Clear();
+        if (contentRoot != null && contentHeight > 0f) {
+            CollectSectionAnchors(contentRoot, buffer, contentHeight);
+        }
+        return buffer;
+    }
+
+    private static void CollectSectionAnchors(LightweaveNode node, List<ScrollAreaSection> into, float contentHeight) {
+        if (node.Tag is SectionAnchorMeta meta) {
+            float pct = Mathf.Clamp01(node.MeasuredRect.y / contentHeight);
+            into.Add(new ScrollAreaSection(meta.Id, meta.Label, pct));
+        }
+        for (int i = 0; i < node.Children.Count; i++) {
+            CollectSectionAnchors(node.Children[i], into, contentHeight);
+        }
+    }
+
+    private static int ResolveActiveSection(IReadOnlyList<ScrollAreaSection> active, float scrollNorm) {
+        if (active.Count == 0) {
             return -1;
         }
 
-        int active = 0;
-        for (int i = 0; i < sections.Count; i++) {
-            if (sections[i].Pct <= scrollNorm + 0.01f) {
-                active = i;
+        int activeIndex = 0;
+        for (int i = 0; i < active.Count; i++) {
+            if (active[i].Pct <= scrollNorm + 0.01f) {
+                activeIndex = i;
             }
         }
-        return active;
+        return activeIndex;
     }
 
     private void DrawTickLabel(ScrollAreaSection section, float alpha) {

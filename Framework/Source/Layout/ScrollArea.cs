@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Cosmere.Lightweave.Doc;
+using Cosmere.Lightweave.Navigation;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
@@ -90,7 +91,7 @@ public static class ScrollArea {
                 ? content.Measure?.Invoke(innerWidth) ?? content.PreferredHeight ?? rect.height
                 : rect.height;
             status.Height = contentHeight;
-            using (new LightweaveScrollView(rect, status, variant, tone, edge, sections)) {
+            using (new LightweaveScrollView(rect, status, variant, tone, edge, sections, content)) {
                 if (content.IsInFlow()) {
                     content.MeasuredRect = new Rect(0f, 0f, innerWidth, contentHeight);
                 }
@@ -145,6 +146,23 @@ public static class ScrollArea {
                     new ScrollAreaSection("gameplay", "GAMEPLAY", 0.75f),
                     new ScrollAreaSection("network", "NETWORK", 0.95f),
                 }
+            )
+        );
+    }
+
+
+    [DocVariant("CL_Playground_ScrollArea_TicksFromAnchors")]
+    public static DocSample DocsTicksFromAnchors() {
+        return new DocSample(() =>
+            ScrollArea.Create(
+                Stack.Create(SpacingScale.Xxs, c => {
+                    c.Add(Section.Anchor("display", "DISPLAY", DocsRows(4)));
+                    c.Add(Section.Anchor("audio", "AUDIO", DocsRows(4)));
+                    c.Add(Section.Anchor("input", "INPUT", DocsRows(4)));
+                    c.Add(Section.Anchor("gameplay", "GAMEPLAY", DocsRows(4)));
+                    c.Add(Section.Anchor("network", "NETWORK", DocsRows(4)));
+                }),
+                variant: ScrollAreaVariant.Ticks
             )
         );
     }
