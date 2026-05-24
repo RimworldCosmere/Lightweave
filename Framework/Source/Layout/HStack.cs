@@ -69,8 +69,13 @@ public static class HStack {
         }
 
         float? maxChildHeight = null;
+        bool anyChildMeasurable = false;
         for (int i = 0; i < count; i++) {
-            float? ph = builder.Items[i].node.PreferredHeight;
+            LightweaveNode child = builder.Items[i].node;
+            if (child.Measure != null || child.PreferredHeight.HasValue) {
+                anyChildMeasurable = true;
+            }
+            float? ph = child.PreferredHeight;
             if (ph.HasValue && (!maxChildHeight.HasValue || ph.Value > maxChildHeight.Value)) {
                 maxChildHeight = ph.Value;
             }
@@ -147,31 +152,33 @@ public static class HStack {
             return total + totalGap + left + right;
         };
 
-        node.Measure = availableWidth => {
-            (float left, float top, float right, float bottom) = ResolvePaddingPixels();
-            float innerWidth = Mathf.Max(0f, availableWidth - left - right);
-            float contentH = 0f;
-            if (count > 0) {
-                bool[] inFlow = new bool[count];
-                float[] widths = new float[count];
-                for (int i = 0; i < count; i++) {
-                    inFlow[i] = builder.Items[i].node.IsInFlow();
+        if (anyChildMeasurable) {
+            node.Measure = availableWidth => {
+                (float left, float top, float right, float bottom) = ResolvePaddingPixels();
+                float innerWidth = Mathf.Max(0f, availableWidth - left - right);
+                float contentH = 0f;
+                if (count > 0) {
+                    bool[] inFlow = new bool[count];
+                    float[] widths = new float[count];
+                    for (int i = 0; i < count; i++) {
+                        inFlow[i] = builder.Items[i].node.IsInFlow();
+                    }
+
+                    FillWidths(innerWidth, ResolveGapPx(), inFlow, widths);
+                    for (int i = 0; i < count; i++) {
+                        if (!inFlow[i]) {
+                            continue;
+                        }
+                        float h = MeasureChildHeight(builder.Items[i].node, widths[i]);
+                        if (h > contentH) {
+                            contentH = h;
+                        }
+                    }
                 }
 
-                FillWidths(innerWidth, ResolveGapPx(), inFlow, widths);
-                for (int i = 0; i < count; i++) {
-                    if (!inFlow[i]) {
-                        continue;
-                    }
-                    float h = MeasureChildHeight(builder.Items[i].node, widths[i]);
-                    if (h > contentH) {
-                        contentH = h;
-                    }
-                }
-            }
-
-            return contentH + top + bottom;
-        };
+                return contentH + top + bottom;
+            };
+        }
 
         bool[]? layoutInFlow = null;
         float[]? layoutWidths = null;
