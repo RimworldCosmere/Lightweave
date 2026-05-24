@@ -101,7 +101,7 @@ public static class IconButton {
         };
 
         if (!string.IsNullOrEmpty(tooltipKey)) {
-            return Tooltip.Create(node, (string)tooltipKey!.Translate());
+            return Tooltip.Create(node, (string)tooltipKey!.Translate(), line: line, file: file);
         }
 
         return node;
