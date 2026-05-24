@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
-    <CL_LogViewer_Title>LogViewer</CL_LogViewer_Title>
+    <CL_LogViewer_Title>Log Viewer</CL_LogViewer_Title>
     <CL_LogViewer_Tailing>TAILING</CL_LogViewer_Tailing>
     <CL_LogViewer_Presets>Presets</CL_LogViewer_Presets>
     <CL_LogViewer_PresetName>Preset {INDEX}</CL_LogViewer_PresetName>
     <CL_LogViewer_HideChannels>Hide channels</CL_LogViewer_HideChannels>
     <CL_LogViewer_ShowChannels>Show channels</CL_LogViewer_ShowChannels>
-    <CL_LogViewer_ShareBundle>Share bug bundle</CL_LogViewer_ShareBundle>
+    <CL_LogViewer_ShareBundle>Share</CL_LogViewer_ShareBundle>
     <CL_LogViewer_OpenVanilla>Open vanilla log (Shift+`)</CL_LogViewer_OpenVanilla>
     <CL_LogViewer_Close>Close</CL_LogViewer_Close>
 
@@ -38,5 +38,4 @@
     <CL_LogViewer_Copy>Copy</CL_LogViewer_Copy>
 
     <CL_LogViewer_BundleShared>Bug bundle shared. URL copied to clipboard: {URL}</CL_LogViewer_BundleShared>
-    <CL_LogViewer_BundleFailed>Bug bundle upload failed: {ERROR}</CL_LogViewer_BundleFailed>
 </LanguageData>

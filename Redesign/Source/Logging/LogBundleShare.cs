@@ -28,19 +28,11 @@ internal static class LogBundleShare {
                 );
             }
             else {
-                Messages.Message(
-                    (string)"CL_LogViewer_BundleFailed".Translate((result.ErrorMessage ?? "").Named("ERROR")),
-                    MessageTypeDefOf.RejectInput,
-                    false
-                );
+                RedesignLog.Error($"Bug bundle upload failed: {result.ErrorMessage ?? "(no error message)"}");
             }
         }
         catch (Exception ex) {
-            Messages.Message(
-                (string)"CL_LogViewer_BundleFailed".Translate(ex.Message.Named("ERROR")),
-                MessageTypeDefOf.RejectInput,
-                false
-            );
+            RedesignLog.Error($"Bug bundle upload failed: {ex}");
         }
         finally {
             state.Uploading = false;

@@ -84,15 +84,18 @@ internal sealed class LogViewerWindow : LightweaveWindow {
             new object[] { sinkRev, state.ChannelFilter, expandedSig }
         );
 
-        LightweaveNode listAndDetail = SplitPane.Create(
-            first: BuildListColumn(filtered, invalidate),
-            second: BuildDetail(invalidate),
-            orientation: SplitOrientation.Horizontal,
-            initialFraction: 0.68f,
-            minFirst: new Rem(20f),
-            minSecond: new Rem(14f),
-            style: Fill
-        );
+        LightweaveNode listColumn = BuildListColumn(filtered, invalidate);
+        LightweaveNode listAndDetail = state.Selected == null
+            ? listColumn
+            : SplitPane.Create(
+                first: listColumn,
+                second: BuildDetail(invalidate),
+                orientation: SplitOrientation.Horizontal,
+                initialFraction: 0.68f,
+                minFirst: new Rem(20f),
+                minSecond: new Rem(14f),
+                style: Fill
+            );
 
         if (!state.ChannelsOpen) {
             return listAndDetail;
@@ -195,6 +198,15 @@ internal sealed class LogViewerWindow : LightweaveWindow {
                         variant: Variant.Ghost,
                         tooltipKey: "CL_LogViewer_OpenVanilla",
                         id: "logviewer-open-vanilla"
+                    ));
+
+                    row.AddHug(IconButton.Create(
+                        icon: Glyph.Create(Icons.Phosphor.UploadSimple),
+                        onClick: () => LogBundleShare.Upload(sink, state, invalidate),
+                        variant: Variant.Ghost,
+                        disabled: state.Uploading,
+                        tooltipKey: "CL_LogViewer_ShareBundle",
+                        id: "logviewer-share-bundle"
                     ));
 
                     row.AddHug(IconButton.Create(
