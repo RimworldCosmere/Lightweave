@@ -3,14 +3,39 @@
     <CL_Settings_Title>Lightweave</CL_Settings_Title>
     <CL_Settings_Subtitle>IMGUI framework for RimWorld mods.</CL_Settings_Subtitle>
 
-    <CL_Settings_Theme_Heading>Theme</CL_Settings_Theme_Heading>
-    <CL_Settings_Theme_Help>Pick the color palette and surface treatments used across every Lightweave-rendered surface.</CL_Settings_Theme_Help>
+    <CL_Settings_Tab_Display>Display</CL_Settings_Tab_Display>
+    <CL_Settings_Tab_Typography>Typography</CL_Settings_Tab_Typography>
+    <CL_Settings_Tab_Motion>Motion</CL_Settings_Tab_Motion>
+    <CL_Settings_Tab_Misc>Misc</CL_Settings_Tab_Misc>
+
+    <CL_Settings_Diff_One>1 setting differs from default</CL_Settings_Diff_One>
+    <CL_Settings_Diff_Many>{COUNT} settings differ from defaults</CL_Settings_Diff_Many>
+    <CL_Settings_Diff_Reset>RESET ALL</CL_Settings_Diff_Reset>
+    <CL_Settings_Edited>EDITED</CL_Settings_Edited>
+    <CL_Settings_Default_Tag>default: {VALUE}</CL_Settings_Default_Tag>
+    <CL_Settings_Default_Off>off</CL_Settings_Default_Off>
+
+    <CL_Settings_Section_Display>THEME</CL_Settings_Section_Display>
+    <CL_Settings_Section_Display_Caption>Visual identity of the shell.</CL_Settings_Section_Display_Caption>
+    <CL_Settings_Section_Typography>FONT SCALE</CL_Settings_Section_Typography>
+    <CL_Settings_Section_Typography_Caption>Resize every Lightweave-rendered surface. Vanilla UI is unaffected.</CL_Settings_Section_Typography_Caption>
+    <CL_Settings_Section_Motion>ANIMATION</CL_Settings_Section_Motion>
+    <CL_Settings_Section_Motion_Caption>Transitions and hover feedback on Lightweave-rendered surfaces.</CL_Settings_Section_Motion_Caption>
+    <CL_Settings_Section_Misc>DIAGNOSTICS</CL_Settings_Section_Misc>
+    <CL_Settings_Section_Misc_Caption>Render-pipeline overlays and trace logs for performance work.</CL_Settings_Section_Misc_Caption>
+
+    <CL_Settings_Theme_Heading>Theme preset</CL_Settings_Theme_Heading>
+    <CL_Settings_Theme_Help>Each preset swaps palette, type stack and background art.</CL_Settings_Theme_Help>
     <CL_Settings_Theme_None>No themes are registered.</CL_Settings_Theme_None>
 
     <CL_Theme_Default>Default</CL_Theme_Default>
+    <CL_Theme_Default_Sub>Tarnished gold - warm umber</CL_Theme_Default_Sub>
     <CL_Theme_Cosmere>Cosmere</CL_Theme_Cosmere>
+    <CL_Theme_Cosmere_Sub>Aged vellum - wax crimson - verdigris</CL_Theme_Cosmere_Sub>
     <CL_Theme_Scadrial>Scadrial</CL_Theme_Scadrial>
+    <CL_Theme_Scadrial_Sub>Cold pewter - allomantic copper - atium violet</CL_Theme_Scadrial_Sub>
     <CL_Theme_Roshar>Roshar</CL_Theme_Roshar>
+    <CL_Theme_Roshar_Sub>Weathered stone - kholin cobalt - stormlight</CL_Theme_Roshar_Sub>
 
     <CL_Settings_FontSize_Heading>Font size</CL_Settings_FontSize_Heading>
     <CL_Settings_FontSize_Help>Scales every Lightweave-rendered surface. Vanilla UI is unaffected.</CL_Settings_FontSize_Help>
