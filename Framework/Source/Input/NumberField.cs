@@ -164,6 +164,7 @@ public static class NumberField {
                     lastSeen.Current = clamped;
                     buffer.Set(effectiveFormat(clamped));
                     onChange?.Invoke(clamped);
+                    RenderContext.Current.Hooks.Invalidate();
                 }
                 else {
                     buffer.Set(effectiveFormat(lastGood.Current));

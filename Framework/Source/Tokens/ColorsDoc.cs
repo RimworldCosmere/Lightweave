@@ -35,6 +35,8 @@ public static class ColorsDoc {
             ThemeSlot.SurfaceDisabled,
             ThemeSlot.SurfaceShadow,
             ThemeSlot.SurfaceGhostHover,
+            ThemeSlot.ExpansionBarSurface,
+            ThemeSlot.ExpansionPillSurface,
         }),
         ("CL_Playground_colors_Group_Text", new[] {
             ThemeSlot.TextPrimary,
@@ -62,6 +64,7 @@ public static class ColorsDoc {
             ThemeSlot.HoverTint,
             ThemeSlot.ActiveTint,
             ThemeSlot.OverlayDim,
+            ThemeSlot.MenuVignette,
             ThemeSlot.ScrimDefault,
             ThemeSlot.MapPreviewTint,
         }),
@@ -69,6 +72,7 @@ public static class ColorsDoc {
             ThemeSlot.Glass1,
             ThemeSlot.Glass2,
             ThemeSlot.Glass3,
+            ThemeSlot.WindowSurface,
             ThemeSlot.GlassFrost,
         }),
         ("CL_Playground_colors_Group_GradientTints", new[] {

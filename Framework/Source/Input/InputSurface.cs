@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Cosmere.Lightweave.Input;
 
-internal static class InputSurface {
+public static class InputSurface {
     public static readonly Rem PaddingY = new Rem(0.25f);
     public static readonly Rem PaddingX = SelectorTrigger.PaddingX;
 
@@ -71,7 +71,11 @@ internal static class InputSurface {
         return chromelessTextFieldStyle;
     }
 
-    public static ThemeSlot ResolveBorderSlot(InteractionState state) {
+    public static ThemeSlot ResolveBorderSlot(InteractionState state, Variant variant = default) {
+        if (variant == Variant.Danger) {
+            return ThemeSlot.BorderDanger;
+        }
+
         if (state.Focused) {
             return ThemeSlot.BorderFocus;
         }
@@ -103,11 +107,14 @@ internal static class InputSurface {
         if (variant == Variant.Primary) {
             return state.Disabled ? ThemeSlot.SurfaceDisabled : ThemeSlot.SurfaceInput;
         }
+        if (variant == Variant.Danger) {
+            return VariantPalette.Background(Variant.Secondary, state);
+        }
         return VariantPalette.Background(variant, state);
     }
 
     public static void Draw(Rect rect, InteractionState state, Variant variant = default) {
-        ThemeSlot borderSlot = ResolveBorderSlot(state);
+        ThemeSlot borderSlot = ResolveBorderSlot(state, variant);
         ThemeSlot? surfaceSlot = ResolveSurfaceSlot(state, variant);
 
         BackgroundSpec? bg = surfaceSlot.HasValue ? BackgroundSpec.Of(surfaceSlot.Value) : null;

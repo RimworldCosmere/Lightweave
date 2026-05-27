@@ -54,9 +54,10 @@ public static class Tabs {
         Rem effectivePadding = bodyPadding ?? new Rem(1f);
         bool skipPadding = noPaddingFor?.Invoke(value) ?? false;
         float padPx = skipPadding ? 0f : effectivePadding.ToPixels();
+        float leftIndentPx = skipPadding ? 0f : new Rem(2f).ToPixels();
 
         if (bodyNode.Measure != null) {
-            node.Measure = width => chromeHeight + padPx * 2f + bodyNode.Measure(Mathf.Max(0f, width - padPx * 2f));
+            node.Measure = width => chromeHeight + padPx * 2f + bodyNode.Measure(Mathf.Max(0f, width - leftIndentPx - padPx));
         }
         else if (bodyNode.PreferredHeight.HasValue) {
             node.PreferredHeight = chromeHeight + padPx * 2f + bodyNode.PreferredHeight.Value;
@@ -65,12 +66,12 @@ public static class Tabs {
         node.MeasureWidth = () => {
             int count = items.Count;
             Theme.Theme theme = RenderContext.Current.Theme;
-            Font font = theme.GetFont(FontRole.BodyBold);
+            Font font = theme.GetFont(FontRole.Mono);
             int pixelSize = Mathf.RoundToInt(new Rem(0.875f).ToFontPx());
             GUIStyle gs = GuiStyleCache.GetOrCreate(font, pixelSize);
             float tabPadding = SpacingScale.Md.ToPixels();
             float tabGap = new Rem(0.25f).ToPixels();
-            float barW = 0f;
+            float barW = leftIndentPx;
             for (int i = 0; i < count; i++) {
                 string label = labelFn(items[i]) ?? string.Empty;
                 barW += gs.CalcSize(new GUIContent(label)).x + tabPadding * 2f;
@@ -79,7 +80,7 @@ public static class Tabs {
                 }
             }
             float bodyW = bodyNode.MeasureWidth?.Invoke() ?? 0f;
-            float bodyOuterW = bodyW + padPx * 2f;
+            float bodyOuterW = bodyW + leftIndentPx + padPx;
             return Mathf.Ceil(Mathf.Max(barW, bodyOuterW));
         };
 
@@ -101,13 +102,13 @@ public static class Tabs {
                 Mathf.Max(0f, rect.yMax - dividerRect.yMax)
             );
             Rect bodyRect = new Rect(
-                bodyOuter.x + padPx,
+                bodyOuter.x + (rtl ? padPx : leftIndentPx),
                 bodyOuter.y + padPx,
-                Mathf.Max(0f, bodyOuter.width - padPx * 2f),
+                Mathf.Max(0f, bodyOuter.width - leftIndentPx - padPx),
                 Mathf.Max(0f, bodyOuter.height - padPx * 2f)
             );
 
-            Font font = theme.GetFont(FontRole.BodyBold);
+            Font font = theme.GetFont(FontRole.Mono);
             int pixelSize = Mathf.RoundToInt(new Rem(0.875f).ToFontPx());
             GUIStyle style = GuiStyleCache.GetOrCreate(font, pixelSize);
             style.alignment = TextAnchor.MiddleCenter;
@@ -122,7 +123,7 @@ public static class Tabs {
 
             Event e = Event.current;
 
-            float cursor = rtl ? barRect.xMax : barRect.x;
+            float cursor = rtl ? barRect.xMax - leftIndentPx : barRect.x + leftIndentPx;
             for (int i = 0; i < count; i++) {
                 T item = items[i];
                 bool active = EqualityComparer<T>.Default.Equals(item, value);

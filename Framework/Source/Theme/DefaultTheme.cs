@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Cosmere.Lightweave.Theme;
 
-[LightweaveTheme("default", "CL_Theme_Default", Order = 0)]
+[LightweaveTheme("default", "CL_Theme_Default", Order = 0, SubLabelKey = "CL_Theme_Default_Sub")]
 public static class DefaultTheme {
     public static Theme Build(Font body, Font bodyBold, Font heading, Font display, Font mono) {
         Dictionary<ThemeSlot, Color> colors = new Dictionary<ThemeSlot, Color> {
@@ -11,7 +11,7 @@ public static class DefaultTheme {
             [ThemeSlot.SurfaceRaised] = new Color(0.175f, 0.168f, 0.155f, 1.00f),
             [ThemeSlot.SurfaceSunken] = new Color(0.083f, 0.080f, 0.074f, 1f),
             [ThemeSlot.SurfaceTranslucent] = new Color(0.030f, 0.030f, 0.025f, 0.35f),
-            [ThemeSlot.SurfaceAccent] = new Color(0.800f, 0.660f, 0.350f, 0.92f),
+            [ThemeSlot.SurfaceAccent] = new Color(0.831f, 0.659f, 0.341f, 0.92f),
             [ThemeSlot.SurfaceShadow] = new Color(0.000f, 0.000f, 0.000f, 0.35f),
             [ThemeSlot.SurfaceInput] = new Color(0.165f, 0.160f, 0.148f, 1.00f),
             [ThemeSlot.SurfaceDisabled] = new Color(0.220f, 0.215f, 0.200f, 1.00f),
@@ -26,10 +26,10 @@ public static class DefaultTheme {
             [ThemeSlot.BorderHover] = new Color(0.380f, 0.300f, 0.190f, 1f),
             [ThemeSlot.BorderOff] = new Color(0.420f, 0.410f, 0.375f, 1f),
             [ThemeSlot.BorderDanger] = new Color(0.820f, 0.330f, 0.305f, 1f),
-            [ThemeSlot.StatusWarning] = new Color(0.940f, 0.720f, 0.280f),
-            [ThemeSlot.StatusDanger] = new Color(0.780f, 0.280f, 0.260f),
-            [ThemeSlot.StatusSuccess] = new Color(0.550f, 0.720f, 0.360f),
-            [ThemeSlot.StatusInfo] = new Color(0.420f, 0.610f, 0.760f),
+            [ThemeSlot.StatusWarning] = new Color(0.831f, 0.604f, 0.227f),
+            [ThemeSlot.StatusDanger] = new Color(0.769f, 0.318f, 0.227f),
+            [ThemeSlot.StatusSuccess] = new Color(0.478f, 0.604f, 0.322f),
+            [ThemeSlot.StatusInfo] = new Color(0.416f, 0.553f, 0.659f),
             [ThemeSlot.HoverTint] = new Color(0.157f, 0.125f, 0.086f, 0.60f),
             [ThemeSlot.ActiveTint] = new Color(0.157f, 0.125f, 0.086f, 0.50f),
             [ThemeSlot.AccentSoft] = new Color(0.831f, 0.659f, 0.341f, 0.08f),
@@ -44,6 +44,7 @@ public static class DefaultTheme {
             [ThemeSlot.Glass1] = new Color(0.059f, 0.047f, 0.031f, 0.55f),
             [ThemeSlot.Glass2] = new Color(0.059f, 0.047f, 0.031f, 0.78f),
             [ThemeSlot.Glass3] = new Color(0.059f, 0.047f, 0.031f, 0.92f),
+            [ThemeSlot.WindowSurface] = new Color(0.024f, 0.018f, 0.011f, 0.98f),
             [ThemeSlot.GlassFrost] = new Color(0.039f, 0.031f, 0.020f, 0.70f),
             [ThemeSlot.AccentGlow] = new Color(0.831f, 0.659f, 0.341f, 0.40f),
             [ThemeSlot.ShelfTint] = new Color(0.000f, 0.000f, 0.000f, 0.20f),
@@ -63,6 +64,9 @@ public static class DefaultTheme {
             [ThemeSlot.TextShadowDeep] = new Color(0.000f, 0.000f, 0.000f, 0.50f),
             [ThemeSlot.TextShadowDisplay] = new Color(0.000f, 0.000f, 0.000f, 0.50f),
             [ThemeSlot.GrainTint] = new Color(0.780f, 0.722f, 0.549f, 0.13f),
+            [ThemeSlot.MenuVignette] = new Color(0.030f, 0.030f, 0.025f, 0.62f),
+            [ThemeSlot.ExpansionBarSurface] = new Color(0.0314f, 0.0235f, 0.0157f, 0.78f),
+            [ThemeSlot.ExpansionPillSurface] = new Color(0.1098f, 0.0863f, 0.0549f, 0.85f),
         };
         return BaseTheme.Compose(colors, body, bodyBold, heading, display, mono, BaseTheme.BuildFlatRadii());
     }

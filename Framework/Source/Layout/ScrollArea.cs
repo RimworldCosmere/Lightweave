@@ -29,6 +29,8 @@ public static class ScrollArea {
         ScrollAreaTone tone = ScrollAreaTone.Accent,
         [DocParam("Draw a 14px gradient at the top/bottom edges of the viewport when content overflows in that direction. Subtle hint of scrollability.")]
         bool edge = false,
+        [DocParam("When true, content shorter than the viewport is stretched to fill the viewport. Useful for input surfaces (TextArea) that should visually fill the available space and only scroll when content exceeds it.")]
+        bool stretchContent = false,
         [DocParam("Sections used by the Ticks variant. Each section is rendered as a clickable tick marker at its Pct position (0..1).", TypeOverride = "IReadOnlyList<ScrollAreaSection>?", DefaultOverride = "null")]
         IReadOnlyList<ScrollAreaSection>? sections = null,
         [DocParam("Inline style override.", TypeOverride = "Style?", DefaultOverride = "null")]
@@ -49,7 +51,7 @@ public static class ScrollArea {
             lastResetKey.Current = resetKey;
         }
 
-        LightweaveNode node = BuildScrollArea(content, statusRef.Current, variant, tone, edge, sections, line, file);
+        LightweaveNode node = BuildScrollArea(content, statusRef.Current, variant, tone, edge, stretchContent, sections, line, file);
         node.ApplyStyling("scroll-area", style, classes, id);
         return node;
     }
@@ -60,6 +62,7 @@ public static class ScrollArea {
         ScrollAreaVariant variant = ScrollAreaVariant.Slim,
         ScrollAreaTone tone = ScrollAreaTone.Accent,
         bool edge = false,
+        bool stretchContent = false,
         IReadOnlyList<ScrollAreaSection>? sections = null,
         Style? style = null,
         string[]? classes = null,
@@ -67,7 +70,7 @@ public static class ScrollArea {
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = ""
     ) {
-        LightweaveNode node = BuildScrollArea(content, status, variant, tone, edge, sections, line, file);
+        LightweaveNode node = BuildScrollArea(content, status, variant, tone, edge, stretchContent, sections, line, file);
         node.ApplyStyling("scroll-area", style, classes, id);
         return node;
     }
@@ -78,6 +81,7 @@ public static class ScrollArea {
         ScrollAreaVariant variant,
         ScrollAreaTone tone,
         bool edge,
+        bool stretchContent,
         IReadOnlyList<ScrollAreaSection>? sections,
         int line,
         string file
@@ -87,9 +91,10 @@ public static class ScrollArea {
         node.Paint = (rect, paintChildren) => {
             float scrollbarGutter = LightweaveScrollView.GutterPixels(status.VerticalVisible, variant);
             float innerWidth = rect.width - scrollbarGutter;
-            float contentHeight = content.IsInFlow()
+            float naturalHeight = content.IsInFlow()
                 ? content.Measure?.Invoke(innerWidth) ?? content.PreferredHeight ?? rect.height
                 : rect.height;
+            float contentHeight = stretchContent ? Mathf.Max(naturalHeight, rect.height) : naturalHeight;
             status.Height = contentHeight;
             using (new LightweaveScrollView(rect, status, variant, tone, edge, sections, content)) {
                 if (content.IsInFlow()) {

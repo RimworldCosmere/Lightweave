@@ -39,8 +39,6 @@ public static class Menu {
     private static readonly Rem EmptyHeight = new Rem(2.5f);
     private static readonly Rem HotkeyTrailWidth = new Rem(2.5f);
 
-    private static readonly Color PopBackdrop = new Color(15f / 255f, 12f / 255f, 8f / 255f, 0.96f);
-    private static readonly Color RowHover = new Color(40f / 255f, 32f / 255f, 22f / 255f, 0.75f);
 
     
 
@@ -380,8 +378,9 @@ public static class Menu {
             return;
         }
 
-        BackgroundSpec bg = BackgroundSpec.Of(PopBackdrop);
-        PaintBox.Draw(rect, bg, null, RadiusSpec.All(RadiusScale.Lg));
+        BackgroundSpec bg = BackgroundSpec.Of(ThemeSlot.Glass3);
+        BorderSpec border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderSubtle);
+        PaintBox.Draw(rect, bg, border, RadiusSpec.All(RadiusScale.Lg));
     }
 
     private static void PaintHeader(Rect rect, string label, string? meta) {
@@ -492,7 +491,7 @@ public static class Menu {
 
         if (e.type == EventType.Repaint) {
             if (!item.Disabled && hovering) {
-                PaintBox.Draw(rowRect, BackgroundSpec.Of(RowHover), null, RadiusSpec.All(RadiusScale.None));
+                PaintBox.Draw(rowRect, BackgroundSpec.Of(ThemeSlot.HoverTint), null, RadiusSpec.All(RadiusScale.None));
             }
             else if (focused && !item.Disabled) {
                 Color focusFill = theme.GetColor(ThemeSlot.SurfaceRaised);

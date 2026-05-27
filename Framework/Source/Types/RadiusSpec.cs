@@ -26,6 +26,14 @@ public readonly record struct RadiusSpec(
         return new RadiusSpec(BottomLeft: v, BottomRight: v);
     }
 
+    public static RadiusSpec Left(Rem v) {
+        return new RadiusSpec(TopLeft: v, BottomLeft: v);
+    }
+
+    public static RadiusSpec Right(Rem v) {
+        return new RadiusSpec(TopRight: v, BottomRight: v);
+    }
+
     public static RadiusSpec StartSide(Rem v) {
         return new RadiusSpec(TopStart: v, BottomStart: v);
     }
@@ -40,6 +48,14 @@ public readonly record struct RadiusSpec(
 
     public static RadiusSpec Bottom(Cosmere.Lightweave.Tokens.RadiusScale scale) {
         return Bottom(ResolveRem(scale));
+    }
+
+    public static RadiusSpec Left(Cosmere.Lightweave.Tokens.RadiusScale scale) {
+        return Left(ResolveRem(scale));
+    }
+
+    public static RadiusSpec Right(Cosmere.Lightweave.Tokens.RadiusScale scale) {
+        return Right(ResolveRem(scale));
     }
 
     public static RadiusSpec StartSide(Cosmere.Lightweave.Tokens.RadiusScale scale) {

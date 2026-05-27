@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
+using Cosmere.Lightweave.Settings;
 using Cosmere.Lightweave.Theme;
 using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
@@ -12,17 +13,32 @@ namespace Cosmere.Lightweave.Patch;
 
 public static class LightweaveBackdropRegistry {
     private static readonly List<LightweaveWindow> active = new List<LightweaveWindow>();
+    private static readonly Dictionary<LightweaveWindow, float> startTime = new Dictionary<LightweaveWindow, float>();
 
     public static IReadOnlyList<LightweaveWindow> Active => active;
 
     public static void Register(LightweaveWindow window) {
         if (!active.Contains(window)) {
             active.Add(window);
+            startTime[window] = Time.unscaledTime;
         }
     }
 
     public static void Unregister(LightweaveWindow window) {
         active.Remove(window);
+        startTime.Remove(window);
+    }
+
+    public static float ScrimAlphaFor(LightweaveWindow window, float targetAlpha) {
+        if (LightweaveMod.Settings?.ReduceMotion ?? false) {
+            return targetAlpha;
+        }
+        if (!startTime.TryGetValue(window, out float t0)) {
+            return targetAlpha;
+        }
+        float elapsed = Time.unscaledTime - t0;
+        float progress = elapsed >= 0.16f ? 1f : Mathf.Clamp01(elapsed / 0.16f);
+        return targetAlpha * progress;
     }
 
     public static void PruneOrphans() {
@@ -40,6 +56,9 @@ public static class LightweaveBackdropRegistry {
             LightweaveWindow window = active[i];
             if (window == null || !stack.Windows.Contains(window)) {
                 active.RemoveAt(i);
+                if (window != null) {
+                    startTime.Remove(window);
+                }
             }
         }
     }
@@ -67,6 +86,11 @@ public static class WindowStackOnGUI_BackdropPatch {
             if (window.DrawScrim) {
                 Color scrimBase = theme.GetColor(ThemeSlot.ScrimDefault);
                 Color scrim = window.ScrimColor ?? new Color(scrimBase.r, scrimBase.g, scrimBase.b, 0.55f);
+                float fadeProgress = scrim.a > 0f
+                    ? LightweaveBackdropRegistry.ScrimAlphaFor(window, scrim.a) / scrim.a
+                    : 1f;
+                BackdropBlur.Draw(screen, 6f * fadeProgress);
+                scrim.a *= fadeProgress;
                 Widgets.DrawBoxSolid(screen, scrim);
             }
 

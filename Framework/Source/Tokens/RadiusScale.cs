@@ -7,5 +7,6 @@ public enum RadiusScale {
     Md,
     Lg,
     Xl,
+    Pill,
     Full,
 }

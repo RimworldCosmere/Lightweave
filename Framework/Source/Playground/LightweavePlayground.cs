@@ -52,7 +52,7 @@ public sealed class LightweavePlayground : LightweaveWindow {
             "feedback",
             "CL_Playground_Category_Feedback",
             "CL_Playground_Category_Feedback_Desc",
-            new[] { "spinner", "progressbar", "ringgauge", "tooltip" }
+            new[] { "spinner", "progressbar", "ringgauge", "tooltip", "diffbanner" }
         ),
         new PlaygroundCategory(
             "blocks",
@@ -143,6 +143,7 @@ public sealed class LightweavePlayground : LightweaveWindow {
         { "ringgauge", "Lightweave/Feedback/RingGauge.cs" },
         { "chart", "Lightweave/Feedback/Chart.cs" },
         { "tooltip", "Lightweave/Feedback/Tooltip.cs" },
+        { "diffbanner", "Lightweave/Feedback/DiffBanner.cs" },
         { "avatar", "Lightweave/Blocks/Avatar.cs" },
         { "tabs", "Lightweave/Navigation/Tabs.cs" },
         { "segmented", "Lightweave/Navigation/Segmented.cs" },
