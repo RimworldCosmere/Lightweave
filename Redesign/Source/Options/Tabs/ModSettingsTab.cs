@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+using Cosmere.Lightweave.Fonts;
+using Cosmere.Lightweave.Icons;
 using Cosmere.Lightweave.Input;
 using Cosmere.Lightweave.Layout;
 using Cosmere.Lightweave.Rendering;
@@ -13,8 +16,11 @@ using Cosmere.Lightweave.Redesign.Settings;
 using RimWorld;
 using UnityEngine;
 using Verse;
+using Cosmere.Lightweave.Redesign.ModsConfig;
 using Heading = Cosmere.Lightweave.Typography.Typography.Heading;
 using Caption = Cosmere.Lightweave.Typography.Typography.Caption;
+using Text = Cosmere.Lightweave.Typography.Typography.Text;
+using Display = Cosmere.Lightweave.Typography.Display;
 
 namespace Cosmere.Lightweave.Redesign.Options.Tabs;
 
@@ -42,7 +48,7 @@ public static class ModSettingsTab {
         }
 
         return HStack.Create(SpacingScale.None, h => {
-            h.Add(BuildMasterPane(filtered, selectedKey, query), new Rem(16f).ToPixels());
+            h.Add(BuildMasterPane(filtered, selectedKey, query), new Rem(22.5f).ToPixels());
             h.AddFlex(BuildDetailPane(selected));
         });
     }
@@ -156,21 +162,16 @@ public static class ModSettingsTab {
         node.PreferredHeight = new Rem(2.5f).ToPixels();
         node.Paint = (rect, _) => {
             InteractionState state = InteractionState.Resolve(rect, null, false);
-            Theme.Theme theme = RenderContext.Current.Theme;
 
             if (isActive) {
-                Color baseSlot = theme.GetColor(ThemeSlot.SurfaceGhostHover);
-                Color warm = new Color(baseSlot.r, baseSlot.g, baseSlot.b, 0.4f);
-                PaintBox.Draw(rect, BackgroundSpec.Of(warm), null, null);
+                PaintBox.Draw(rect, BackgroundSpec.Of(ThemeSlot.ActiveTint), null, null);
             }
             else if (state.Hovered) {
-                Color baseSlot = theme.GetColor(ThemeSlot.SurfaceGhostHover);
-                Color hover = new Color(baseSlot.r, baseSlot.g, baseSlot.b, 0.2f);
-                PaintBox.Draw(rect, BackgroundSpec.Of(hover), null, null);
+                PaintBox.Draw(rect, BackgroundSpec.Of(ThemeSlot.HoverTint), null, null);
             }
 
             if (isActive) {
-                float stripeW = new Rem(0.1875f).ToPixels();
+                float stripeW = Spacing.StripeWidth.ToPixels();
                 Rect stripe = new Rect(rect.x, rect.y, stripeW, rect.height);
                 PaintBox.Draw(stripe, BackgroundSpec.Of(ThemeSlot.SurfaceAccent), null, null);
             }
@@ -180,7 +181,7 @@ public static class ModSettingsTab {
             TextDraw.Draw(
                 labelRect,
                 label,
-                isActive ? FontRole.BodyBold : FontRole.Body,
+                FontRole.Body,
                 new Rem(0.9f),
                 TextAnchor.MiddleLeft,
                 isActive ? ThemeSlot.TextPrimary : ThemeSlot.TextSecondary
@@ -209,53 +210,28 @@ public static class ModSettingsTab {
             );
         }
 
-        return Box.Create(
-            children: c => c.Add(BuildDetailBody(selected)),
-            style: new Style {
-                Width = Length.Stretch,
-                Height = Length.Stretch,
-                Padding = new EdgeInsets(
-                    Left: SpacingScale.Lg,
-                    Top: SpacingScale.Lg,
-                    Right: SpacingScale.Lg,
-                    Bottom: SpacingScale.Md
-                ),
-            }
-        );
+        return BuildDetailBody(selected);
     }
 
     private static LightweaveNode BuildDetailBody(Mod mod) {
-        if (IsOwnFrameworkMod(mod)) {
-            return ScrollArea.Create(
-                content: LightweaveSettingsForm.Build(),
+        ModMetaData? meta = mod.Content?.ModMetaData;
+        bool isFramework = IsOwnFrameworkMod(mod);
+        bool isRedesign = IsOwnRedesignMod(mod);
+
+        LightweaveNode body;
+        if (isFramework || isRedesign) {
+            LightweaveNode form = isFramework
+                ? LightweaveSettingsForm.Build()
+                : LightweaveRedesignSettingsForm.Build();
+
+            body = ScrollArea.Create(
+                content: form,
                 style: new Style { Width = Length.Stretch, Height = Length.Stretch }
             );
         }
-
-        if (IsOwnRedesignMod(mod)) {
-            return ScrollArea.Create(
-                content: LightweaveRedesignSettingsForm.Build(),
-                style: new Style { Width = Length.Stretch, Height = Length.Stretch }
-            );
-        }
-
-        return BuildThirdPartyBody(mod);
-    }
-
-    private static LightweaveNode BuildThirdPartyBody(Mod mod) {
-        string title = mod.SettingsCategory() ?? string.Empty;
-        return Stack.Create(
-            gap: SpacingScale.Sm,
-            children: s => {
-                s.Add(HStack.Create(SpacingScale.Sm, h => {
-                    h.AddFlex(Heading.Create(3, title));
-                    h.AddHug(Button.Create(
-                        label: (string)"CL_ModSettings_PopOut".Translate(),
-                        onClick: () => OpenVanillaModSettings(mod),
-                        variant: Variant.Ghost
-                    ));
-                }));
-                s.AddFlex(ScrollArea.Create(
+        else {
+            body = Box.Create(
+                children: c => c.Add(ScrollArea.Create(
                     content: ImguiHost.Create(
                         render: rect => {
                             try {
@@ -268,11 +244,217 @@ public static class ModSettingsTab {
                         height: new Rem(40f)
                     ),
                     style: new Style { Width = Length.Stretch, Height = Length.Stretch }
-                ));
+                )),
+                style: new Style {
+                    Width = Length.Stretch,
+                    Height = Length.Stretch,
+                    Padding = new EdgeInsets(
+                        Left: SpacingScale.Lg,
+                        Top: SpacingScale.Lg,
+                        Right: SpacingScale.Lg,
+                        Bottom: SpacingScale.Md
+                    ),
+                }
+            );
+        }
+
+        return Stack.Create(
+            gap: SpacingScale.None,
+            children: s => {
+                s.Add(BuildModHeader(mod, meta));
+                s.AddFlex(body);
             },
             style: new Style { Width = Length.Stretch, Height = Length.Stretch }
         );
     }
+
+
+    private static LightweaveNode BuildModHeader(Mod? mod, ModMetaData? meta) {
+        Font? fellRegular = LightweaveFonts.IMFellEnglishRegular;
+        FontRef titleFont = fellRegular != null
+            ? new FontRef.Literal(fellRegular)
+            : new FontRef.Role(FontRole.Display);
+
+        float actionsColPx = new Rem(14f).ToPixels();
+
+        return Box.Create(
+            children: c => c.Add(HStack.Create(SpacingScale.Md, h => {
+                h.AddFlex(HStack.Create(SpacingScale.Md, left => {
+                    if (meta != null) {
+                        left.Add(BuildModHeaderThumbnail(meta), new Rem(5f).ToPixels());
+                    }
+                    left.AddFlex(Stack.Create(SpacingScale.Xs, s => {
+                        string title = meta?.Name ?? meta?.PackageId ?? string.Empty;
+                        s.Add(Display.Create(
+                            title,
+                            level: 2,
+                            wrap: true,
+                            style: new Style {
+                                TextAlign = TextAlign.Start,
+                                FontFamily = titleFont,
+                            }
+                        ));
+                        if (meta != null) {
+                            s.Add(BuildBylineRow(meta));
+                            s.Add(BuildHeaderDescription(meta));
+                        }
+                    }));
+                }));
+                h.Add(BuildHeaderActionsColumn(mod, meta), actionsColPx);
+            })),
+            style: new Style {
+                Width = Length.Stretch,
+                Padding = new EdgeInsets(
+                    Top: SpacingScale.Lg,
+                    Right: SpacingScale.Lg,
+                    Bottom: SpacingScale.Md,
+                    Left: SpacingScale.Lg
+                ),
+                Border = new BorderSpec(Bottom: new Rem(1f / 16f), Color: ThemeSlot.BorderSubtle),
+            }
+        );
+    }
+
+    private static LightweaveNode BuildModHeaderThumbnail(ModMetaData meta) {
+        LightweaveNode node = NodeBuilder.New("ModSettingsHeaderThumb:" + meta.PackageId);
+        float size = new Rem(5f).ToPixels();
+        node.PreferredHeight = size;
+        node.MeasureWidth = () => size;
+        node.Paint = (rect, _) => {
+            float sq = Mathf.Min(rect.width, rect.height);
+            Rect r = new Rect(rect.x, rect.y, sq, sq);
+            Texture2D? preview = meta.PreviewImage;
+            if (preview != null) {
+                PaintBox.DrawTexture(r, preview, Color.white, ScaleMode.ScaleToFit);
+            }
+            else {
+                PaintBox.Draw(
+                    r,
+                    BackgroundSpec.Of(ThemeSlot.SurfaceRaised),
+                    BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderSubtle),
+                    null
+                );
+            }
+        };
+        return node;
+    }
+
+    private static LightweaveNode BuildBylineRow(ModMetaData meta) {
+        List<string> parts = new List<string>();
+        string author = meta.AuthorsString ?? string.Empty;
+        if (!string.IsNullOrEmpty(author)) {
+            parts.Add((string)"CL_ModSettings_Header_AuthorPrefix".Translate(author.Named("AUTHOR")));
+        }
+        if (!string.IsNullOrEmpty(meta.ModVersion)) {
+            parts.Add("v" + meta.ModVersion);
+        }
+        string textLine = string.Join("  ·  ", parts);
+        bool isWorkshop = meta.Source == ContentSource.SteamWorkshop;
+
+        return HStack.Create(
+            gap: SpacingScale.Sm,
+            children: h => {
+                if (!string.IsNullOrEmpty(textLine)) {
+                    h.AddHug(Text.Create(
+                        textLine,
+                        style: new Style {
+                            FontFamily = FontRole.Mono,
+                            FontSize = new Rem(0.875f),
+                            TextColor = ThemeSlot.TextMuted,
+                        }
+                    ));
+                }
+                if (isWorkshop) {
+                    h.AddHug(IconButton.Create(
+                        icon: Glyph.Create(Phosphor.SteamLogo, style: new Style {
+                            FontSize = new Rem(1f),
+                            TextColor = ThemeSlot.TextSecondary,
+                        }),
+                        onClick: () => OpenWorkshop(meta),
+                        variant: Variant.Ghost,
+                        iconSize: new Rem(1f),
+                        tooltipKey: "CL_ModSettings_Header_Workshop_Tip"
+                    ));
+                }
+                h.AddHug(IconButton.Create(
+                    icon: Glyph.Create(Phosphor.FolderOpen, style: new Style {
+                        FontSize = new Rem(1f),
+                        TextColor = ThemeSlot.TextSecondary,
+                    }),
+                    onClick: () => OpenModFolder(meta),
+                    variant: Variant.Ghost,
+                    iconSize: new Rem(1f),
+                    tooltipKey: "CL_ModSettings_Header_Folder_Tip"
+                ));
+                h.AddFlex(Spacer.Flex());
+            }
+        );
+    }
+
+    private static LightweaveNode BuildHeaderDescription(ModMetaData meta) {
+        string description = meta.Description ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(description)) {
+            description = (string)"CL_ModSettings_Description_None".Translate();
+        }
+        return Text.Create(
+            description,
+            wrap: true,
+            style: new Style {
+                FontSize = new Rem(0.9375f),
+                TextColor = ThemeSlot.TextSecondary,
+            }
+        );
+    }
+
+    private static LightweaveNode BuildHeaderActionsColumn(Mod? mod, ModMetaData? meta) {
+        bool active = meta != null && Verse.ModsConfig.IsActive(meta);
+        bool toggleDisabled = meta == null || meta.IsCoreMod;
+        bool isLightweaveNative = mod != null && (IsOwnFrameworkMod(mod) || IsOwnRedesignMod(mod));
+        bool resetDisabled = mod == null;
+
+        Style buttonStyle = new Style {
+            Width = Length.Stretch,
+            Height = new Rem(2f),
+            FontSize = new Rem(0.8125f),
+        };
+
+        return Stack.Create(
+            gap: SpacingScale.Xs,
+            children: s => {
+                s.Add(Button.Create(
+                    label: (string)"CL_ModSettings_Action_Reset".Translate(),
+                    onClick: () => { if (mod != null) ConfirmResetModSettings(mod); },
+                    variant: Variant.Secondary,
+                    disabled: resetDisabled,
+                    style: buttonStyle
+                ));
+                s.Add(Button.Create(
+                    label: (string)(active
+                        ? "CL_ModSettings_Action_Disable"
+                        : "CL_ModSettings_Action_Enable").Translate(),
+                    onClick: () => ToggleModEnabled(meta),
+                    variant: active ? Variant.Danger : Variant.Primary,
+                    disabled: toggleDisabled,
+                    style: buttonStyle
+                ));
+                if (mod != null && !isLightweaveNative) {
+                    s.Add(Button.Create(
+                        label: (string)"CL_ModSettings_PopOut".Translate(),
+                        onClick: () => OpenVanillaModSettings(mod),
+                        variant: Variant.Ghost,
+                        style: buttonStyle
+                    ));
+                }
+            },
+            style: new Style { Width = Length.Stretch }
+        );
+    }
+
+    
+
+    
+
+    
 
     private static bool IsOwnFrameworkMod(Mod mod) {
         if (mod.Content == null) {
@@ -295,5 +477,85 @@ public static class ModSettingsTab {
             layer = WindowLayer.Super,
         };
         Find.WindowStack.Add(dialog);
+    }
+
+
+    
+
+    private static void ConfirmResetModSettings(Mod mod) {
+        string displayName = mod.Content?.ModMetaData?.Name ?? mod.SettingsCategory() ?? KeyFor(mod);
+        string body = "CL_ModSettings_Confirm_Reset_Body"
+            .Translate(displayName.Named("MOD"))
+            .Resolve();
+        Verse.Dialog_MessageBox dialog = Verse.Dialog_MessageBox.CreateConfirmation(
+            body,
+            () => ResetModSettings(mod),
+            destructive: true,
+            title: (string)"CL_ModSettings_Confirm_Reset_Title".Translate()
+        );
+        Find.WindowStack.Add(dialog);
+    }
+
+    private static void ResetModSettings(Mod mod) {
+        try {
+            FieldInfo? settingsField = typeof(Verse.Mod).GetField(
+                "modSettings",
+                BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public
+            );
+            if (settingsField == null) {
+                LightweaveLog.Error("Could not locate Verse.Mod.modSettings field via reflection.");
+                return;
+            }
+            ModSettings? current = settingsField.GetValue(mod) as ModSettings;
+            if (current == null) {
+                LightweaveLog.Warning($"Mod '{KeyFor(mod)}' has no settings instance to reset.");
+                return;
+            }
+            Type settingsType = current.GetType();
+            ModSettings? fresh = Activator.CreateInstance(settingsType) as ModSettings;
+            if (fresh == null) {
+                LightweaveLog.Error($"Failed to instantiate fresh settings of type {settingsType.FullName}.");
+                return;
+            }
+            settingsField.SetValue(mod, fresh);
+            string identifier = mod.Content?.PackageId ?? mod.GetType().FullName ?? string.Empty;
+            LoadedModManager.WriteModSettings(identifier, mod.GetType().Name, fresh);
+        }
+        catch (Exception ex) {
+            LightweaveLog.Error($"Failed to reset mod settings for '{KeyFor(mod)}': {ex}");
+        }
+    }
+
+    private static void ToggleModEnabled(ModMetaData? meta) {
+        if (meta == null) {
+            return;
+        }
+        bool active = Verse.ModsConfig.IsActive(meta);
+        Verse.ModsConfig.SetActive(meta, !active);
+        Verse.ModsConfig.Save();
+        Find.WindowStack.Add(new Dialog_ModsConfigRestart());
+    }
+
+    private static void OpenWorkshop(ModMetaData meta) {
+        try {
+            SteamUtility.OpenWorkshopPage(meta.GetPublishedFileId());
+        }
+        catch (Exception ex) {
+            LightweaveLog.Error($"Failed to open workshop page for '{meta.PackageId}': {ex}");
+        }
+    }
+
+    private static void OpenModFolder(ModMetaData meta) {
+        try {
+            System.IO.DirectoryInfo? root = meta.RootDir;
+            if (root == null || !root.Exists) {
+                LightweaveLog.Warning($"Mod '{meta.PackageId}' has no root directory on disk.");
+                return;
+            }
+            Application.OpenURL(root.FullName);
+        }
+        catch (Exception ex) {
+            LightweaveLog.Error($"Failed to open mod folder for '{meta.PackageId}': {ex}");
+        }
     }
 }

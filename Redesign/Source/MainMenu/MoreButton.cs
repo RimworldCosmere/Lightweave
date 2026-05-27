@@ -11,7 +11,7 @@ using Verse;
 namespace Cosmere.Lightweave.Redesign.MainMenu;
 
 public static class MoreButton {
-    private static readonly Rem TileHeight = new Rem(4.0f);
+    private static readonly Rem TileHeight = new Rem(5.6875f);
     private static readonly Rem MenuWidth = new Rem(18f);
 
     public static LightweaveNode Create(

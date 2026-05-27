@@ -20,7 +20,6 @@ namespace Cosmere.Lightweave.Redesign.LoadColony;
 
 public static class SaveListPane {
     private static readonly Rem RowHeight = new Rem(5.0f);
-    private static readonly Rem StripeWidth = new Rem(0.1875f);
 
     public static LightweaveNode Create(
         List<SaveFileInfo> files,
@@ -30,11 +29,30 @@ public static class SaveListPane {
         Action<string> onFilterChange
     ) {
         IReadOnlyList<string> filterValues = new[] { "all", "manual", "auto" };
+
+        int autoCount = 0;
+        for (int i = 0; i < files.Count; i++) {
+            if (IsAutosave(files[i].FileName)) {
+                autoCount++;
+            }
+        }
+        string allCountStr = files.Count.ToString();
+        string manualCountStr = (files.Count - autoCount).ToString();
+        string autoCountStr = autoCount.ToString();
+
         string LabelFor(string f) {
             return f switch {
-                "manual" => "CL_LoadColony_Filter_Manual".Translate(),
-                "auto" => "CL_LoadColony_Filter_Auto".Translate(),
-                _ => "CL_LoadColony_Filter_All".Translate(),
+                "manual" => ((string)"CL_LoadColony_Filter_Manual".Translate()).ToUpperInvariant(),
+                "auto" => ((string)"CL_LoadColony_Filter_Auto".Translate()).ToUpperInvariant(),
+                _ => ((string)"CL_LoadColony_Filter_All".Translate()).ToUpperInvariant(),
+            };
+        }
+
+        string CountFor(string f) {
+            return f switch {
+                "manual" => manualCountStr,
+                "auto" => autoCountStr,
+                _ => allCountStr,
             };
         }
 
@@ -43,10 +61,12 @@ public static class SaveListPane {
                 value: filter,
                 items: filterValues,
                 labelFn: LabelFor,
-                onChange: onFilterChange
+                onChange: onFilterChange,
+                countFn: CountFor,
+                bordered: false,
+                style: new Style { Width = Length.Stretch, Height = Length.Rem(2.33f) }
             )),
             style: new Style {
-                Padding = EdgeInsets.All(SpacingScale.Sm),
                 Border = new BorderSpec(Bottom: new Rem(0.0625f), Color: ThemeSlot.BorderSubtle),
             }
         );
@@ -95,14 +115,14 @@ public static class SaveListPane {
             InteractionState state = InteractionState.Resolve(rect, null, false);
 
             if (isSelected) {
-                PaintBox.Draw(rect, BackgroundSpec.Of(new Color(1f, 1f, 1f, 0.06f)), null, null);
+                PaintBox.Draw(rect, BackgroundSpec.Of(ThemeSlot.ActiveTint), null, null);
             }
             else if (state.Hovered) {
-                PaintBox.Draw(rect, BackgroundSpec.Of(new Color(1f, 1f, 1f, 0.03f)), null, null);
+                PaintBox.Draw(rect, BackgroundSpec.Of(ThemeSlot.HoverTint), null, null);
             }
 
             if (isSelected) {
-                Rect stripe = new Rect(rect.x, rect.y, StripeWidth.ToPixels(), rect.height);
+                Rect stripe = new Rect(rect.x, rect.y, Spacing.StripeWidth.ToPixels(), rect.height);
                 PaintBox.Draw(stripe, BackgroundSpec.Of(ThemeSlot.SurfaceAccent), null, null);
             }
 
@@ -137,9 +157,9 @@ public static class SaveListPane {
 
             float labelWidth = Mathf.Max(0f, content.width - chipReserve);
 
-            Rem titleSize = new Rem(1.05f);
+            Rem titleSize = new Rem(1.175f);
             int titlePx = Mathf.RoundToInt(titleSize.ToFontPx());
-            Rem detailSize = new Rem(0.7f);
+            Rem detailSize = new Rem(0.7625f);
             int detailPx = Mathf.RoundToInt(detailSize.ToFontPx());
 
             float titleCursor = content.x;
@@ -211,6 +231,6 @@ public static class SaveListPane {
             }
         }
         parts.Add(SaveMetadata.FormatRelative(status.LastWriteTime));
-        return string.Join("  ·  ", parts);
+        return Verse.ColoredText.StripTags(string.Join("  ·  ", parts));
     }
 }

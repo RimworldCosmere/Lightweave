@@ -13,7 +13,10 @@ using Verse;
 namespace Cosmere.Lightweave.Redesign.MainMenu;
 
 public static class DockTile {
-    private static readonly Rem TileHeight = new Rem(5.6875f);
+    private static readonly Rem TileHeight = new Rem(4f);
+    private static readonly Rem LabelLineHeight = new Rem(1.3f);
+    private static readonly Rem HintLineHeight = new Rem(1.25f);
+    private static readonly Rem LabelHintGap = new Rem(0.1f);
 
     public static LightweaveNode Create(
         string label,
@@ -91,20 +94,14 @@ public static class DockTile {
         string upper = (label ?? string.Empty).ToUpperInvariant();
         Rem fontSize = new Rem(0.875f);
         int pixelSize = Mathf.RoundToInt(fontSize.ToFontPx());
-        float labelH = new Rem(1.3f).ToPixels();
-        Rect labelRect = new Rect(
-            tile.x,
-            tile.y + (tile.height - labelH) * 0.5f - new Rem(0.35f).ToPixels(),
-            tile.width,
-            labelH
-        );
+        float labelH = LabelLineHeight.ToPixels();
+        float hintH = HintLineHeight.ToPixels();
+        float gap = LabelHintGap.ToPixels();
+        float blockH = labelH + gap + hintH;
+        float blockY = tile.y + (tile.height - blockH) * 0.5f;
+        Rect labelRect = new Rect(tile.x, blockY, tile.width, labelH);
 
-        bool hovered = !disabled && tile.Contains(Event.current.mousePosition);
-        ThemeSlot fgSlot = disabled
-            ? ThemeSlot.TextMuted
-            : hovered
-                ? ThemeSlot.TextOnAccent
-                : ThemeSlot.TextPrimary;
+        ThemeSlot fgSlot = disabled ? ThemeSlot.TextMuted : ThemeSlot.TextPrimary;
 
         float tracking = Mathf.Max(1, Mathf.RoundToInt(pixelSize * 0.04f));
         TextDraw.DrawTracked(labelRect, upper, FontRole.Body, fontSize, TextAnchor.MiddleCenter, fgSlot, tracking);
@@ -122,17 +119,16 @@ public static class DockTile {
         string label = "[" + key.ToUpperInvariant() + "]";
         Rem fontSize = new Rem(0.9f);
         Vector2 size = TextDraw.Measure(label, FontRole.Mono, fontSize);
-        float h = new Rem(1.25f).ToPixels();
+        float labelH = LabelLineHeight.ToPixels();
+        float hintH = HintLineHeight.ToPixels();
+        float gap = LabelHintGap.ToPixels();
+        float blockH = labelH + gap + hintH;
+        float blockY = tile.y + (tile.height - blockH) * 0.5f;
         float x = tile.x + (tile.width - size.x) * 0.5f;
-        float y = tile.yMax - h - new Rem(0.4f).ToPixels();
-        Rect hint = new Rect(x, y, size.x, h);
+        float y = blockY + labelH + gap;
+        Rect hint = new Rect(x, y, size.x, hintH);
 
-        bool hovered = !disabled && tile.Contains(Event.current.mousePosition);
-        ThemeSlot fgSlot = disabled
-            ? ThemeSlot.TextMuted
-            : hovered
-                ? ThemeSlot.TextOnAccent
-                : ThemeSlot.TextSecondary;
+        ThemeSlot fgSlot = disabled ? ThemeSlot.TextMuted : ThemeSlot.TextSecondary;
         TextDraw.Draw(hint, label, FontRole.Mono, fontSize, TextAnchor.MiddleLeft, fgSlot);
     }
 
@@ -144,17 +140,17 @@ public static class DockTile {
         }
 
         Theme.Theme theme = RenderContext.Current.Theme;
-        bool hovered = !disabled && tile.Contains(Event.current.mousePosition);
-        ThemeSlot fgSlot = disabled
-            ? ThemeSlot.TextMuted
-            : hovered
-                ? ThemeSlot.TextOnAccent
-                : ThemeSlot.TextSecondary;
+        ThemeSlot fgSlot = disabled ? ThemeSlot.TextMuted : ThemeSlot.TextSecondary;
         Color tint = theme.GetColor(fgSlot);
 
         float chevronSize = new Rem(1.0f).ToPixels();
+        float labelH = LabelLineHeight.ToPixels();
+        float hintH = HintLineHeight.ToPixels();
+        float gap = LabelHintGap.ToPixels();
+        float blockH = labelH + gap + hintH;
+        float blockY = tile.y + (tile.height - blockH) * 0.5f;
         float cx = tile.x + tile.width * 0.5f;
-        float yTop = tile.yMax - chevronSize - new Rem(0.525f).ToPixels();
+        float yTop = blockY + labelH + gap + (hintH - chevronSize) * 0.5f;
         Rect chevronRect = RectSnap.Snap(new Rect(cx - chevronSize * 0.5f, yTop, chevronSize, chevronSize));
 
         float scaleY = 1f - 2f * flipRatio;

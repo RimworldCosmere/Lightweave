@@ -67,7 +67,7 @@ public static class MainMenuRoot {
                 }
             ),
             style: new Style {
-                MaxWidth = new Rem(80f),
+                MaxWidth = new Rem(66f),
                 Padding = new EdgeInsets(Left: SpacingScale.Lg, Right: SpacingScale.Lg),
             }
         );
@@ -89,7 +89,7 @@ public static class MainMenuRoot {
             shape: VignetteShape.Radial,
             intensity: 0.75f,
             scale: 1.5f,
-            color: ThemeSlot.OverlayDim
+            color: ThemeSlot.MenuVignette
         );
     }
 }

@@ -12,6 +12,10 @@ namespace Cosmere.Lightweave.Redesign.MainMenu;
 public static class TitleHero {
     private const float TitleAspect = 1032f / 146f;
     private static readonly Texture2D TitleTex = ContentFinder<Texture2D>.Get("UI/HeroArt/GameTitle");
+    private static readonly Vector2[] SubtitleHaloOffsets = {
+        new Vector2(-1f, 0f), new Vector2(1f, 0f),
+        new Vector2(0f, -1f), new Vector2(0f, 1f),
+    };
 
     public static LightweaveNode Create() {
         return Stack.Create(
@@ -65,13 +69,32 @@ public static class TitleHero {
             float tracking = pixelSize * 0.02f;
 
             Rect anchored = new Rect(rect.x, rect.y, wordmarkRight - rect.x, rect.height);
+
+            Theme.Theme theme = RenderContext.Current.Theme;
+            Color ink = theme.GetColor(ThemeSlot.TextSecondary);
+            Color halo = theme.GetColor(ThemeSlot.TextShadowDeep);
+
+            for (int i = 0; i < SubtitleHaloOffsets.Length; i++) {
+                Vector2 off = SubtitleHaloOffsets[i];
+                TextDraw.DrawTracked(
+                    new Rect(anchored.x + off.x, anchored.y + off.y, anchored.width, anchored.height),
+                    raw,
+                    FontRole.Display,
+                    new Rem(1.375f),
+                    TextAnchor.MiddleRight,
+                    halo,
+                    tracking,
+                    FontStyle.Italic
+                );
+            }
+
             TextDraw.DrawTracked(
                 anchored,
                 raw,
                 FontRole.Display,
                 new Rem(1.375f),
                 TextAnchor.MiddleRight,
-                ThemeSlot.TextMuted,
+                ink,
                 tracking,
                 FontStyle.Italic
             );

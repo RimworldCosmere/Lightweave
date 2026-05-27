@@ -15,8 +15,17 @@ public static class MetadataTable {
     public static LightweaveNode Create(
         SaveMetadata.LatestSave? latestSave
     ) {
+        Style diagText = new Style {
+            FontFamily = FontRole.Mono,
+            LetterSpacing = Tracking.Of(0.02f),
+        };
         return Container.Create(
-            KeyValueTable.Create(GetList(), labelColumnRem: 5.5f),
+            KeyValueTable.Create(
+                GetList(),
+                labelColumnRem: 4f,
+                labelStyle: Style.Merge(diagText, new Style { FontSize = new Rem(0.65625f), TextColor = ThemeSlot.TextSecondary }),
+                valueStyle: Style.Merge(diagText, new Style { FontSize = new Rem(0.625f), TextColor = ThemeSlot.TextSecondary })
+            ),
             align: ContainerAlign.Start,
             style: new Style {
                 MaxWidth = new Rem(28f),

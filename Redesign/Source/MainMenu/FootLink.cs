@@ -32,11 +32,11 @@ public static class FootLink {
         node.Paint = (rect, _) => {
             InteractionState state = InteractionState.Resolve(rect, null, false);
             bool active = state.Hovered || state.Pressed;
-            ThemeSlot slot = active ? ThemeSlot.SurfaceAccent : ThemeSlot.TextMuted;
+            ThemeSlot slot = active ? ThemeSlot.SurfaceAccent : ThemeSlot.TextSecondary;
             Color color = RenderContext.Current.Theme.GetColor(slot);
 
             string upper = (label ?? string.Empty).ToUpperInvariant();
-            Rem fontSize = new Rem(0.75f);
+            Rem fontSize = new Rem(0.65625f);
             int pixelSize = Mathf.RoundToInt(fontSize.ToFontPx());
             float tracking = pixelSize * 0.18f;
             float chevronGap = pixelSize * 0.6f;
@@ -72,7 +72,7 @@ public static class FootLink {
     }
 
     private static float MeasureWidth(string label, bool indicateMenu) {
-        Rem fontSize = new Rem(0.75f);
+        Rem fontSize = new Rem(0.65625f);
         int pixelSize = Mathf.RoundToInt(fontSize.ToFontPx());
         string upper = (label ?? string.Empty).ToUpperInvariant();
         float tracking = pixelSize * 0.18f;

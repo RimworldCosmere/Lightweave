@@ -45,7 +45,7 @@ public static class LoadColonyRoot {
                     name => selected.Set(name),
                     filter.Value,
                     f => filter.Set(f)
-                ), new Rem(30f).ToPixels());
+                ), new Rem(28.75f).ToPixels());
                 h.AddFlex(SaveDetailPane.Create(
                     activeFile,
                     activeStatus,
