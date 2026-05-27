@@ -35,7 +35,7 @@ public static class OptionsRoot {
                 drawDivider: true
             ));
             root.AddFlex(HStack.Create(SpacingScale.None, h => {
-                h.Add(BuildSidebar(tab), new Rem(14f).ToPixels());
+                h.Add(BuildSidebar(tab), new Rem(15f).ToPixels());
                 h.AddFlex(BuildContent(tab.Value, dialog));
             }));
         });
@@ -51,6 +51,12 @@ public static class OptionsRoot {
                 AppendTab(s, tab, OptionsTab.Controls, "CL_Options_Tab_Controls");
                 AppendTab(s, tab, OptionsTab.Interface, "CL_Options_Tab_Interface");
                 AppendTab(s, tab, OptionsTab.Developer, "CL_Options_Tab_Developer");
+                s.Add(Box.Create(
+                    children: c => c.Add(Divider.Horizontal()),
+                    style: new Style {
+                        Padding = new EdgeInsets(Top: SpacingScale.Sm, Bottom: SpacingScale.Sm, Left: SpacingScale.Md, Right: SpacingScale.Md),
+                    }
+                ));
                 AppendTab(s, tab, OptionsTab.ModSettings, "CL_Options_Tab_ModSettings");
             })),
             style: new Style {
@@ -74,18 +80,14 @@ public static class OptionsRoot {
             InteractionState state = InteractionState.Resolve(rect, null, false);
 
             if (isActive) {
-                Color ghostBase = RenderContext.Current.Theme.GetColor(ThemeSlot.SurfaceGhostHover);
-                Color warmBg = new Color(ghostBase.r, ghostBase.g, ghostBase.b, 0.4f);
-                PaintBox.Draw(rect, BackgroundSpec.Of(warmBg), null, null);
+                PaintBox.Draw(rect, BackgroundSpec.Of(ThemeSlot.ActiveTint), null, null);
             }
             else if (state.Hovered) {
-                Color ghostBase = RenderContext.Current.Theme.GetColor(ThemeSlot.SurfaceGhostHover);
-                Color hoverBg = new Color(ghostBase.r, ghostBase.g, ghostBase.b, 0.2f);
-                PaintBox.Draw(rect, BackgroundSpec.Of(hoverBg), null, null);
+                PaintBox.Draw(rect, BackgroundSpec.Of(ThemeSlot.HoverTint), null, null);
             }
 
             if (isActive) {
-                float stripeW = new Rem(0.1875f).ToPixels();
+                float stripeW = Spacing.StripeWidth.ToPixels();
                 Rect stripe = new Rect(rect.x, rect.y, stripeW, rect.height);
                 PaintBox.Draw(stripe, BackgroundSpec.Of(ThemeSlot.SurfaceAccent), null, null);
             }
@@ -95,7 +97,7 @@ public static class OptionsRoot {
             TextDraw.Draw(
                 labelRect,
                 label,
-                isActive ? FontRole.BodyBold : FontRole.Body,
+                FontRole.Body,
                 new Rem(0.95f),
                 TextAnchor.MiddleLeft,
                 isActive ? ThemeSlot.TextPrimary : ThemeSlot.TextSecondary

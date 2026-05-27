@@ -33,9 +33,9 @@ public static class ContinueCard {
                 h.Add(BuildContinueButton(save), new Rem(15.5f).ToPixels());
             })),
             style: new Style {
-                Background = BackgroundSpec.Blur(new Color(0f, 0f, 0f, 0.72f)),
+                Background = BackgroundSpec.Blur(ThemeSlot.Glass3),
                 Border = BorderSpec.All(new Rem(0.0625f), ThemeSlot.BorderSubtle),
-                Radius = RadiusSpec.All(RadiusScale.None),
+                Radius = RadiusSpec.All(RadiusScale.Lg),
             }
         );
     }
@@ -43,18 +43,18 @@ public static class ContinueCard {
     private static LightweaveNode BuildContinueContent(SaveMetadata.LatestSave save) {
         return Box.Create(
             children: c => c.Add(HStack.Create(SpacingScale.Md, h => {
-                h.Add(BuildThumbnail(save), new Rem(14.7f).ToPixels());
+                h.Add(BuildThumbnail(save), new Rem(4.5f).ToPixels());
                 h.AddFlex(BuildBody(save));
             })),
             style: new Style {
-                Padding = new EdgeInsets(Top: new Rem(1.25f), Bottom: new Rem(1.25f), Left: new Rem(1.5f), Right: new Rem(1.5f)),
+                Padding = new EdgeInsets(Top: new Rem(0.75f), Bottom: new Rem(0.75f), Left: new Rem(1.5f), Right: new Rem(1.5f)),
             }
         );
     }
 
     private static LightweaveNode BuildThumbnail(SaveMetadata.LatestSave save) {
         LightweaveNode node = NodeBuilder.New("ContinueCard:Thumbnail");
-        node.PreferredHeight = new Rem(9.1875f).ToPixels();
+        node.PreferredHeight = new Rem(4.5f).ToPixels();
         node.Paint = (rect, _) => {
             PaintBox.Fill(rect, new Color(0.122f, 0.086f, 0.067f, 1f));
 
@@ -108,7 +108,7 @@ public static class ContinueCard {
         LightweaveNode node = NodeBuilder.New("ContinueCard:Eyebrow");
         node.PreferredHeight = new Rem(1.5f).ToPixels();
         node.Paint = (rect, _) => {
-            Rem fontSize = new Rem(1.0667f);
+            Rem fontSize = new Rem(0.6875f);
             int px = Mathf.RoundToInt(fontSize.ToFontPx());
             string parts = BuildEyebrowText(save);
             string upper = parts.ToUpperInvariant();
@@ -272,7 +272,7 @@ public static class ContinueCard {
             bottom.a = top.a;
 
             BackgroundSpec.Gradient bg = new BackgroundSpec.Gradient(GradientTextureCache.Vertical(top, bottom));
-            RadiusSpec radius = RadiusSpec.All(RadiusScale.None);
+            RadiusSpec radius = RadiusSpec.Right(RadiusScale.Lg);
             PaintBox.Draw(rect, bg, null, radius);
 
             float overlay = VariantPalette.OverlayAlpha(state);

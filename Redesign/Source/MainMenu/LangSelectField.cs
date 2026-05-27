@@ -33,7 +33,6 @@ public static class LangSelectField {
 
         node.Paint = (allocatedRect, paintChildren) => {
             Rect rect = SelectorTrigger.ComputeTriggerRect(allocatedRect);
-            Theme.Theme theme = RenderContext.Current.Theme;
             Direction dir = RenderContext.Current.Direction;
             bool rtl = dir == Direction.Rtl;
 
@@ -51,23 +50,8 @@ public static class LangSelectField {
             }
 
             InteractionState state = InteractionState.Resolve(rect, null, disabled);
-            bool active = state.Hovered || state.Pressed || open.Value;
 
-            BackdropBlur.Draw(rect, active ? 8f : 6f);
-            Color translucentBase = theme.GetColor(ThemeSlot.SurfaceTranslucentDark);
-            Color translucent = new Color(translucentBase.r, translucentBase.g, translucentBase.b, active ? 0.88f : 0.78f);
-            ThemeSlot? borderSlot = VariantPalette.Border(Variant.Frosted, state);
-            BorderSpec? borderSpec = borderSlot.HasValue
-                ? BorderSpec.All(new Rem(1f / 16f), borderSlot.Value)
-                : null;
-            RadiusSpec radiusSpec = RadiusSpec.All(RadiusScale.Sm);
-            PaintBox.Draw(rect, BackgroundSpec.Of(translucent), borderSpec, radiusSpec);
-
-            float overlay = VariantPalette.OverlayAlpha(state);
-            if (overlay > 0f) {
-                Color overlayColor = InteractionFeedback.OverlayColor(theme, state, overlay);
-                PaintBox.Draw(rect, BackgroundSpec.Of(overlayColor), null, radiusSpec);
-            }
+            InputSurface.DrawInputChrome(rect, state);
 
             SelectorTrigger.Layout layout = SelectorTrigger.ComputeLayout(rect, dir);
             Rect labelRect = layout.LabelRect;
@@ -78,11 +62,11 @@ public static class LangSelectField {
                 ? (activeLang.FriendlyNameNative ?? activeLang.folderName)
                 : "English";
 
-            ThemeSlot fgSlot = VariantPalette.Foreground(Variant.Frosted, state);
+            ThemeSlot fgSlot = disabled ? ThemeSlot.TextMuted : ThemeSlot.TextPrimary;
             TextAnchor labelAnchor = Typography.Typography.ResolveAnchor(TextAlign.Start, dir);
-            TextDraw.Draw(labelRect, labelText, FontRole.BodyBold, new Rem(0.875f), labelAnchor, fgSlot);
+            TextDraw.Draw(labelRect, labelText, FontRole.Body, new Rem(0.875f), labelAnchor, fgSlot);
 
-            SelectorTrigger.DrawChevron(chevronRect, fgSlot);
+            SelectorTrigger.DrawChevron(chevronRect, ThemeSlot.TextMuted);
 
             if (!disabled) {
                 Event e = Event.current;

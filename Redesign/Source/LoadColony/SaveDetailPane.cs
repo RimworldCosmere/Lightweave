@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using Cosmere.Lightweave.Fonts;
+using Cosmere.Lightweave.Icons;
 using Cosmere.Lightweave.Input;
 using Cosmere.Lightweave.Layout;
 using Cosmere.Lightweave.Redesign.MainMenu;
@@ -49,7 +50,7 @@ public static class SaveDetailPane {
         return Stack.Create(SpacingScale.Lg, s => {
             s.Add(HStack.Create(SpacingScale.Lg, h => {
                 h.Add(BuildPreview(status), new Rem(13.75f).ToPixels());
-                h.AddFlex(Stack.Create(SpacingScale.Sm, t => {
+                h.AddFlex(Stack.Create(SpacingScale.Xs, t => {
                     t.Add(BuildStatusEyebrow(status));
                     t.Add(Display.Create(status.DisplayName, style: new Style { TextAlign = TextAlign.Start, FontSize = new Rem(3.5f) }, level: 1));
                     t.Add(Text.Create(BuildSubtitle(status), style: new Style { TextColor = ThemeSlot.TextMuted, FontSize = new Rem(0.95f) }));
@@ -139,7 +140,7 @@ public static class SaveDetailPane {
 
     private static LightweaveNode BuildPreview(SaveStatusInspector.SaveStatus status) {
         LightweaveNode node = NodeBuilder.New("SavePreview");
-        node.PreferredHeight = new Rem(13.75f).ToPixels();
+        node.PreferredHeight = new Rem(8.75f).ToPixels();
         node.Paint = (rect, _) => {
             PaintBox.Draw(
                 rect,
@@ -185,7 +186,19 @@ public static class SaveDetailPane {
             label = "CL_LoadColony_Status_Differs".Translate();
             tone = ThemeSlot.StatusWarning;
         }
-        return HStack.Create(SpacingScale.None, h => {
+
+        int? day = status.Sidecar?.DaysSurvived;
+        string? dayLabel = day.HasValue && day.Value > 0
+            ? ((string)"CL_LoadColony_DayShort".Translate(day.Value.Named("DAY"))).ToUpperInvariant()
+            : null;
+
+        return HStack.Create(SpacingScale.Sm, h => {
+            if (dayLabel != null) {
+                h.AddHug(Eyebrow.Create(dayLabel, style: new Style {
+                    TextColor = ThemeSlot.TextMuted,
+                    LetterSpacing = Tracking.Wide,
+                }));
+            }
             h.AddHug(Chip.Create(label, true, tone: SlotToTone(tone), showDot: false));
             h.AddFlex(Spacer.Flex());
         });
@@ -234,12 +247,15 @@ public static class SaveDetailPane {
         return HStack.Create(SpacingScale.None, h => {
             for (int i = 0; i < rows.Count; i++) {
                 KeyValueRow row = rows[i];
-                h.AddFlex(BuildStatCell(row.Label, row.Value));
+                bool isFirst = i == 0;
+                h.AddFlex(BuildStatCell(row.Label, row.Value, isFirst));
             }
         });
     }
 
-    private static LightweaveNode BuildStatCell(string label, string value) {
+    private static LightweaveNode BuildStatCell(string label, string value, bool isFirst = false) {
+        Rem hairline = new Rem(0.0625f);
+        Rem leftBorder = isFirst ? hairline : new Rem(0f);
         return Box.Create(
             children: c => c.Add(Stack.Create(SpacingScale.Sm, s => {
                 s.Add(Eyebrow.Create(label, style: new Style { TextColor = ThemeSlot.MetadataLabel, FontSize = new Rem(0.7f), LetterSpacing = Tracking.Wide }));
@@ -253,8 +269,8 @@ public static class SaveDetailPane {
                 ));
             })),
             style: new Style {
-                Padding = new EdgeInsets(Top: SpacingScale.Md, Right: SpacingScale.Lg, Bottom: SpacingScale.Md, Left: new Rem(0f)),
-                Border = new BorderSpec(Top: new Rem(0.0625f), Color: ThemeSlot.BorderSubtle),
+                Padding = EdgeInsets.All(new Rem(1f)),
+                Border = new BorderSpec(Top: hairline, Right: hairline, Bottom: hairline, Left: leftBorder, Color: ThemeSlot.BorderSubtle),
             }
         );
     }
@@ -364,68 +380,23 @@ public static class SaveDetailPane {
     }
 
     private static LightweaveNode BuildLoadButton(string fileName, Action? onClose) {
-        LightweaveNode node = NodeBuilder.New("LoadColony:LoadButton");
-        node.Style = new Style {
-            Width = Length.Stretch,
-            Height = new Rem(2.75f),
-            LetterSpacing = Tracking.Widest,
-        };
-        node.PreferredHeight = new Rem(2.75f).ToPixels();
-        node.Paint = (rect, _) => {
-            InteractionState state = InteractionState.Resolve(rect, null, false);
-
-            Color topColor = new Color(212f / 255f, 168f / 255f, 87f / 255f, 1f);
-            Color bottomColor = new Color(184f / 255f, 136f / 255f, 56f / 255f, 1f);
-            if (state.Pressed) {
-                topColor = new Color(160f / 255f, 120f / 255f, 50f / 255f, 1f);
-                bottomColor = new Color(120f / 255f, 84f / 255f, 28f / 255f, 1f);
-            }
-            else if (state.Hovered) {
-                topColor = new Color(224f / 255f, 185f / 255f, 106f / 255f, 1f);
-                bottomColor = new Color(199f / 255f, 151f / 255f, 65f / 255f, 1f);
-            }
-            BackgroundSpec.Gradient bg = new BackgroundSpec.Gradient(GradientTextureCache.Vertical(topColor, bottomColor));
-            PaintBox.Draw(rect, bg, null, RadiusSpec.All(RadiusScale.None));
-
-            Color leftBorder = new Color(0f, 0f, 0f, 0.4f);
-            Rect leftStroke = new Rect(rect.x, rect.y, 1f, rect.height);
-            PaintBox.Fill(leftStroke, leftBorder);
-
-            if (Event.current.type == EventType.Repaint) {
-                Font? font = LightweaveFonts.CarlitoBold ?? LightweaveFonts.CarlitoRegular;
-                Rem fontSizeRem = new Rem(1.1f);
-
-                Style resolved = node.GetResolvedStyle();
-                float letterSpacing = resolved.LetterSpacing.HasValue
-                    ? Mathf.Max(0, Mathf.RoundToInt(resolved.LetterSpacing.Value.ToPixels(fontSizeRem.ToFontPx())))
-                    : 0f;
-
-                Color inkColor = new Color(26f / 255f, 19f / 255f, 10f / 255f, 1f);
-                string text = "▶  " + ((string)"CL_LoadColony_Load".Translate()).ToUpperInvariant();
-
-                TextDraw.DrawTracked(
-                    rect,
-                    text,
-                    FontRole.BodyBold,
-                    fontSizeRem,
-                    TextAnchor.MiddleCenter,
-                    inkColor,
-                    letterSpacing,
-                    FontStyle.Normal,
-                    font
-                );
-            }
-
-            InteractionFeedback.Apply(rect, true, true);
-
-            Event e = Event.current;
-            if (e.type == EventType.MouseUp && e.button == 0 && rect.Contains(e.mousePosition)) {
+        return Button.Create(
+            label: ((string)"CL_LoadColony_Load".Translate()).ToUpperInvariant(),
+            onClick: () => {
                 onClose?.Invoke();
                 GameDataSaveLoader.CheckVersionAndLoadGame(fileName);
-                e.Use();
+            },
+            variant: Variant.Primary,
+            leading: Glyph.Create(
+                Icons.Phosphor.Play,
+                style: new Style { TextColor = ThemeSlot.TextOnAccent }
+            ),
+            style: new Style {
+                Width = Length.Stretch,
+                Height = new Rem(2.75f),
+                LetterSpacing = Tracking.Widest,
             }
-        };
-        return node;
+        );
     }
 
     private static void RenameSave(SaveFileInfo file, Action onAfter) {

@@ -32,7 +32,13 @@ public static class ExpansionRow {
             children: c => c.Add(HStack.Create(SpacingScale.Sm, h => {
                 h.AddHug(Eyebrow.Create(
                     "CL_MainMenu_ExpansionsActive".Translate(),
-                    style: new Style { TextColor = ThemeSlot.SurfaceAccent, TextAlign = TextAlign.Left, LetterSpacing = Tracking.Widest }
+                    style: new Style {
+                        TextColor = ThemeSlot.SurfaceAccent,
+                        TextAlign = TextAlign.Left,
+                        LetterSpacing = Tracking.Widest,
+                        FontSize = new Rem(0.625f),
+                        FontFamily = FontRole.Mono,
+                    }
                 ));
                 h.AddHug(Divider.Vertical());
                 for (int i = 0; i < visible.Count; i++) {
@@ -41,9 +47,9 @@ public static class ExpansionRow {
             })),
             style: new Style {
                 Padding = new EdgeInsets(SpacingScale.Xs, SpacingScale.Md, SpacingScale.Xs, SpacingScale.Md),
-                Background = BackgroundSpec.Blur(new Color(0f, 0f, 0f, 0.65f)),
-                Border = BorderSpec.All(new Rem(0.0625f), ThemeSlot.AccentSoft),
-                Radius = RadiusSpec.All(RadiusScale.None),
+                Background = BackgroundSpec.Blur(ThemeSlot.ExpansionBarSurface, 8f),
+                Border = BorderSpec.All(new Rem(0.0625f), ThemeSlot.AccentGlow),
+                Radius = RadiusSpec.All(RadiusScale.Pill),
             }
         );
 
@@ -60,7 +66,12 @@ public static class ExpansionRow {
     private static LightweaveNode BuildItem(ExpansionDef expansion) {
         ExpansionStatus status = expansion.Status;
         bool active = status == ExpansionStatus.Active;
-        ThemeSlot textSlot = active ? ThemeSlot.TextPrimary : ThemeSlot.TextMuted;
+
+        Theme.Theme theme = RenderContext.Current.Theme;
+        Color ink = theme.GetColor(ThemeSlot.TextPrimary);
+        Color labelColor = active ? ink : new Color(ink.r, ink.g, ink.b, 0.55f);
+        Color accent = theme.GetColor(ThemeSlot.SurfaceAccent);
+        Color pillBorder = new Color(accent.r, accent.g, accent.b, 0.55f);
 
         Texture2D? icon = expansion.IconFromStatus;
         string label = expansion.LabelCap.ToString().ToUpperInvariant();
@@ -74,13 +85,19 @@ public static class ExpansionRow {
                 if (icon != null) {
                     h.AddHug(Icon.Create(icon, size: new Rem(1.25f)));
                 }
-                h.AddHug(Eyebrow.Create(label, style: new Style { TextColor = textSlot, TextAlign = TextAlign.Left, LetterSpacing = Tracking.Widest }));
+                h.AddHug(Eyebrow.Create(label, style: new Style {
+                    TextColor = (ColorRef)labelColor,
+                    TextAlign = TextAlign.Left,
+                    LetterSpacing = Tracking.Widest,
+                    FontSize = new Rem(0.75f),
+                    FontFamily = FontRole.Mono,
+                }));
             })),
             style: new Style {
-                Padding = new EdgeInsets(Top: SpacingScale.Xs, Right: SpacingScale.Sm, Bottom: SpacingScale.Xs, Left: SpacingScale.Sm),
-                Background = BackgroundSpec.Of(new Color(28f / 255f, 22f / 255f, 14f / 255f, 0.85f)),
-                Border = BorderSpec.All(new Rem(0.0625f), ThemeSlot.AccentSoft),
-                Radius = RadiusSpec.All(RadiusScale.None),
+                Padding = new EdgeInsets(Top: SpacingScale.Xxs, Right: SpacingScale.Sm, Bottom: SpacingScale.Xxs, Left: SpacingScale.Sm),
+                Background = BackgroundSpec.Of(ThemeSlot.ExpansionPillSurface),
+                Border = BorderSpec.All(new Rem(0.0625f), (ColorRef)pillBorder),
+                Radius = RadiusSpec.All(RadiusScale.Pill),
             }
         );
 
@@ -101,9 +118,9 @@ public static class ExpansionRow {
                 Theme.Theme theme = RenderContext.Current.Theme;
                 float overlayAlpha = state.Pressed ? 0.18f : 0.10f;
                 Color overlay = InteractionFeedback.OverlayColor(theme, state, overlayAlpha);
-                PaintBox.Draw(rect, BackgroundSpec.Of(overlay), null, RadiusSpec.All(RadiusScale.None));
+                PaintBox.Draw(rect, BackgroundSpec.Of(overlay), null, RadiusSpec.All(RadiusScale.Pill));
                 Color borderColor = theme.GetColor(ThemeSlot.SurfaceAccent);
-                PaintBox.Draw(rect, null, BorderSpec.All(new Rem(0.0625f), borderColor), RadiusSpec.All(RadiusScale.None));
+                PaintBox.Draw(rect, null, BorderSpec.All(new Rem(0.0625f), borderColor), RadiusSpec.All(RadiusScale.Pill));
             }
 
             TooltipHandler.TipRegion(rect, tooltip);

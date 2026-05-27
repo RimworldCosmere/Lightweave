@@ -60,8 +60,7 @@ public static class GameplayTab {
                         options: PauseModes,
                         labelFn: m => m.ToStringHuman(),
                         onChange: m => Prefs.AutomaticPauseMode = m,
-                        variant: DropdownVariant.Button,
-                        buttonStyle: Variant.Frosted
+                        variant: DropdownVariant.Input
                     ),
                     caption: (string)"CL_Options_AutoPauseMode_Hint".Translate()
                 ),

@@ -49,7 +49,6 @@ public static class LangPopover {
             );
         }
 
-        Color bgColor = new Color(15f / 255f, 12f / 255f, 8f / 255f, 0.96f);
 
         LightweaveNode stack = Stack.Create(SpacingScale.None, s => {
             s.Add(header);
@@ -64,7 +63,8 @@ public static class LangPopover {
             children: c => c.Add(stack),
             style: new Style {
                 Padding = new EdgeInsets(Top: SpacingScale.Md, Bottom: SpacingScale.Md, Left: SpacingScale.None, Right: SpacingScale.None),
-                Background = BackgroundSpec.Of(bgColor),
+                Background = BackgroundSpec.Of(ThemeSlot.Glass3),
+                Border = BorderSpec.All(new Rem(0.0625f), ThemeSlot.BorderSubtle),
                 Radius = RadiusSpec.All(RadiusScale.Lg),
             }
         );

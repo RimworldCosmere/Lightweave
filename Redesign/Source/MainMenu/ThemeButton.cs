@@ -1,7 +1,9 @@
 using System.Runtime.CompilerServices;
 using Cosmere.Lightweave.Hooks;
 using static Cosmere.Lightweave.Hooks.Hooks;
+using Cosmere.Lightweave.Layout;
 using Cosmere.Lightweave.Overlay;
+using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
@@ -44,7 +46,7 @@ public static class ThemeButton {
             preferredSize: new Vector2(new Rem(16f).ToPixels(), -1f)
         );
 
-        node.MeasureWidth = () => trigger.MeasureWidth?.Invoke() ?? new Rem(8f).ToPixels();
+        node.MeasureWidth = () => trigger.MeasureWidth?.Invoke() ?? new Rem(10f).ToPixels();
         node.Children.Add(trigger);
         node.Children.Add(popover);
 
@@ -60,4 +62,8 @@ public static class ThemeButton {
 
         return node;
     }
+
+    
+
+    
 }

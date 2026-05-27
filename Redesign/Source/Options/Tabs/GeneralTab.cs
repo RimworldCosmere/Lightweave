@@ -38,8 +38,7 @@ public static class GeneralTab {
                         options: AutosaveIntervalPresets,
                         labelFn: FormatAutosaveInterval,
                         onChange: v => Prefs.AutosaveIntervalDays = v,
-                        variant: DropdownVariant.Button,
-                        buttonStyle: Variant.Frosted
+                        variant: DropdownVariant.Input
                     ),
                     caption: (string)"CL_Options_Autosave_Interval_Hint".Translate()
                 ),

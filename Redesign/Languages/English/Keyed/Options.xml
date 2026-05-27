@@ -36,6 +36,21 @@
     <CL_ModSettings_NoMatches>No matching mods.</CL_ModSettings_NoMatches>
     <CL_ModSettings_NoSelection>Select a mod from the list to edit its settings.</CL_ModSettings_NoSelection>
     <CL_ModSettings_PopOut>Pop out to full window</CL_ModSettings_PopOut>
+    <CL_ModSettings_Meta_ModId>MOD ID</CL_ModSettings_Meta_ModId>
+    <CL_ModSettings_Meta_StudioPage>STUDIO PAGE</CL_ModSettings_Meta_StudioPage>
+    <CL_ModSettings_Meta_None>—</CL_ModSettings_Meta_None>
+    <CL_ModSettings_Header_AuthorPrefix>by {AUTHOR}</CL_ModSettings_Header_AuthorPrefix>
+    <CL_ModSettings_Header_Workshop_Tip>Open in Steam Workshop</CL_ModSettings_Header_Workshop_Tip>
+    <CL_ModSettings_Header_Folder_Tip>Open mod folder</CL_ModSettings_Header_Folder_Tip>
+    <CL_ModSettings_Action_Reset>Reset all settings</CL_ModSettings_Action_Reset>
+    <CL_ModSettings_Action_Enable>Enable mod</CL_ModSettings_Action_Enable>
+    <CL_ModSettings_Action_Disable>Disable mod</CL_ModSettings_Action_Disable>
+    <CL_ModSettings_Confirm_Reset_Title>Reset settings?</CL_ModSettings_Confirm_Reset_Title>
+    <CL_ModSettings_Confirm_Reset_Body>This will clear all saved configuration for "{MOD}" and restore its defaults. A restart may be required for the change to take full effect.</CL_ModSettings_Confirm_Reset_Body>
+    <CL_ModSettings_Confirm_Reset_Confirm>Reset</CL_ModSettings_Confirm_Reset_Confirm>
+    <CL_ModSettings_Confirm_Reset_Cancel>Cancel</CL_ModSettings_Confirm_Reset_Cancel>
+    <CL_ModSettings_Description>Description</CL_ModSettings_Description>
+    <CL_ModSettings_Description_None>No description provided.</CL_ModSettings_Description_None>
     <CL_Options_Section_Developer>Developer</CL_Options_Section_Developer>
     <CL_Options_Section_Files>Files</CL_Options_Section_Files>
     <CL_Options_Section_Reset>Reset</CL_Options_Section_Reset>

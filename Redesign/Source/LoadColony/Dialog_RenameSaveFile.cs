@@ -37,7 +37,7 @@ public class Dialog_RenameSaveFile : LightweaveWindow {
     protected override float? CardWidth => 520f;
     protected override float? CardHeight => 320f;
     protected override Color? ScrimColor => new Color(0f, 0f, 0f, 0.25f);
-    protected override BackgroundSpec? CardBackground => BackgroundSpec.Blur(new Color(0f, 0f, 0f, 0.95f), 10f);
+    protected override BackgroundSpec? CardBackground => BackgroundSpec.Blur(ThemeSlot.WindowSurface, 10f);
     protected override float VignetteIntensity => 0.35f;
     protected override float VignetteScale => 0.9f;
     protected override EdgeInsets? CardPadding => EdgeInsets.All(SpacingScale.Md);
