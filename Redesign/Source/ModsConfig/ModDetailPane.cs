@@ -77,7 +77,7 @@ public static class ModDetailPane {
         );
     }
 
-    private static LightweaveNode BuildHeader(ModMetaData mod) {
+    public static LightweaveNode BuildHeader(ModMetaData mod, Action<StackBuilder>? trailing = null) {
         return Box.Create(
             children: c => c.Add(HStack.Create(SpacingScale.Md, h => {
                 h.Add(BuildThumbnail(mod), ThumbSize.ToPixels());
@@ -113,6 +113,9 @@ public static class ModDetailPane {
                         ));
                     }
                 }));
+                if (trailing != null) {
+                    h.AddHug(Stack.Create(SpacingScale.Xs, trailing));
+                }
             })),
             style: new Style {
                 Padding = new EdgeInsets(Top: SpacingScale.Lg, Right: SpacingScale.Lg, Bottom: SpacingScale.Md, Left: SpacingScale.Lg),

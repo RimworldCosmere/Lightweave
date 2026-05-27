@@ -3,11 +3,17 @@
     <CL_RedesignSettings_Title>Lightweave Redesign</CL_RedesignSettings_Title>
     <CL_RedesignSettings_Subtitle>Toggle the screens that Lightweave replaces.</CL_RedesignSettings_Subtitle>
 
+    <CL_RedesignSettings_Tab_MainMenu>Main menu</CL_RedesignSettings_Tab_MainMenu>
+    <CL_RedesignSettings_Section_MainMenu>MAIN MENU</CL_RedesignSettings_Section_MainMenu>
+    <CL_RedesignSettings_Section_MainMenu_Caption>Title screen replacement.</CL_RedesignSettings_Section_MainMenu_Caption>
+    <CL_RedesignSettings_Default_On>on</CL_RedesignSettings_Default_On>
+
     <CL_Settings_MainMenu_Heading>Main menu</CL_Settings_MainMenu_Heading>
     <CL_Settings_MainMenu_Redesign>Use Lightweave main menu</CL_Settings_MainMenu_Redesign>
     <CL_Settings_MainMenu_Redesign_Tip>Replace the vanilla title screen with the Lightweave layout. Disable to fall back to RimWorld's stock menu.</CL_Settings_MainMenu_Redesign_Tip>
     <CL_Settings_MainMenu_ParseSaves>Show last save details</CL_Settings_MainMenu_ParseSaves>
     <CL_Settings_MainMenu_ParseSaves_Tip>Read the most recent .rws header to surface colony name and tick count on the Continue card. Adds a small one-time disk read.</CL_Settings_MainMenu_ParseSaves_Tip>
+
 
     <CL_Settings_Restart_Title>Restart required</CL_Settings_Restart_Title>
     <CL_Settings_Restart_Body>Switching the Lightweave main menu requires restarting RimWorld for the patches to take effect.</CL_Settings_Restart_Body>
