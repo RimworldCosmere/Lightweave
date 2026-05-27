@@ -63,6 +63,8 @@
     <CL_ModsConfig_Confirm_Unsubscribe>This will unsubscribe you from "{MOD}" in the workshop.</CL_ModsConfig_Confirm_Unsubscribe>
     <CL_ModsConfig_Action_Close>Close</CL_ModsConfig_Action_Close>
 
+    <CL_ModSettings_Action_Reset>Reset all settings</CL_ModSettings_Action_Reset>
+
     <CL_ModsConfig_Confirm_Eyebrow>UNSAVED CHANGES</CL_ModsConfig_Confirm_Eyebrow>
     <CL_ModsConfig_Confirm_Heading>Save mod changes?</CL_ModsConfig_Confirm_Heading>
     <CL_ModsConfig_Confirm_Body>You have unsaved load order or enable/disable changes. Save now, discard them, or cancel and keep editing.</CL_ModsConfig_Confirm_Body>

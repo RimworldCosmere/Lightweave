@@ -1,10 +1,11 @@
+using Cosmere.Lightweave.Settings;
 using HarmonyLib;
 using UnityEngine;
 using Verse;
 
 namespace Cosmere.Lightweave.Redesign.Settings;
 
-public class LightweaveRedesignMod : Verse.Mod {
+public class LightweaveRedesignMod : Verse.Mod, ILightweaveSettings {
     private static LightweaveRedesignMod? instance;
 
     public static LightweaveRedesignSettings Settings { get; private set; } = null!;
@@ -25,6 +26,19 @@ public class LightweaveRedesignMod : Verse.Mod {
 
     public override string SettingsCategory() {
         return "Lightweave Redesign";
+    }
+
+    public string LightweaveSettingsTitle => (string)"CL_RedesignSettings_Title".Translate();
+
+    public string? LightweaveSettingsSubtitle => (string)"CL_RedesignSettings_Subtitle".Translate();
+
+    public Cosmere.Lightweave.Runtime.LightweaveNode BuildLightweaveSettingsBody() {
+        return LightweaveRedesignSettingsForm.Build();
+    }
+
+    public void ResetLightweaveSettings() {
+        LightweaveRedesignSettingsForm.ResetAll(Settings);
+        WriteSettings();
     }
 
     public override void DoSettingsWindowContents(Rect inRect) {

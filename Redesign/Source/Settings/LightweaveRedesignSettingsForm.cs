@@ -1,14 +1,13 @@
 using System;
+using Cosmere.Lightweave.Feedback;
 using Cosmere.Lightweave.Input;
 using Cosmere.Lightweave.Layout;
+using Cosmere.Lightweave.Navigation;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
-using Cosmere.Lightweave.Types;
 using RimWorld;
 using UnityEngine;
 using Verse;
-using Caption = Cosmere.Lightweave.Typography.Typography.Caption;
-using Heading = Cosmere.Lightweave.Typography.Typography.Heading;
 
 namespace Cosmere.Lightweave.Redesign.Settings;
 
@@ -21,42 +20,102 @@ public static class LightweaveRedesignSettingsForm {
 
     public static LightweaveNode Build() {
         LightweaveRedesignSettings settings = LightweaveRedesignMod.Settings;
+        Hooks.Hooks.StateHandle<RedesignCategory> activeTab = Hooks.Hooks.UseState(RedesignCategory.MainMenu);
+        int diffs = CountDiffs(settings);
 
         return Stack.Create(
-            new Rem(1.25f),
+            SpacingScale.None,
             stack => {
-                stack.Add(Heading.Create(2, "CL_RedesignSettings_Title".Translate()));
-                stack.Add(Caption.Create("CL_RedesignSettings_Subtitle".Translate()));
+                if (diffs > 0) {
+                    string diffLabel = diffs == 1
+                        ? (string)"CL_Settings_Diff_One".Translate()
+                        : (string)"CL_Settings_Diff_Many".Translate(diffs.Named("COUNT"));
+                    stack.Add(DiffBanner.Create(label: diffLabel));
+                }
 
-                stack.Add(BuildMainMenuSection(settings));
+                stack.Add(Tabs.Create<RedesignCategory>(
+                    value: activeTab.Value,
+                    items: new[] { RedesignCategory.MainMenu },
+                    labelFn: cat => FormatTabLabel(cat),
+                    onChange: cat => activeTab.Set(cat),
+                    bodyFn: cat => cat switch {
+                        RedesignCategory.MainMenu => BuildMainMenuSection(settings),
+                        _ => Stack.Create(SpacingScale.None, _ => {}),
+                    }
+                ));
             }
         );
     }
 
+    private enum RedesignCategory {
+        MainMenu,
+    }
+
+    private static string FormatTabLabel(RedesignCategory cat) {
+        string baseLabel = cat switch {
+            RedesignCategory.MainMenu => (string)"CL_RedesignSettings_Tab_MainMenu".Translate(),
+            _ => string.Empty,
+        };
+        return baseLabel.ToUpperInvariant();
+    }
+
+    public static void ResetAll(LightweaveRedesignSettings s) {
+        s.RedesignMainMenu = true;
+        s.ParseSaveMetadata = true;
+    }
+
+    private static int CountDiffs(LightweaveRedesignSettings s) {
+        int n = 0;
+        if (!s.RedesignMainMenu) n++;
+        if (!s.ParseSaveMetadata) n++;
+        return n;
+    }
+
+    private static string FormatDefaultTag(string value) {
+        return ((string)"CL_Settings_Default_Tag".Translate()).Replace("{VALUE}", value);
+    }
+
     private static LightweaveNode BuildMainMenuSection(LightweaveRedesignSettings settings) {
-        return Stack.Create(
-            new Rem(0.5f),
-            section => {
-                section.Add(Heading.Create(3, "CL_Settings_MainMenu_Heading".Translate()));
-                section.Add(Checkbox.Create(
-                    label: "CL_Settings_MainMenu_Redesign".Translate(),
-                    value: settings.RedesignMainMenu,
-                    onChange: v => {
-                        settings.RedesignMainMenu = v;
-                        LightweaveRedesignMod.Save();
-                        PromptRestartIfBootDiff(settings);
-                    },
-                    tooltipKey: "CL_Settings_MainMenu_Redesign_Tip"
+        string onLabel = (string)"CL_RedesignSettings_Default_On".Translate();
+        string defaultTag = FormatDefaultTag(onLabel);
+        string editedLabel = (string)"CL_Settings_Edited".Translate();
+        return SettingsSection.Create(
+            title: (string)"CL_RedesignSettings_Section_MainMenu".Translate(),
+            description: (string)"CL_RedesignSettings_Section_MainMenu_Caption".Translate(),
+            rows: r => {
+                r.Add(SettingRow.Create(
+                    label: (string)"CL_Settings_MainMenu_Redesign".Translate(),
+                    description: (string)"CL_Settings_MainMenu_Redesign_Tip".Translate(),
+                    defaultValue: defaultTag,
+                    edited: !settings.RedesignMainMenu,
+                    editedLabel: editedLabel,
+                    control: Checkbox.Create(
+                        label: (string)"CL_Settings_MainMenu_Redesign".Translate(),
+                        value: settings.RedesignMainMenu,
+                        onChange: v => {
+                            settings.RedesignMainMenu = v;
+                            LightweaveRedesignMod.Save();
+                            PromptRestartIfBootDiff(settings);
+                        },
+                        tooltipKey: "CL_Settings_MainMenu_Redesign_Tip"
+                    )
                 ));
-                section.Add(Checkbox.Create(
-                    label: "CL_Settings_MainMenu_ParseSaves".Translate(),
-                    value: settings.ParseSaveMetadata,
-                    onChange: v => {
-                        settings.ParseSaveMetadata = v;
-                        LightweaveRedesignMod.Save();
-                    },
-                    disabled: !settings.RedesignMainMenu,
-                    tooltipKey: "CL_Settings_MainMenu_ParseSaves_Tip"
+                r.Add(SettingRow.Create(
+                    label: (string)"CL_Settings_MainMenu_ParseSaves".Translate(),
+                    description: (string)"CL_Settings_MainMenu_ParseSaves_Tip".Translate(),
+                    defaultValue: defaultTag,
+                    edited: !settings.ParseSaveMetadata,
+                    editedLabel: editedLabel,
+                    control: Checkbox.Create(
+                        label: (string)"CL_Settings_MainMenu_ParseSaves".Translate(),
+                        value: settings.ParseSaveMetadata,
+                        onChange: v => {
+                            settings.ParseSaveMetadata = v;
+                            LightweaveRedesignMod.Save();
+                        },
+                        disabled: !settings.RedesignMainMenu,
+                        tooltipKey: "CL_Settings_MainMenu_ParseSaves_Tip"
+                    )
                 ));
             }
         );

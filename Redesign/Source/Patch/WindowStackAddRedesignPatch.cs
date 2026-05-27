@@ -1,6 +1,7 @@
 using Cosmere.Lightweave.Redesign.Settings;
 using System;
 using Cosmere.Lightweave.Redesign.LoadColony;
+using Cosmere.Lightweave.Redesign.ModOptions;
 using Cosmere.Lightweave.Redesign.ModsConfig;
 using Cosmere.Lightweave.Redesign.Options;
 using Cosmere.Lightweave.Runtime;
@@ -35,8 +36,25 @@ public static class WindowStackAddRedesignPatch {
             case Page_ModsConfig page when page.next == null && page.prev == null:
                 __instance.Add(new ModsConfigWindow(page));
                 return false;
+
+            case Dialog_ModSettings modSettings:
+                Mod? mod = ResolveDialogMod(modSettings);
+                if (mod is ILightweaveSettings) {
+                    __instance.Add(new LightweaveModSettingsWindow(mod));
+                    return false;
+                }
+                return true;
         }
 
         return true;
+    }
+
+    private static System.Reflection.FieldInfo? ModField = HarmonyLib.AccessTools.Field(typeof(Dialog_ModSettings), "mod");
+
+    private static Mod? ResolveDialogMod(Dialog_ModSettings dialog) {
+        if (ModField == null) {
+            return null;
+        }
+        return ModField.GetValue(dialog) as Mod;
     }
 }
