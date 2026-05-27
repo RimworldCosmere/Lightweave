@@ -18,5 +18,6 @@
     </modDependencies>
     <loadAfter>
         <li>cryptiklemur.rimlogging</li>
+        <li>CryptikLemur.RimObs</li>
     </loadAfter>
 </ModMetaData>
