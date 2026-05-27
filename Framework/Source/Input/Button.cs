@@ -127,9 +127,7 @@ public static class Button {
                 if (variant == Variant.Frosted && !ghost) {
                     bool active = state.Hovered || state.Pressed;
                     BackdropBlur.Draw(rect, active ? 8f : 6f);
-                    Color translucentBase = theme.GetColor(ThemeSlot.SurfaceTranslucentDark);
-                    Color translucent = new Color(translucentBase.r, translucentBase.g, translucentBase.b, active ? 0.88f : 0.78f);
-                    PaintBox.Draw(rect, BackgroundSpec.Of(translucent), border, radius);
+                    PaintBox.Draw(rect, BackgroundSpec.Of(ThemeSlot.Glass3), border, radius);
                 }
                 else {
                     ThemeSlot? bgSlot = VariantPalette.Background(variant, state, ghost);
@@ -144,17 +142,20 @@ public static class Button {
                         }
                     }
                     else if (variant == Variant.Primary && !ghost && !state.Pressed && !disabled) {
-                        Color top = theme.GetColor(bgSlot.Value);
-                        Color.RGBToHSV(top, out float hue, out float sat, out float val);
+                        Color accent = theme.GetColor(bgSlot.Value);
+                        Color.RGBToHSV(accent, out float hue, out float sat, out float val);
+                        if (state.Hovered) {
+                            val = Mathf.Clamp01(val * 1.18f);
+                            sat = Mathf.Clamp01(sat * 0.9f);
+                        }
+                        Color top = Color.HSVToRGB(hue, sat, val);
                         Color bottom = Color.HSVToRGB(hue, sat, val * 0.78f);
-                        bottom.a = top.a;
+                        top.a = accent.a;
+                        bottom.a = accent.a;
                         bg = new BackgroundSpec.Gradient(GradientTextureCache.Vertical(top, bottom));
                     }
                     else if (variant == Variant.Secondary && state.Hovered && !state.Pressed && !disabled) {
-                        Color accent = theme.GetColor(ThemeSlot.SurfaceAccent);
-                        Color top = new Color(accent.r, accent.g, accent.b, 0.42f);
-                        Color bottom = new Color(accent.r * 0.62f, accent.g * 0.62f, accent.b * 0.62f, 0.28f);
-                        bg = new BackgroundSpec.Gradient(GradientTextureCache.Vertical(top, bottom));
+                        bg = BackgroundSpec.Of(theme.GetColor(ThemeSlot.HoverTint));
                     }
                     else {
                         bg = BackgroundSpec.Of(bgSlot.Value);
@@ -174,26 +175,22 @@ public static class Button {
             Rect labelRect = new Rect(rect.x + padXPx, rect.y, rect.width - padXPx * 2f, rect.height);
 
             if (leading != null) {
-                float leadingX = rtl
-                    ? rect.xMax - padXPx - iconSize
-                    : rect.x + padXPx;
-                Rect leadingRect = new Rect(leadingX, rect.y + (rect.height - iconSize) / 2f, iconSize, iconSize);
-                leading.MeasuredRect = leadingRect;
+                float groupW = iconSize + iconGapPx + labelWidth;
+                float centeredStart = rect.x + (rect.width - groupW) * 0.5f;
+                float iconY = rect.y + (rect.height - iconSize) / 2f;
                 if (rtl) {
-                    labelRect = new Rect(
-                        labelRect.x,
-                        labelRect.y,
-                        labelRect.width - (iconSize + iconGapPx),
-                        labelRect.height
-                    );
+                    float labelX = Mathf.Min(rect.xMax - padXPx - labelWidth, centeredStart + iconSize + iconGapPx);
+                    float leadingX = labelX - iconGapPx - iconSize;
+                    leading.MeasuredRect = new Rect(leadingX, iconY, iconSize, iconSize);
+                    labelRect = new Rect(labelX, labelRect.y, rect.xMax - padXPx - labelX, labelRect.height);
+                    gstyle.alignment = TextAnchor.MiddleLeft;
                 }
                 else {
-                    labelRect = new Rect(
-                        leadingX + iconSize + iconGapPx,
-                        labelRect.y,
-                        rect.xMax - padXPx - (leadingX + iconSize + iconGapPx),
-                        labelRect.height
-                    );
+                    float leadingX = Mathf.Max(rect.x + padXPx, centeredStart);
+                    leading.MeasuredRect = new Rect(leadingX, iconY, iconSize, iconSize);
+                    float labelX = leadingX + iconSize + iconGapPx;
+                    labelRect = new Rect(labelX, labelRect.y, rect.xMax - padXPx - labelX, labelRect.height);
+                    gstyle.alignment = TextAnchor.MiddleLeft;
                 }
             }
 

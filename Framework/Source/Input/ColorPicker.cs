@@ -122,6 +122,7 @@ public static class ColorPicker {
 
                 if (!disabled && e.type == EventType.MouseUp && e.button == 0 && swatchRect.Contains(e.mousePosition)) {
                     onChange?.Invoke(swatchColor);
+                    RenderContext.Current.Hooks.Invalidate();
                     e.Use();
                 }
             }

@@ -147,6 +147,7 @@ public static class TextArea {
 
             if (focusLost && !readOnly) {
                 onChange?.Invoke(buffer.Value ?? string.Empty);
+                RenderContext.Current.Hooks.Invalidate();
             }
 
             paintChildren();

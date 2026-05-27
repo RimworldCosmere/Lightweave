@@ -41,7 +41,7 @@ public static class LightweaveBootstrap {
         ThemeClassRegistry.Register("h4", new Style { FontSize = new Rem(1.125f) });
         ThemeClassRegistry.Register("eyebrow", new Style {
             FontFamily = FontRole.Body,
-            FontSize = new Rem(1f),
+            FontSize = new Rem(0.625f),
             FontWeight = FontStyle.Normal,
             TextColor = ThemeSlot.TextMuted,
         });

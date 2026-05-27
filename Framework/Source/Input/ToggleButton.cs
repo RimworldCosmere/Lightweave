@@ -78,6 +78,7 @@ public static class ToggleButton {
             Event e = Event.current;
             if (e.type == EventType.MouseUp && e.button == 0 && rect.Contains(e.mousePosition)) {
                 onChange?.Invoke(!value);
+                RenderContext.Current.Hooks.Invalidate();
                 e.Use();
             }
         };

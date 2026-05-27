@@ -18,7 +18,7 @@ public sealed record PlaygroundCategory(
 public static class PlaygroundRail {
     private const float CategoryRowHeight = 38f;
     private const float PrimitiveRowHeight = 28f;
-    private const float HighlightBarWidth = 3f;
+    private static readonly float HighlightBarWidth = Spacing.StripeWidth.ToPixels();
     private const float RowPaddingX = 10f;
     private const float CategoryGap = 2f;
     private const float PrimitiveGap = 1f;
@@ -202,9 +202,7 @@ public static class PlaygroundRail {
         bool activeContainsSelection
     ) {
         if (pinned || activeContainsSelection) {
-            Color bg = theme.GetColor(ThemeSlot.SurfaceAccent);
-            bg.a = 0.14f;
-            PaintBox.Fill(rowRect, bg);
+            PaintBox.Fill(rowRect, theme.GetColor(ThemeSlot.ActiveTint));
 
             Color focusBar = theme.GetColor(ThemeSlot.BorderFocus);
             float barX = rtl ? rowRect.xMax - HighlightBarWidth : rowRect.x;
@@ -251,9 +249,7 @@ public static class PlaygroundRail {
         bool hovering
     ) {
         if (isSelected) {
-            Color bg = theme.GetColor(ThemeSlot.SurfaceAccent);
-            bg.a = 0.22f;
-            PaintBox.Fill(rowRect, bg);
+            PaintBox.Fill(rowRect, theme.GetColor(ThemeSlot.ActiveTint));
 
             Color focusBar = theme.GetColor(ThemeSlot.BorderFocus);
             float barX = rtl ? rowRect.xMax - HighlightBarWidth : rowRect.x;

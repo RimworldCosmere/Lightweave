@@ -102,6 +102,7 @@ public static class PaintBox {
             if (hasBorder) {
                 Color bc = ResolveColor(border!.Value.Color!);
                 if (rounded) {
+                    DrawRoundedBorderRing(r, bw, rad, bc);
                     DrawRoundedBorderEdges(r, bw, rad, bc);
                 }
                 else {
@@ -287,6 +288,15 @@ public static class PaintBox {
         }
 
         GUI.color = saved;
+    }
+
+    // Draws a rounded-corner border outline with a transparent interior. Unity's
+    // GUI.DrawTexture borderWidths arg renders only the ring (the outer bw pixels)
+    // following the corner radius, so the corner arcs connect to the straight edges
+    // cleanly. Used for rounded borders over a non-opaque fill, where the opaque
+    // DrawSolidRounded base path can't be used (it would tint the translucent fill).
+    private static void DrawRoundedBorderRing(Rect r, Vector4 bw, Vector4 rad, Color color) {
+        GUI.DrawTexture(r, Texture2D.whiteTexture, ScaleMode.StretchToFill, true, 0, color, bw, rad);
     }
 
     private static void DrawRectStroke(Rect r, Vector4 bw, Color color) {

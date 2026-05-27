@@ -27,11 +27,12 @@ public static class BaseTheme {
     public static Dictionary<RadiusScale, float> BuildRadii() {
         return new Dictionary<RadiusScale, float> {
             [RadiusScale.None] = 0f,
-            [RadiusScale.Xs] = 2f,
-            [RadiusScale.Sm] = 4f,
-            [RadiusScale.Md] = 6f,
-            [RadiusScale.Lg] = 8f,
-            [RadiusScale.Xl] = 10f,
+            [RadiusScale.Xs] = 3f,
+            [RadiusScale.Sm] = 5f,
+            [RadiusScale.Md] = 8f,
+            [RadiusScale.Lg] = 12f,
+            [RadiusScale.Xl] = 16f,
+            [RadiusScale.Pill] = 999f,
             [RadiusScale.Full] = 9999f,
         };
     }
@@ -44,6 +45,7 @@ public static class BaseTheme {
             [RadiusScale.Md] = 0f,
             [RadiusScale.Lg] = 0f,
             [RadiusScale.Xl] = 0f,
+            [RadiusScale.Pill] = 0f,
             [RadiusScale.Full] = 9999f,
         };
     }

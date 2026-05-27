@@ -38,6 +38,7 @@ public enum ThemeSlot {
     Glass1,
     Glass2,
     Glass3,
+    WindowSurface,
     GlassFrost,
     AccentGlow,
     ShelfTint,
@@ -57,4 +58,7 @@ public enum ThemeSlot {
     TextShadowDeep,
     TextShadowDisplay,
     GrainTint,
+    MenuVignette,
+    ExpansionBarSurface,
+    ExpansionPillSurface,
 }

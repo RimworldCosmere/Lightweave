@@ -1,7 +1,9 @@
 using System;
 using Cosmere.Lightweave.Doc;
+using Cosmere.Lightweave.Hooks;
 using Cosmere.Lightweave.Layout;
 using Cosmere.Lightweave.Rendering;
+using Cosmere.Lightweave.Settings;
 using Cosmere.Lightweave.Theme;
 using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
@@ -21,6 +23,7 @@ public abstract class LightweaveWindow : Verse.Window {
         Right = 8,
     }
 
+    private static readonly Func<float, float> EntryEase = t => 1f - Mathf.Pow(1f - t, 3f);
     protected bool drawOwnCloseX;
     private ResizeEdge activeResize;
     private Vector2 resizeAnchorScreen;
@@ -87,7 +90,7 @@ public abstract class LightweaveWindow : Verse.Window {
     [DocOverride("Bottom color of the accent gradient. Defaults to fully-transparent gold.", TypeOverride = "Color?", DefaultOverride = "null")]
     protected virtual Color? GradientBottomColor => null;
 
-    [DocOverride("Card background. Defaults to BackgroundSpec.Blur(rgba(0,0,0,0.85), 10px).", TypeOverride = "BackgroundSpec?", DefaultOverride = "null")]
+    [DocOverride("Card background. Defaults to BackgroundSpec.Blur(ThemeSlot.WindowSurface, 10px).", TypeOverride = "BackgroundSpec?", DefaultOverride = "null")]
     protected virtual BackgroundSpec? CardBackground => null;
 
     [DocOverride("Card border. Defaults to 1/16rem BorderDefault on all sides.", TypeOverride = "BorderSpec?", DefaultOverride = "null")]
@@ -246,7 +249,7 @@ public abstract class LightweaveWindow : Verse.Window {
     private LightweaveNode BuildRoot() {
         Theme.Theme theme = RenderContext.Current.Theme;
 
-        BackgroundSpec resolvedCardBg = CardBackground ?? BackgroundSpec.Blur(new Color(0f, 0f, 0f, 0.95f), 10f);
+        BackgroundSpec resolvedCardBg = CardBackground ?? BackgroundSpec.Blur(ThemeSlot.WindowSurface, 10f);
         BorderSpec resolvedCardBorder = CardBorder ?? BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderDefault);
         EdgeInsets resolvedCardPadding = CardPadding ?? EdgeInsets.All(new Rem(1f / 16f));
         RadiusSpec resolvedCardRadius = CardRadius ?? RadiusSpec.All(RadiusScale.Xl);
@@ -286,6 +289,7 @@ public abstract class LightweaveWindow : Verse.Window {
                         Background = new BackgroundSpec.Gradient(
                             GradientTextureCache.Vertical(resolvedGradientTop, resolvedGradientBottom)
                         ),
+                        Radius = resolvedCardRadius,
                     }));
                 }
                 c.Add(contentStack);
@@ -299,7 +303,25 @@ public abstract class LightweaveWindow : Verse.Window {
             }
         );
 
-        return card;
+        bool reduceMotion = LightweaveMod.Settings?.ReduceMotion ?? false;
+        if (reduceMotion) {
+            return card;
+        }
+
+        LightweaveNode entry = NodeBuilder.New("WindowEntry");
+        entry.MeasureWidth = card.MeasureWidth;
+        entry.Measure = card.Measure;
+        entry.PreferredHeight = card.PreferredHeight;
+        entry.Children.Add(card);
+        entry.Paint = (rect, _) => {
+            float progress = UseAnim.Animate(1f, 0.2f, EntryEase);
+            float slide = (1f - progress) * new Rem(0.5f).ToPixels();
+            Rect animRect = new Rect(rect.x, rect.y + slide, rect.width, rect.height);
+            using (TintScope.Multiply(new Color(1f, 1f, 1f, progress))) {
+                LightweaveRoot.PaintSubtree(card, animRect);
+            }
+        };
+        return entry;
     }
 
     private void AfterContent() {
@@ -609,7 +631,7 @@ public abstract class LightweaveWindow : Verse.Window {
 
     private void DrawCloseX(Rect anchor) {
         float padding = SpacingScale.Sm.ToPixels();
-        float size = new Rem(1.125f).ToPixels();
+        float size = new Rem(1.5f).ToPixels();
         Rect closeRect = new Rect(
             anchor.xMax - size - padding,
             anchor.y + padding,
@@ -619,13 +641,37 @@ public abstract class LightweaveWindow : Verse.Window {
         LightweaveHitTracker.Track(closeRect);
 
         Theme.Theme theme = ThemeOverride ?? ThemeRegistry.Active;
-        Color accent = theme.GetColor(ThemeSlot.SurfaceAccent);
-        accent.a = 1f;
-        Color baseColor = theme.GetColor(ThemeSlot.TextPrimary);
-        Color hoverColor = accent;
+        Event e = Event.current;
+        bool hovered = closeRect.Contains(e.mousePosition);
 
-        if (Widgets.ButtonImage(closeRect, TexButton.CloseXSmall, baseColor, hoverColor, true, null)) {
+        if (e.type == EventType.Repaint) {
+            if (hovered) {
+                Color borderColor = theme.GetColor(Cosmere.Lightweave.Tokens.ThemeSlot.SurfaceAccent);
+                Rect snapped = Cosmere.Lightweave.Rendering.RectSnap.Snap(closeRect);
+                float bw = 1f;
+                Color prev = GUI.color;
+                GUI.color = borderColor;
+                GUI.DrawTexture(new Rect(snapped.x, snapped.y, snapped.width, bw), Verse.BaseContent.WhiteTex);
+                GUI.DrawTexture(new Rect(snapped.x, snapped.yMax - bw, snapped.width, bw), Verse.BaseContent.WhiteTex);
+                GUI.DrawTexture(new Rect(snapped.x, snapped.y, bw, snapped.height), Verse.BaseContent.WhiteTex);
+                GUI.DrawTexture(new Rect(snapped.xMax - bw, snapped.y, bw, snapped.height), Verse.BaseContent.WhiteTex);
+                GUI.color = prev;
+            }
+            Color textSec = theme.GetColor(Cosmere.Lightweave.Tokens.ThemeSlot.TextSecondary);
+            Color xColor = hovered ? Color.Lerp(textSec, Color.white, 0.5f) : textSec;
+            float iconInset = new Rem(0.375f).ToPixels();
+            Rect iconRect = new Rect(
+                closeRect.x + iconInset,
+                closeRect.y + iconInset,
+                closeRect.width - iconInset * 2f,
+                closeRect.height - iconInset * 2f
+            );
+            Cosmere.Lightweave.Rendering.PaintBox.DrawTexture(iconRect, TexButton.CloseXSmall, xColor);
+        }
+
+        if (e.type == EventType.MouseUp && e.button == 0 && hovered) {
             Close();
+            e.Use();
         }
 
         MouseoverSounds.DoRegion(closeRect);

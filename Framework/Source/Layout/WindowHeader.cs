@@ -84,8 +84,8 @@ public static class WindowHeader {
                             if (hasTitle) {
                                 titleStack.Add(Display.Create(title!.ToUpperInvariant(), level: 2, style: new Style {
                                     FontFamily = FontRole.Display,
-                                    FontSize = new Rem(2.25f),
-                                    LetterSpacing = Tracking.Of(0.06f),
+                                    FontSize = new Rem(1.75f),
+                                    LetterSpacing = Tracking.Of(0.12f),
                                     TextColor = ThemeSlot.TextPrimary,
                                 }));
                             }
@@ -179,19 +179,6 @@ public static class WindowHeader {
         float sizePx = new Rem(1.75f).ToPixels();
         node.PreferredHeight = sizePx;
 
-        Color restColor = new Color(0.722f, 0.706f, 0.671f, 0.92f);
-        Color hoverColor = new Color(0.910f, 0.890f, 0.847f, 1f);
-        Color restBorder = new Color(0.557f, 0.541f, 0.510f, 0.45f);
-        Color hoverBorder = new Color(0.722f, 0.706f, 0.671f, 0.75f);
-        Color hoverBg = new Color(0.157f, 0.125f, 0.086f, 0.50f);
-
-        LightweaveNode BuildGlyph(Color color) {
-            return Glyph.Create(Icons.Phosphor.X, style: new Style {
-                FontSize = new Rem(0.8125f),
-                TextColor = color,
-            });
-        }
-
         node.MeasureWidth = () => sizePx;
 
         node.Paint = (rect, _) => {
@@ -206,15 +193,22 @@ public static class WindowHeader {
             LightweaveHitTracker.Track(square);
             InteractionState state = InteractionState.Resolve(square, null, false);
 
-            BackgroundSpec? hoverBgSpec = state.Hovered ? BackgroundSpec.Of(hoverBg) : null;
+            Theme.Theme theme = RenderContext.Current.Theme;
+            ThemeSlot borderSlot = state.Hovered ? ThemeSlot.BorderHover : ThemeSlot.BorderSubtle;
+            BackgroundSpec? bg = state.Hovered ? BackgroundSpec.Of(ThemeSlot.AccentSoft) : null;
             PaintBox.Draw(
                 square,
-                hoverBgSpec,
-                BorderSpec.All(new Rem(1f / 16f), state.Hovered ? hoverBorder : restBorder),
+                bg,
+                BorderSpec.All(new Rem(1f / 16f), borderSlot),
                 null
             );
 
-            LightweaveNode glyph = BuildGlyph(state.Hovered ? hoverColor : restColor);
+            Color textSec = theme.GetColor(ThemeSlot.TextSecondary);
+            Color glyphColor = state.Hovered ? Color.Lerp(textSec, Color.white, 0.85f) : textSec;
+            LightweaveNode glyph = Glyph.Create(Icons.Phosphor.X, style: new Style {
+                FontSize = new Rem(0.8125f),
+                TextColor = new ColorRef.Literal(glyphColor),
+            });
             LightweaveRoot.PaintSubtree(glyph, square);
 
             InteractionFeedback.Apply(square, true, true);

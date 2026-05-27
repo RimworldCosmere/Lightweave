@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Cosmere.Lightweave.Theme;
 
-[LightweaveTheme("cosmere", "CL_Theme_Cosmere", Order = 10)]
+[LightweaveTheme("cosmere", "CL_Theme_Cosmere", Order = 10, SubLabelKey = "CL_Theme_Cosmere_Sub")]
 public static class CosmereTheme {
     public static Theme Build(Font body, Font bodyBold, Font heading, Font display, Font mono) {
         Dictionary<ThemeSlot, Color> colors = new Dictionary<ThemeSlot, Color> {
@@ -29,7 +29,7 @@ public static class CosmereTheme {
             [ThemeSlot.StatusWarning] = new Color(0.722f, 0.573f, 0.227f),
             [ThemeSlot.StatusDanger] = new Color(0.557f, 0.133f, 0.192f),
             [ThemeSlot.StatusSuccess] = new Color(0.290f, 0.420f, 0.361f),
-            [ThemeSlot.StatusInfo] = new Color(0.330f, 0.480f, 0.610f),
+            [ThemeSlot.StatusInfo] = new Color(0.239f, 0.353f, 0.471f),
             [ThemeSlot.HoverTint] = new Color(0.722f, 0.573f, 0.227f, 0.18f),
             [ThemeSlot.ActiveTint] = new Color(0.722f, 0.573f, 0.227f, 0.16f),
             [ThemeSlot.AccentSoft] = new Color(0.557f, 0.133f, 0.192f, 0.08f),
@@ -44,6 +44,7 @@ public static class CosmereTheme {
             [ThemeSlot.Glass1] = new Color(0.953f, 0.925f, 0.847f, 0.55f),
             [ThemeSlot.Glass2] = new Color(0.890f, 0.875f, 0.816f, 0.85f),
             [ThemeSlot.Glass3] = new Color(0.890f, 0.875f, 0.816f, 0.95f),
+            [ThemeSlot.WindowSurface] = new Color(0.830f, 0.812f, 0.745f, 0.97f),
             [ThemeSlot.GlassFrost] = new Color(0.847f, 0.827f, 0.769f, 0.82f),
             [ThemeSlot.AccentGlow] = new Color(0.557f, 0.133f, 0.192f, 0.40f),
             [ThemeSlot.ShelfTint] = new Color(0.102f, 0.122f, 0.180f, 0.04f),
@@ -63,7 +64,10 @@ public static class CosmereTheme {
             [ThemeSlot.TextShadowDeep] = new Color(1.000f, 1.000f, 1.000f, 0.50f),
             [ThemeSlot.TextShadowDisplay] = new Color(0.000f, 0.000f, 0.000f, 0.50f),
             [ThemeSlot.GrainTint] = new Color(0.102f, 0.122f, 0.180f, 0.13f),
+            [ThemeSlot.MenuVignette] = new Color(0.847f, 0.827f, 0.769f, 0.85f),
+            [ThemeSlot.ExpansionBarSurface] = new Color(0.890f, 0.875f, 0.816f, 0.92f),
+            [ThemeSlot.ExpansionPillSurface] = new Color(0.953f, 0.925f, 0.847f, 0.85f),
         };
-        return BaseTheme.Compose(colors, body, bodyBold, heading, display, mono);
+        return BaseTheme.Compose(colors, body, bodyBold, heading, display, mono, BaseTheme.BuildFlatRadii());
     }
 }

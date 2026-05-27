@@ -154,7 +154,7 @@ public static class Drawer {
                     PaintBox.Draw(shadowRect, shadowBg, null, null);
 
                     BackdropBlur.Draw(drawerRect, 10f);
-                    PaintBox.Draw(drawerRect, BackgroundSpec.Of(new Color(0f, 0f, 0f, 0.95f)), null, null);
+                    PaintBox.Draw(drawerRect, BackgroundSpec.Of(ThemeSlot.Glass3), null, null);
                     Color goldTop = new Color(0.831f, 0.659f, 0.341f, 0.10f);
                     Color goldBottom = new Color(0.831f, 0.659f, 0.341f, 0.0f);
                     PaintBox.Draw(

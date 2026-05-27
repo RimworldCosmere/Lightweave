@@ -276,20 +276,11 @@ public struct LightweaveScrollView : IDisposable {
         bool active = status.Dragging;
 
         Color saved = GUI.color;
-        float pillRadius = width * 0.5f;
 
         Color trackColor = theme.GetColor(ThemeSlot.ShelfTint);
         trackColor.a *= 0.7f * alpha;
-        GUI.DrawTexture(
-            trackRect,
-            Texture2D.whiteTexture,
-            ScaleMode.StretchToFill,
-            true,
-            0f,
-            trackColor,
-            Vector4.zero,
-            new Vector4(pillRadius, pillRadius, pillRadius, pillRadius)
-        );
+        GUI.color = trackColor;
+        GUI.DrawTexture(trackRect, Texture2D.whiteTexture);
 
         Color thumbColor = theme.GetColor(ThumbSlot());
         if (!active && !hovering) {
@@ -297,16 +288,8 @@ public struct LightweaveScrollView : IDisposable {
         }
         thumbColor.a *= alpha;
 
-        GUI.DrawTexture(
-            thumbRect,
-            Texture2D.whiteTexture,
-            ScaleMode.StretchToFill,
-            true,
-            0f,
-            thumbColor,
-            Vector4.zero,
-            new Vector4(pillRadius, pillRadius, pillRadius, pillRadius)
-        );
+        GUI.color = thumbColor;
+        GUI.DrawTexture(thumbRect, Texture2D.whiteTexture);
 
         GUI.color = saved;
 
@@ -370,17 +353,7 @@ public struct LightweaveScrollView : IDisposable {
         Color thumbColor = theme.GetColor(ThumbSlot());
         thumbColor.a *= alpha;
         GUI.color = thumbColor;
-        float pillRadius = thumbWidth * 0.5f;
-        GUI.DrawTexture(
-            thumbRect,
-            Texture2D.whiteTexture,
-            ScaleMode.StretchToFill,
-            true,
-            0f,
-            thumbColor,
-            Vector4.zero,
-            new Vector4(pillRadius, pillRadius, pillRadius, pillRadius)
-        );
+        GUI.DrawTexture(thumbRect, Texture2D.whiteTexture);
 
         GUI.color = saved;
 
@@ -495,7 +468,7 @@ public struct LightweaveScrollView : IDisposable {
 
         Color bg = theme.GetColor(ThemeSlot.Glass3);
         bg.a *= alpha;
-        PaintBox.Draw(labelRect, BackgroundSpec.Of(bg), BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderSubtle), new RadiusSpec(new Rem(0.125f)));
+        PaintBox.Draw(labelRect, BackgroundSpec.Of(bg), BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderSubtle), RadiusSpec.None);
 
         Color textColor = theme.GetColor(ThemeSlot.TextSecondary);
         textColor.a *= alpha;

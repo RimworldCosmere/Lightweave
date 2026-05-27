@@ -143,6 +143,7 @@ public static class KeyBindingField {
                     }
 
                     onChange?.Invoke(new KeyBinding(e.keyCode, mods));
+                    RenderContext.Current.Hooks.Invalidate();
                     recording.Set(false);
                     e.Use();
                 }
@@ -192,6 +193,7 @@ public static class KeyBindingField {
         Event e = Event.current;
         if (e.type == EventType.MouseUp && e.button == 0 && rect.Contains(e.mousePosition)) {
             onChange?.Invoke(new KeyBinding(KeyCode.None, KeyModifiers.None));
+            RenderContext.Current.Hooks.Invalidate();
             e.Use();
         }
     }

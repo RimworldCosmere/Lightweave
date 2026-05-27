@@ -86,14 +86,12 @@ public static class SearchField {
             if (variant == SearchFieldVariant.Frosted) {
                 bool sfActive = state.Hovered || state.Focused || state.Pressed;
                 BackdropBlur.Draw(rect, sfActive ? 8f : 6f);
-                Color sfTranslucentBase = theme.GetColor(ThemeSlot.SurfaceTranslucentDark);
-                Color sfTranslucent = new Color(sfTranslucentBase.r, sfTranslucentBase.g, sfTranslucentBase.b, sfActive ? 0.88f : 0.78f);
                 ThemeSlot sfBorderSlot = disabled
                     ? ThemeSlot.BorderOff
                     : (sfActive ? ThemeSlot.BorderHover : ThemeSlot.BorderSubtle);
                 BorderSpec sfBorder = BorderSpec.All(new Rem(1f / 16f), sfBorderSlot);
                 RadiusSpec sfRadius = RadiusSpec.All(RadiusScale.Sm);
-                PaintBox.Draw(rect, BackgroundSpec.Of(sfTranslucent), sfBorder, sfRadius);
+                PaintBox.Draw(rect, BackgroundSpec.Of(ThemeSlot.Glass3), sfBorder, sfRadius);
             }
             else if (variant == SearchFieldVariant.Borderless) {
             }
@@ -154,6 +152,7 @@ public static class SearchField {
                     buffer.Set(next);
                     syncedFrom.Current = next;
                     onChange?.Invoke(next);
+                    RenderContext.Current.Hooks.Invalidate();
                 }
 
                 if (hasValue) {
@@ -226,6 +225,7 @@ public static class SearchField {
             buffer.Set(string.Empty);
             syncedFrom.Current = string.Empty;
             onChange?.Invoke(string.Empty);
+            RenderContext.Current.Hooks.Invalidate();
             e.Use();
         }
     }

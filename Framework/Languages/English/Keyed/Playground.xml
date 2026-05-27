@@ -563,6 +563,7 @@
     <!-- Task D2b: variant and state labels -->
     <CL_Playground_Layout_Wrap_Badges>Badges</CL_Playground_Layout_Wrap_Badges>
     <CL_Playground_Label_Default>Default</CL_Playground_Label_Default>
+    <CL_Playground_Label_FullBleed>Full bleed + counts</CL_Playground_Label_FullBleed>
     <CL_Playground_Label_Virtualized>Virtualized</CL_Playground_Label_Virtualized>
     <CL_Playground_List_HudRow>Row {INDEX}</CL_Playground_List_HudRow>
     <CL_Playground_Label_Disabled>Disabled</CL_Playground_Label_Disabled>

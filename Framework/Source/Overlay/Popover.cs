@@ -103,7 +103,7 @@ public static class Popover {
                     );
                     PaintBox.Draw(
                         shadowRect,
-                        BackgroundSpec.Of(new Color(0f, 0f, 0f, 0.55f)),
+                        BackgroundSpec.Of(ThemeSlot.SurfaceShadow),
                         null,
                         null
                     );
@@ -112,7 +112,7 @@ public static class Popover {
 
                     PaintBox.Draw(
                         popoverRect,
-                        BackgroundSpec.Of(new Color(0.0588f, 0.047f, 0.0314f, 0.96f)),
+                        BackgroundSpec.Of(ThemeSlot.Glass3),
                         null,
                         null
                     );

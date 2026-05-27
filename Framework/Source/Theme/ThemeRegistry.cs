@@ -10,7 +10,7 @@ using Verse;
 
 namespace Cosmere.Lightweave.Theme;
 
-public sealed record ThemeDescriptor(string Id, string LabelKey, int Order, Type SourceType);
+public sealed record ThemeDescriptor(string Id, string LabelKey, int Order, Type SourceType, string? SubLabelKey = null);
 
 public static class ThemeRegistry {
     public const string DefaultId = "default";
@@ -122,7 +122,7 @@ public static class ThemeRegistry {
                     );
                     continue;
                 }
-                list.Add(new ThemeDescriptor(attr.Id, attr.LabelKey, attr.Order, type));
+                list.Add(new ThemeDescriptor(attr.Id, attr.LabelKey, attr.Order, type, attr.SubLabelKey));
                 cachedBuilders[attr.Id] = buildMethod;
             }
         }
@@ -137,9 +137,9 @@ public static class ThemeRegistry {
     }
 
     private static FontSet RequireFonts() {
-        Font? body = LightweaveFonts.ArimoRegular;
-        Font? bodyBold = LightweaveFonts.ArimoBold;
-        Font? heading = LightweaveFonts.ArimoBold;
+        Font? body = LightweaveFonts.CarlitoRegular ?? LightweaveFonts.ArimoRegular;
+        Font? bodyBold = LightweaveFonts.CarlitoBold ?? LightweaveFonts.ArimoBold;
+        Font? heading = LightweaveFonts.CarlitoBold ?? LightweaveFonts.ArimoBold;
         Font? display = LightweaveFonts.IMFellEnglishSC ?? LightweaveFonts.Cinzel ?? LightweaveFonts.CarlitoBold;
         Font? mono = LightweaveFonts.JetBrainsMono;
         if (body == null || bodyBold == null || heading == null || display == null || mono == null) {

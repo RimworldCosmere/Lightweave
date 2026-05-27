@@ -162,9 +162,7 @@ public static class Dropdown {
             if (buttonStyle == Variant.Frosted) {
                 bool active = state.Hovered || state.Pressed;
                 BackdropBlur.Draw(rect, active ? 8f : 6f);
-                Color translucentBase = RenderContext.Current.Theme.GetColor(ThemeSlot.SurfaceTranslucentDark);
-                Color translucent = new Color(translucentBase.r, translucentBase.g, translucentBase.b, active ? 0.88f : 0.78f);
-                PaintBox.Draw(rect, BackgroundSpec.Of(translucent), borderSpec, radiusSpec);
+                PaintBox.Draw(rect, BackgroundSpec.Of(ThemeSlot.Glass3), borderSpec, radiusSpec);
             }
             else {
                 ThemeSlot? bgSlot = VariantPalette.Background(buttonStyle, state);
@@ -481,6 +479,7 @@ public static class Dropdown {
 
         if (e.type == EventType.MouseUp && e.button == 0 && rowRect.Contains(e.mousePosition)) {
             onChange?.Invoke(option);
+            RenderContext.Current.Hooks.Invalidate();
             isOpen.Set(false);
             e.Use();
         }
@@ -535,6 +534,7 @@ public static class Dropdown {
             case KeyCode.Return:
             case KeyCode.KeypadEnter:
                 onChange?.Invoke(options[current]);
+                RenderContext.Current.Hooks.Invalidate();
                 isOpen.Set(false);
                 e.Use();
                 return;

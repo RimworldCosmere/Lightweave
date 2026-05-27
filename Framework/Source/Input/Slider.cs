@@ -238,6 +238,7 @@ public static class Slider {
                 draftValue.Current = computed;
                 if (live && !Mathf.Approximately(computed, value)) {
                     onChange?.Invoke(computed);
+                    RenderContext.Current.Hooks.Invalidate();
                     lastFireFrame.Current = Time.frameCount;
                 }
 
@@ -247,6 +248,7 @@ public static class Slider {
                 float final = draftValue.Current;
                 if (!Mathf.Approximately(final, value)) {
                     onChange?.Invoke(final);
+                    RenderContext.Current.Hooks.Invalidate();
                     lastFireFrame.Current = Time.frameCount;
                 }
 
@@ -259,6 +261,7 @@ public static class Slider {
                     int throttle = Mathf.Max(0, liveThrottleFrames);
                     if (frame - lastFireFrame.Current >= throttle) {
                         onChange?.Invoke(draftValue.Current);
+                        RenderContext.Current.Hooks.Invalidate();
                         lastFireFrame.Current = frame;
                     }
                 }

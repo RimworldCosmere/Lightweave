@@ -14,7 +14,7 @@ namespace Cosmere.Lightweave.Navigation;
 
 [Doc(
     Id = "segmented",
-    Summary = "Pill-shaped grouped selector for a small set of choices.",
+    Summary = "Rectangular grouped selector for a small set of choices, with optional count badges.",
     WhenToUse = "Toggle between 2-5 mutually exclusive filters or modes.",
     SourcePath = "Lightweave/Navigation/Segmented.cs",
     ShowRtl = true
@@ -29,6 +29,10 @@ public static class Segmented {
         Func<T, string> labelFn,
         [DocParam("Invoked when the user picks a different segment.")]
         Action<T> onChange,
+        [DocParam("Optional per-segment count badge text (rendered in mono next to the label).")]
+        Func<T, string?>? countFn = null,
+        [DocParam("When false, drops the enclosing border box so the control sits flush (full-bleed); the active fill and dividers reach the rect edges and the parent supplies the framing.")]
+        bool bordered = true,
         Style? style = null,
         string[]? classes = null,
         string? id = null,
@@ -37,21 +41,30 @@ public static class Segmented {
     ) {
         LightweaveNode node = NodeBuilder.New($"Segmented<{typeof(T).Name}>", line, file);
         node.ApplyStyling("segmented", style, classes, id);
-        node.PreferredHeight = new Rem(1.75f).ToPixels();
+        Style resolved0 = node.GetResolvedStyle();
+        node.PreferredHeight = resolved0.Height is { Mode: Length.Kind.Rem } h0
+            ? h0.ToPixels(0f, 0f)
+            : new Rem(1.75f).ToPixels();
+
+        Rem labelSize = new Rem(0.75f);
+        Rem countSize = new Rem(0.656f);
+
         node.MeasureWidth = () => {
             int count = items.Count;
             if (count == 0) {
                 return 0f;
             }
-            Theme.Theme theme = RenderContext.Current.Theme;
-            Font activeFont = theme.GetFont(FontRole.BodyBold);
-            int pixelSize = Mathf.RoundToInt(new Rem(0.875f).ToFontPx());
-            GUIStyle gs = GuiStyleCache.GetOrCreate(activeFont, pixelSize);
+            float labelTrackingPx = Mathf.Round(labelSize.ToFontPx() * 0.12f);
             float padPx = SpacingScale.Md.ToPixels();
+            float gapPx = SpacingScale.Sm.ToPixels();
             float total = 0f;
             for (int i = 0; i < count; i++) {
                 string label = labelFn(items[i]) ?? string.Empty;
-                float w = gs.CalcSize(new GUIContent(label)).x;
+                float w = TextDraw.MeasureTracked(label, FontRole.Body, labelSize, labelTrackingPx);
+                string? cnt = countFn?.Invoke(items[i]);
+                if (!string.IsNullOrEmpty(cnt)) {
+                    w += gapPx + TextDraw.Measure(cnt!, FontRole.Mono, countSize).x;
+                }
                 total += w + padPx * 2f;
             }
             return Mathf.Ceil(total);
@@ -62,26 +75,33 @@ public static class Segmented {
             Direction dir = RenderContext.Current.Direction;
             bool rtl = dir == Direction.Rtl;
 
-            BackgroundSpec bg = BackgroundSpec.Of(ThemeSlot.SurfaceRaised);
-            BorderSpec border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderDefault);
-            RadiusSpec radius = RadiusSpec.All(RadiusScale.Full);
-            PaintBox.Draw(rect, bg, border, radius);
+            float borderPx = new Rem(1f / 16f).ToPixels();
+            RadiusSpec radius = RadiusSpec.All(RadiusScale.None);
 
             int count = items.Count;
             if (count == 0) {
+                if (bordered) {
+                    PaintBox.Draw(rect, null, BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderDefault), radius);
+                }
                 return;
             }
 
-            float segmentWidth = rect.width / count;
-            float dividerThickness = new Rem(1f / 16f).ToPixels();
-
-            Font inactiveFont = theme.GetFont(FontRole.Body);
-            Font activeFont = theme.GetFont(FontRole.BodyBold);
-            int pixelSize = Mathf.RoundToInt(new Rem(0.875f).ToFontPx());
-            GUIStyle inactiveStyle = GuiStyleCache.GetOrCreate(inactiveFont, pixelSize);
-            inactiveStyle.alignment = TextAnchor.MiddleCenter;
-            GUIStyle activeStyle = GuiStyleCache.GetOrCreate(activeFont, pixelSize);
-            activeStyle.alignment = TextAnchor.MiddleCenter;
+            Rect inner;
+            if (bordered) {
+                PaintBox.Draw(rect, null, BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderDefault), radius);
+                inner = new Rect(
+                    rect.x + borderPx,
+                    rect.y + borderPx,
+                    rect.width - borderPx * 2f,
+                    rect.height - borderPx * 2f
+                );
+            }
+            else {
+                inner = rect;
+            }
+            float segmentWidth = inner.width / count;
+            float labelTrackingPx = Mathf.Round(labelSize.ToFontPx() * 0.12f);
+            float gapPx = SpacingScale.Sm.ToPixels();
 
             int activeIndex = -1;
             for (int i = 0; i < count; i++) {
@@ -98,52 +118,42 @@ public static class Segmented {
                 T item = items[logicalIndex];
                 bool active = logicalIndex == activeIndex;
 
-                Rect segRect = new Rect(rect.x + i * segmentWidth, rect.y, segmentWidth, rect.height);
+                Rect segRect = new Rect(inner.x + i * segmentWidth, inner.y, segmentWidth, inner.height);
                 LightweaveHitTracker.Track(segRect);
 
                 if (active) {
-                    Rem pill = RadiusSpec.ResolveRem(RadiusScale.Full);
-                    bool isFirstLogical = logicalIndex == 0;
-                    bool isLastLogical = logicalIndex == count - 1;
-                    RadiusSpec activeRadius = new RadiusSpec(
-                        TopStart: isFirstLogical ? pill : null,
-                        BottomStart: isFirstLogical ? pill : null,
-                        TopEnd: isLastLogical ? pill : null,
-                        BottomEnd: isLastLogical ? pill : null
-                    );
-                    PaintBox.Draw(segRect, BackgroundSpec.Of(ThemeSlot.SurfaceAccent), null, activeRadius);
+                    Color top = theme.GetColor(ThemeSlot.SurfaceAccent);
+                    Color.RGBToHSV(top, out float hue, out float sat, out float val);
+                    Color bottom = Color.HSVToRGB(hue, sat, val * 0.78f);
+                    bottom.a = top.a;
+                    PaintBox.Draw(segRect, new BackgroundSpec.Gradient(GradientTextureCache.Vertical(top, bottom)), null, radius);
                 }
-
-                if (!active) {
-                    Rem pill = RadiusSpec.ResolveRem(RadiusScale.Full);
-                    bool isFirstHover = logicalIndex == 0;
-                    bool isLastHover = logicalIndex == count - 1;
-                    RadiusSpec hoverRadius = new RadiusSpec(
-                        TopStart: isFirstHover ? pill : null,
-                        BottomStart: isFirstHover ? pill : null,
-                        TopEnd: isLastHover ? pill : null,
-                        BottomEnd: isLastHover ? pill : null
-                    );
-                    PaintBox.DrawHighlightIfMouseover(segRect, hoverRadius);
+                else {
+                    PaintBox.DrawHighlightIfMouseover(segRect, radius);
                     MouseoverSounds.DoRegion(segRect);
                 }
 
-                GUIStyle style = active ? activeStyle : inactiveStyle;
-                ThemeSlot textSlot = active ? ThemeSlot.TextOnAccent : ThemeSlot.TextSecondary;
-                TextDraw.DrawWithStyle(segRect, labelFn(item), style, theme.GetColor(textSlot));
+                string label = labelFn(item) ?? string.Empty;
+                string? badge = countFn?.Invoke(item);
+                Color textColor = theme.GetColor(active ? ThemeSlot.TextOnAccent : ThemeSlot.TextSecondary);
+
+                float labelW = TextDraw.MeasureTracked(label, FontRole.Body, labelSize, labelTrackingPx);
+                float badgeW = string.IsNullOrEmpty(badge) ? 0f : TextDraw.Measure(badge!, FontRole.Mono, countSize).x;
+                float groupW = labelW + (badgeW > 0f ? gapPx + badgeW : 0f);
+                float startX = segRect.x + (segRect.width - groupW) * 0.5f;
+
+                Rect labelRect = new Rect(startX, segRect.y, labelW, segRect.height);
+                TextDraw.DrawTracked(labelRect, label, FontRole.Body, labelSize, TextAnchor.MiddleLeft, textColor, labelTrackingPx);
+
+                if (badgeW > 0f) {
+                    Rect badgeRect = new Rect(startX + labelW + gapPx, segRect.y, badgeW, segRect.height);
+                    Color badgeColor = new Color(textColor.r, textColor.g, textColor.b, active ? 0.7f : 0.55f);
+                    TextDraw.Draw(badgeRect, badge!, FontRole.Mono, countSize, TextAnchor.MiddleLeft, badgeColor);
+                }
 
                 if (i < count - 1) {
-                    int nextLogical = rtl ? count - 2 - i : i + 1;
-                    bool adjacentToActive = logicalIndex == activeIndex || nextLogical == activeIndex;
-                    if (!adjacentToActive) {
-                        Rect dividerRect = new Rect(
-                            segRect.xMax - dividerThickness / 2f,
-                            segRect.y + segRect.height * 0.25f,
-                            dividerThickness,
-                            segRect.height * 0.5f
-                        );
-                        PaintBox.Draw(dividerRect, BackgroundSpec.Of(ThemeSlot.BorderSubtle), null, null);
-                    }
+                    Rect dividerRect = new Rect(segRect.xMax - borderPx / 2f, inner.y, borderPx, inner.height);
+                    PaintBox.Draw(dividerRect, BackgroundSpec.Of(ThemeSlot.BorderDefault), null, null);
                 }
 
                 if (e.type == EventType.MouseUp && e.button == 0 && segRect.Contains(e.mousePosition)) {
@@ -172,6 +182,28 @@ public static class Segmented {
                     _ => (string)"CL_Playground_Navigation_Segmented_All".Translate(),
                 },
                 v => selected.Set(v)
+            )
+        );
+    }
+
+    [DocVariant("CL_Playground_Label_FullBleed")]
+    public static DocSample DocsFullBleed() {
+        Hooks.Hooks.StateHandle<string> selected = Hooks.Hooks.UseState<string>("all");
+
+        string[] segments = new[] { "all", "manual", "auto" };
+        return new DocSample(() =>
+            Segmented.Create(
+                selected.Value,
+                segments,
+                v => v switch {
+                    "manual" => (string)"CL_Playground_Navigation_Segmented_Weapons".Translate(),
+                    "auto" => (string)"CL_Playground_Navigation_Segmented_Tools".Translate(),
+                    _ => (string)"CL_Playground_Navigation_Segmented_All".Translate(),
+                },
+                v => selected.Set(v),
+                countFn: v => v switch { "manual" => "55", "auto" => "5", _ => "60" },
+                bordered: false,
+                style: new Style { Width = Length.Stretch }
             )
         );
     }

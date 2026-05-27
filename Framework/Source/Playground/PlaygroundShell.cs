@@ -13,7 +13,7 @@ public static class PlaygroundShell {
         LightweaveNode rail,
         LightweaveNode body,
         float headerHeight = 56f,
-        float railWidth = 200f,
+        float railWidth = 260f,
         Style? style = null,
         string[]? classes = null,
         string? id = null,

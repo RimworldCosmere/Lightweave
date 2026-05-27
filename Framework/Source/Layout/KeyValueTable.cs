@@ -33,6 +33,10 @@ public static class KeyValueTable {
         ColorRef? labelColor = null,
         [DocParam("Vertical mode only: fixed width of the label column in rems.")]
         float labelColumnRem = 6f,
+        [DocParam("Merged onto the label's default style (font, size, tracking, color).")]
+        Style? labelStyle = null,
+        [DocParam("Merged onto the value's default style (font, size, tracking, color).")]
+        Style? valueStyle = null,
         Style? style = null,
         string[]? classes = null,
         string? id = null,
@@ -48,7 +52,7 @@ public static class KeyValueTable {
                 children: h => {
                     for (int i = 0; i < rows.Count; i++) {
                         KeyValueRow row = rows[i];
-                        h.AddFlex(BuildHorizontalCell(row.Label, row.Value, resolvedLabel));
+                        h.AddFlex(BuildHorizontalCell(row.Label, row.Value, resolvedLabel, labelStyle, valueStyle));
                     }
                 },
                 style: style,
@@ -64,7 +68,7 @@ public static class KeyValueTable {
             children: s => {
                 for (int i = 0; i < rows.Count; i++) {
                     KeyValueRow row = rows[i];
-                    s.Add(BuildVerticalRow(row.Label, row.Value, resolvedLabel, labelColumnRem));
+                    s.Add(BuildVerticalRow(row.Label, row.Value, resolvedLabel, labelColumnRem, labelStyle, valueStyle));
                 }
             },
             style: style,
@@ -75,26 +79,28 @@ public static class KeyValueTable {
         );
     }
 
-    private static LightweaveNode BuildHorizontalCell(string label, string value, ColorRef labelColor) {
+    private static LightweaveNode BuildHorizontalCell(string label, string value, ColorRef labelColor, Style? labelStyle, Style? valueStyle) {
+        Style baseLabel = new Style { TextColor = labelColor };
+        Style baseValue = new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.9375f), TextColor = ThemeSlot.TextPrimary };
+        Style finalLabel = labelStyle.HasValue ? Style.Merge(baseLabel, labelStyle.Value) : baseLabel;
+        Style finalValue = valueStyle.HasValue ? Style.Merge(baseValue, valueStyle.Value) : baseValue;
         return Stack.Create(SpacingScale.Xxs, s => {
-            s.Add(Eyebrow.Create(label, style: new Style { TextColor = labelColor }));
+            s.Add(Eyebrow.Create(label, style: finalLabel));
             if (!string.IsNullOrEmpty(value)) {
-                s.Add(Text.Create(
-                    value,
-                    style: new Style { FontFamily = FontRole.Body, FontSize = new Rem(0.9375f), TextColor = ThemeSlot.TextPrimary }
-                ));
+                s.Add(Text.Create(value, style: finalValue));
             }
         });
     }
 
-    private static LightweaveNode BuildVerticalRow(string label, string value, ColorRef labelColor, float labelColumnRem) {
+    private static LightweaveNode BuildVerticalRow(string label, string value, ColorRef labelColor, float labelColumnRem, Style? labelStyle, Style? valueStyle) {
         float labelPx = new Rem(labelColumnRem).ToPixels();
+        Style baseLabel = new Style { TextColor = labelColor };
+        Style baseValue = new Style { FontFamily = FontRole.Mono, FontSize = new Rem(0.9375f), TextColor = ThemeSlot.TextPrimary };
+        Style finalLabel = labelStyle.HasValue ? Style.Merge(baseLabel, labelStyle.Value) : baseLabel;
+        Style finalValue = valueStyle.HasValue ? Style.Merge(baseValue, valueStyle.Value) : baseValue;
         return HStack.Create(SpacingScale.Md, h => {
-            h.Add(Eyebrow.Create(label, style: new Style { TextColor = labelColor }), labelPx);
-            h.AddFlex(Text.Create(
-                value ?? string.Empty,
-                style: new Style { FontFamily = FontRole.Mono, FontSize = new Rem(0.9375f), TextColor = ThemeSlot.TextPrimary }
-            ));
+            h.Add(Eyebrow.Create(label, style: finalLabel), labelPx);
+            h.AddFlex(Text.Create(value ?? string.Empty, style: finalValue));
         });
     }
 

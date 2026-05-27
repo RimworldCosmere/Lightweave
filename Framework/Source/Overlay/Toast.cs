@@ -271,8 +271,7 @@ public static class Toast {
                     Rect toastRect = new Rect(anchorX, positionsY[i], widthPx, heights[i]);
 
                     using (TintScope.Multiply(new Color(1f, 1f, 1f, alpha))) {
-                        Color darkBase = theme.GetColor(ThemeSlot.SurfaceSunken);
-                        BackgroundSpec bg = BackgroundSpec.Of(new Color(darkBase.r, darkBase.g, darkBase.b, 0.92f));
+                        BackgroundSpec bg = BackgroundSpec.Of(ThemeSlot.Glass2);
                         BorderSpec border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderDefault);
                         PaintBox.Draw(toastRect, bg, border, null);
 

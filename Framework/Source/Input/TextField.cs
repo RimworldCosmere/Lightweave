@@ -143,6 +143,7 @@ public static class TextField {
                 if (accepted) {
                     lastGood.Current = candidate;
                     onChange?.Invoke(candidate);
+                    RenderContext.Current.Hooks.Invalidate();
                 }
                 else {
                     buffer.Set(lastGood.Current ?? string.Empty);

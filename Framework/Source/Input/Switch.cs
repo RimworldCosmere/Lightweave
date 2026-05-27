@@ -175,6 +175,7 @@ public static class Switch {
             Event e = Event.current;
             if (!disabled && e.type == EventType.MouseUp && e.button == 0 && hitRect.Contains(e.mousePosition)) {
                 onChange?.Invoke(!value);
+                RenderContext.Current.Hooks.Invalidate();
                 e.Use();
             }
         };
