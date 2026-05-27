@@ -62,18 +62,8 @@
         <Using Include="System.Collections.Generic"/>
     </ItemGroup>
 
-    <PropertyGroup>
-        <RimLoggingAssembliesPath Condition="'$(RimLoggingAssembliesPath)' == ''">../../../../cryptiklemur/rimworld-logging-framework/Assemblies</RimLoggingAssembliesPath>
-    </PropertyGroup>
-
     <ItemGroup>
-        <Reference Include="CryptikLemur.RimLogging">
-            <HintPath>$(RimLoggingAssembliesPath)/CryptikLemur.RimLogging.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-    </ItemGroup>
-
-    <ItemGroup>
+        <PackageReference Include="CryptikLemur.RimLogging" Version="[1.0.2,2.0.0)"/>
         <PackageReference Include="Lib.Harmony" Version="2.4.2"/>
         <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" Version="1.0.3" PrivateAssets="all">
             <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
