@@ -33,6 +33,8 @@ public static class ButtonGroup {
         Variant variant = default,
         [DocParam("Outer shape. Pill draws a bordered, rounded container; Flat omits the outer frame and lets segments fill the rect flush with the parent.")]
         ButtonGroupShape shape = ButtonGroupShape.Pill,
+        [DocParam("When true (default) labels render in BodyBold for legibility at small pill sizes. Pass false to use the regular Body weight.")]
+        bool bold = true,
         [DocParam("Override hover sound. Null = component default (true).")]
         bool? playHoverSound = null,
         Style? style = null,
@@ -54,7 +56,7 @@ public static class ButtonGroup {
                 return 0f;
             }
             Theme.Theme theme = RenderContext.Current.Theme;
-            Font font = theme.GetFont(FontRole.BodyBold);
+            Font font = theme.GetFont(bold ? FontRole.BodyBold : FontRole.Body);
             int pixelSize = Mathf.RoundToInt(new Rem(0.875f).ToFontPx());
             GUIStyle gs = GuiStyleCache.GetOrCreate(font, pixelSize);
             float padPx = SpacingScale.Md.ToPixels();
@@ -83,7 +85,7 @@ public static class ButtonGroup {
 
             int count = items.Count;
 
-            Font font = theme.GetFont(FontRole.BodyBold);
+            Font font = theme.GetFont(bold ? FontRole.BodyBold : FontRole.Body);
             int pixelSize = Mathf.RoundToInt(new Rem(0.875f).ToFontPx());
             GUIStyle style = GuiStyleCache.GetOrCreate(font, pixelSize);
             style.alignment = TextAnchor.MiddleCenter;

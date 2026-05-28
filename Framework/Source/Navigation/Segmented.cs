@@ -33,6 +33,8 @@ public static class Segmented {
         Func<T, string?>? countFn = null,
         [DocParam("When false, drops the enclosing border box so the control sits flush (full-bleed); the active fill and dividers reach the rect edges and the parent supplies the framing.")]
         bool bordered = true,
+        [DocParam("When true (default) labels render in BodyBold for legibility at small pill sizes. Pass false to use the regular Body weight.")]
+        bool bold = true,
         Style? style = null,
         string[]? classes = null,
         string? id = null,
@@ -60,7 +62,7 @@ public static class Segmented {
             float total = 0f;
             for (int i = 0; i < count; i++) {
                 string label = labelFn(items[i]) ?? string.Empty;
-                float w = TextDraw.MeasureTracked(label, FontRole.Body, labelSize, labelTrackingPx);
+                float w = TextDraw.MeasureTracked(label, bold ? FontRole.BodyBold : FontRole.Body, labelSize, labelTrackingPx);
                 string? cnt = countFn?.Invoke(items[i]);
                 if (!string.IsNullOrEmpty(cnt)) {
                     w += gapPx + TextDraw.Measure(cnt!, FontRole.Mono, countSize).x;
@@ -137,13 +139,13 @@ public static class Segmented {
                 string? badge = countFn?.Invoke(item);
                 Color textColor = theme.GetColor(active ? ThemeSlot.TextOnAccent : ThemeSlot.TextSecondary);
 
-                float labelW = TextDraw.MeasureTracked(label, FontRole.Body, labelSize, labelTrackingPx);
+                float labelW = TextDraw.MeasureTracked(label, bold ? FontRole.BodyBold : FontRole.Body, labelSize, labelTrackingPx);
                 float badgeW = string.IsNullOrEmpty(badge) ? 0f : TextDraw.Measure(badge!, FontRole.Mono, countSize).x;
                 float groupW = labelW + (badgeW > 0f ? gapPx + badgeW : 0f);
                 float startX = segRect.x + (segRect.width - groupW) * 0.5f;
 
                 Rect labelRect = new Rect(startX, segRect.y, labelW, segRect.height);
-                TextDraw.DrawTracked(labelRect, label, FontRole.Body, labelSize, TextAnchor.MiddleLeft, textColor, labelTrackingPx);
+                TextDraw.DrawTracked(labelRect, label, bold ? FontRole.BodyBold : FontRole.Body, labelSize, TextAnchor.MiddleLeft, textColor, labelTrackingPx);
 
                 if (badgeW > 0f) {
                     Rect badgeRect = new Rect(startX + labelW + gapPx, segRect.y, badgeW, segRect.height);

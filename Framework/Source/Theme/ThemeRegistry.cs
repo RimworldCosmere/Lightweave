@@ -48,7 +48,7 @@ public static class ThemeRegistry {
             throw new InvalidOperationException($"ThemeRegistry lost the cached builder for theme id '{desc.Id}'. This is a bug in ThemeRegistry initialization.");
         }
         FontSet fonts = RequireFonts();
-        Theme built = (Theme)builder.Invoke(null, new object[] { fonts.Body, fonts.BodyBold, fonts.Heading, fonts.Display, fonts.Mono })!;
+        Theme built = (Theme)builder.Invoke(null, new object[] { fonts.Body, fonts.BodyBold, fonts.Heading, fonts.Display, fonts.Mono, fonts.MonoBold })!;
         cachedThemes[desc.Id] = built;
         return built;
     }
@@ -107,12 +107,12 @@ public static class ThemeRegistry {
                     "Build",
                     BindingFlags.Public | BindingFlags.Static,
                     binder: null,
-                    types: new[] { typeof(Font), typeof(Font), typeof(Font), typeof(Font), typeof(Font) },
+                    types: new[] { typeof(Font), typeof(Font), typeof(Font), typeof(Font), typeof(Font), typeof(Font) },
                     modifiers: null
                 );
                 if (buildMethod == null || !typeof(Theme).IsAssignableFrom(buildMethod.ReturnType)) {
                     LightweaveLog.Warning(
-                        $"Theme type '{type.FullName}' is marked [LightweaveTheme] but is missing a 'public static Theme Build(Font, Font, Font, Font, Font)' method. Skipping."
+                        $"Theme type '{type.FullName}' is marked [LightweaveTheme] but is missing a 'public static Theme Build(Font, Font, Font, Font, Font, Font)' method. Skipping."
                     );
                     continue;
                 }
@@ -142,14 +142,15 @@ public static class ThemeRegistry {
         Font? heading = LightweaveFonts.CarlitoBold ?? LightweaveFonts.ArimoBold;
         Font? display = LightweaveFonts.IMFellEnglishSC ?? LightweaveFonts.Cinzel ?? LightweaveFonts.CarlitoBold;
         Font? mono = LightweaveFonts.JetBrainsMono;
-        if (body == null || bodyBold == null || heading == null || display == null || mono == null) {
+        Font? monoBold = LightweaveFonts.JetBrainsMonoBold ?? LightweaveFonts.JetBrainsMono;
+        if (body == null || bodyBold == null || heading == null || display == null || mono == null || monoBold == null) {
             throw new InvalidOperationException(
                 "ThemeRegistry accessed before LightweaveFonts loaded. Ensure FontLoader.cctor has run."
             );
         }
 
-        return new FontSet(body, bodyBold, heading, display, mono);
+        return new FontSet(body, bodyBold, heading, display, mono, monoBold);
     }
 
-    private readonly record struct FontSet(Font Body, Font BodyBold, Font Heading, Font Display, Font Mono);
+    private readonly record struct FontSet(Font Body, Font BodyBold, Font Heading, Font Display, Font Mono, Font MonoBold);
 }

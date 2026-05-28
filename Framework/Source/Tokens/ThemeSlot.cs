@@ -33,6 +33,7 @@ public enum ThemeSlot {
     SurfaceTranslucentDark,
     SurfaceGhostHover,
     ScrimDefault,
+    WindowBackdrop,
     SurfaceTooltip,
     BorderTooltip,
     Glass1,

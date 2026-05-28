@@ -23,6 +23,7 @@ public static class FontLoader {
             ("IMFellEnglish-Italic", f => LightweaveFonts.IMFellEnglishItalic = f),
             ("IMFellEnglishSC", f => LightweaveFonts.IMFellEnglishSC = f),
             ("JetBrainsMono", f => LightweaveFonts.JetBrainsMono = f),
+            ("JetBrainsMono-Bold", f => LightweaveFonts.JetBrainsMonoBold = f),
             ("Phosphor-Bold", f => LightweaveFonts.PhosphorBold = f),
             ("RpgAwesome", f => LightweaveFonts.RpgAwesome = f),
         ];

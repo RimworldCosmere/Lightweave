@@ -90,7 +90,7 @@ public abstract class LightweaveWindow : Verse.Window {
     [DocOverride("Bottom color of the accent gradient. Defaults to fully-transparent gold.", TypeOverride = "Color?", DefaultOverride = "null")]
     protected virtual Color? GradientBottomColor => null;
 
-    [DocOverride("Card background. Defaults to BackgroundSpec.Blur(ThemeSlot.WindowSurface, 10px).", TypeOverride = "BackgroundSpec?", DefaultOverride = "null")]
+    [DocOverride("Card background. Defaults to BackgroundSpec.Of(ThemeSlot.WindowSurface).", TypeOverride = "BackgroundSpec?", DefaultOverride = "null")]
     protected virtual BackgroundSpec? CardBackground => null;
 
     [DocOverride("Card border. Defaults to 1/16rem BorderDefault on all sides.", TypeOverride = "BorderSpec?", DefaultOverride = "null")]
@@ -249,7 +249,7 @@ public abstract class LightweaveWindow : Verse.Window {
     private LightweaveNode BuildRoot() {
         Theme.Theme theme = RenderContext.Current.Theme;
 
-        BackgroundSpec resolvedCardBg = CardBackground ?? BackgroundSpec.Blur(ThemeSlot.WindowSurface, 10f);
+        BackgroundSpec resolvedCardBg = CardBackground ?? BackgroundSpec.Of(ThemeSlot.WindowSurface);
         BorderSpec resolvedCardBorder = CardBorder ?? BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderDefault);
         EdgeInsets resolvedCardPadding = CardPadding ?? EdgeInsets.All(new Rem(1f / 16f));
         RadiusSpec resolvedCardRadius = CardRadius ?? RadiusSpec.All(RadiusScale.Xl);

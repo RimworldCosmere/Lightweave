@@ -11,7 +11,8 @@ public static class BaseTheme {
         Font bodyBold,
         Font heading,
         Font display,
-        Font mono
+        Font mono,
+        Font monoBold
     ) {
         return new Dictionary<FontRole, Font> {
             [FontRole.Body] = body,
@@ -21,6 +22,7 @@ public static class BaseTheme {
             [FontRole.Label] = body,
             [FontRole.Caption] = body,
             [FontRole.Mono] = mono,
+            [FontRole.MonoBold] = monoBold,
         };
     }
 
@@ -87,10 +89,11 @@ public static class BaseTheme {
         Font heading,
         Font display,
         Font mono,
+        Font monoBold,
         Dictionary<RadiusScale, float>? radii = null,
         Dictionary<ThemeSlot, ShadowSpec>? shadows = null
     ) {
-        Dictionary<FontRole, Font> fonts = BuildFonts(body, bodyBold, heading, display, mono);
+        Dictionary<FontRole, Font> fonts = BuildFonts(body, bodyBold, heading, display, mono, monoBold);
         Dictionary<RadiusScale, float> resolvedRadii = radii ?? BuildRadii();
         Dictionary<ThemeSlot, ShadowSpec> resolvedShadows = shadows ?? BuildShadows(colors);
         return new Theme(colors, fonts, resolvedRadii, resolvedShadows);

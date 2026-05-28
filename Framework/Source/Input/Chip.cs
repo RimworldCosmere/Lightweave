@@ -50,6 +50,8 @@ public static class Chip {
         bool disabled = false,
         [DocParam("Overrides whether the leading dot renders. Defaults to on for Default and Severity variants.")]
         bool? showDot = null,
+        [DocParam("Render label + count in the bold mono weight. Defaults true; flip off for quieter inline tags.")]
+        bool bold = true,
         Style? style = null,
         string[]? classes = null,
         string? id = null,
@@ -70,6 +72,7 @@ public static class Chip {
         bool dot = showDot ?? (variant == ChipVariant.Severity || variant == ChipVariant.Default);
         bool hasCount = variant == ChipVariant.Filter && count.HasValue;
         string countText = hasCount ? count!.Value.ToString(CultureInfo.InvariantCulture) : string.Empty;
+        FontRole monoRole = bold ? FontRole.MonoBold : FontRole.Mono;
         InteractionState frameState = default;
 
         node.MeasureWidth = () => {
@@ -85,12 +88,12 @@ public static class Chip {
                 w += IconSize.ToPixels() + gap;
             }
 
-            w += TextDraw.MeasureTracked(displayLabel, FontRole.Mono, LabelFont, LabelTrackingEm * labelPx);
+            w += TextDraw.MeasureTracked(displayLabel, monoRole, LabelFont, LabelTrackingEm * labelPx);
 
             if (hasCount) {
                 float countPx = CountFont.ToFontPx();
                 w += gap + HairlineWidth.ToPixels() + gap
-                     + TextDraw.MeasureTracked(countText, FontRole.Mono, CountFont, CountTrackingEm * countPx);
+                     + TextDraw.MeasureTracked(countText, monoRole, CountFont, CountTrackingEm * countPx);
             }
 
             return Mathf.Ceil(w);
@@ -174,9 +177,9 @@ public static class Chip {
             }
 
             float labelPx = LabelFont.ToFontPx();
-            float labelW = TextDraw.MeasureTracked(displayLabel, FontRole.Mono, LabelFont, LabelTrackingEm * labelPx);
+            float labelW = TextDraw.MeasureTracked(displayLabel, monoRole, LabelFont, LabelTrackingEm * labelPx);
             Rect labelRect = new Rect(x, rect.y, labelW, rect.height);
-            TextDraw.DrawTracked(labelRect, displayLabel, FontRole.Mono, LabelFont, TextAnchor.MiddleLeft, textColor, LabelTrackingEm * labelPx);
+            TextDraw.DrawTracked(labelRect, displayLabel, monoRole, LabelFont, TextAnchor.MiddleLeft, textColor, LabelTrackingEm * labelPx);
             x += labelW;
 
             if (hasCount) {
@@ -188,9 +191,9 @@ public static class Chip {
                 x += hairline + gap;
 
                 float countPx = CountFont.ToFontPx();
-                float countW = TextDraw.MeasureTracked(countText, FontRole.Mono, CountFont, CountTrackingEm * countPx);
+                float countW = TextDraw.MeasureTracked(countText, monoRole, CountFont, CountTrackingEm * countPx);
                 Rect countRect = new Rect(x, rect.y, countW, rect.height);
-                TextDraw.DrawTracked(countRect, countText, FontRole.Mono, CountFont, TextAnchor.MiddleLeft, WithAlpha(textColor, on ? 1f : 0.7f), CountTrackingEm * countPx);
+                TextDraw.DrawTracked(countRect, countText, monoRole, CountFont, TextAnchor.MiddleLeft, WithAlpha(textColor, on ? 1f : 0.7f), CountTrackingEm * countPx);
             }
 
             if (interactive) {
