@@ -1,5 +1,6 @@
 using System;
 using Cosmere.Lightweave.Feedback;
+using Alert = Cosmere.Lightweave.Feedback.Alert;
 using Cosmere.Lightweave.Input;
 using Cosmere.Lightweave.Layout;
 using Cosmere.Lightweave.Navigation;
@@ -30,7 +31,7 @@ public static class LightweaveRedesignSettingsForm {
                     string diffLabel = diffs == 1
                         ? (string)"CL_Settings_Diff_One".Translate()
                         : (string)"CL_Settings_Diff_Many".Translate(diffs.Named("COUNT"));
-                    stack.Add(DiffBanner.Create(label: diffLabel));
+                    stack.Add(Alert.Create(title: diffLabel, variant: AlertVariant.Warning));
                 }
 
                 stack.Add(Tabs.Create<RedesignCategory>(
