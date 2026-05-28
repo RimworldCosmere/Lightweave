@@ -37,7 +37,7 @@ public static class LightweaveSettingsForm {
                     string diffLabel = diffs == 1
                         ? (string)"CL_Settings_Diff_One".Translate()
                         : (string)"CL_Settings_Diff_Many".Translate(diffs.Named("COUNT"));
-                    stack.Add(DiffBanner.Create(label: diffLabel));
+                    stack.Add(Alert.Create(title: diffLabel, variant: AlertVariant.Warning));
                 }
 
                 stack.Add(Tabs.Create<SettingsCategory>(

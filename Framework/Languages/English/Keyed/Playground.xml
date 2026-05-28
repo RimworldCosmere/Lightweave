@@ -151,6 +151,7 @@
     <CL_Playground_UseHotkey_Idle>Waiting.</CL_Playground_UseHotkey_Idle>
     <CL_Playground_UseHotkey_Escape>Escape pressed.</CL_Playground_UseHotkey_Escape>
     <CL_Playground_UseHotkey_Saved>Saved.</CL_Playground_UseHotkey_Saved>
+    <CL_Playground_alert_Title>Alert</CL_Playground_alert_Title>
     <CL_Playground_Spinner_Title>Spinner</CL_Playground_Spinner_Title>
     <CL_Playground_RingGauge_Title>Ring Gauge</CL_Playground_RingGauge_Title>
     <CL_Playground_Chart_Title>Chart</CL_Playground_Chart_Title>
@@ -278,6 +279,14 @@
     <CL_Playground_textfield_Title>TextField</CL_Playground_textfield_Title>
     <CL_Playground_textfield_What>Single-line text entry. Fires onSubmit on Enter and onBlur on focus loss.</CL_Playground_textfield_What>
     <CL_Playground_textfield_When>Collect a short string. Reach for SearchField when you want live filtering on keystroke.</CL_Playground_textfield_When>
+    <CL_Playground_alert_What>Inline tinted callout with a leading status glyph, title, optional description, and optional trailing actions.</CL_Playground_alert_What>
+    <CL_Playground_alert_When>Communicate state to the player at the spot it applies - drift from defaults, validation failure, completed action, or contextual info.</CL_Playground_alert_When>
+    <CL_Playground_Alert_Variant_Info>Info</CL_Playground_Alert_Variant_Info>
+    <CL_Playground_Alert_Variant_Success>Success</CL_Playground_Alert_Variant_Success>
+    <CL_Playground_Alert_Variant_Warning>Warning</CL_Playground_Alert_Variant_Warning>
+    <CL_Playground_Alert_Variant_Danger>Danger</CL_Playground_Alert_Variant_Danger>
+    <CL_Playground_Alert_State_TitleOnly>Title only</CL_Playground_Alert_State_TitleOnly>
+    <CL_Playground_Alert_State_LongCopy>Long copy</CL_Playground_Alert_State_LongCopy>
     <CL_Playground_spinner_Title>Spinner</CL_Playground_spinner_Title>
     <CL_Playground_spinner_What>Rotating arc that indicates an ongoing operation.</CL_Playground_spinner_What>
     <CL_Playground_spinner_When>Use for operations taking longer than about half a second. Shorter than that, just update the UI.</CL_Playground_spinner_When>
