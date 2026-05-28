@@ -5,7 +5,7 @@ namespace Cosmere.Lightweave.Theme;
 
 [LightweaveTheme("roshar", "CL_Theme_Roshar", Order = 30, SubLabelKey = "CL_Theme_Roshar_Sub")]
 public static class RosharTheme {
-    public static Theme Build(Font body, Font bodyBold, Font heading, Font display, Font mono) {
+    public static Theme Build(Font body, Font bodyBold, Font heading, Font display, Font mono, Font monoBold) {
         Dictionary<ThemeSlot, Color> colors = new Dictionary<ThemeSlot, Color> {
             [ThemeSlot.SurfacePrimary] = new Color(0.788f, 0.765f, 0.702f, 0.97f),
             [ThemeSlot.SurfaceRaised] = new Color(0.831f, 0.812f, 0.753f, 1.00f),
@@ -39,6 +39,7 @@ public static class RosharTheme {
             [ThemeSlot.SurfaceTranslucentDark] = new Color(0.110f, 0.133f, 0.188f, 1.00f),
             [ThemeSlot.SurfaceGhostHover] = new Color(0.760f, 0.737f, 0.672f, 1.00f),
             [ThemeSlot.ScrimDefault] = new Color(0.078f, 0.094f, 0.133f, 1.00f),
+            [ThemeSlot.WindowBackdrop] = new Color(0.040f, 0.055f, 0.085f, 1.00f),
             [ThemeSlot.SurfaceTooltip] = new Color(0.110f, 0.133f, 0.188f, 0.96f),
             [ThemeSlot.BorderTooltip] = new Color(0.373f, 0.769f, 0.824f, 1f),
             [ThemeSlot.Glass1] = new Color(0.847f, 0.831f, 0.776f, 0.55f),
@@ -68,6 +69,6 @@ public static class RosharTheme {
             [ThemeSlot.ExpansionBarSurface] = new Color(0.831f, 0.812f, 0.753f, 0.92f),
             [ThemeSlot.ExpansionPillSurface] = new Color(0.929f, 0.902f, 0.827f, 0.85f),
         };
-        return BaseTheme.Compose(colors, body, bodyBold, heading, display, mono);
+        return BaseTheme.Compose(colors, body, bodyBold, heading, display, mono, monoBold);
     }
 }

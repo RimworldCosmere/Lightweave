@@ -14,6 +14,7 @@ public static class LightweaveFonts {
     public static Font? IMFellEnglishItalic { get; internal set; }
     public static Font? IMFellEnglishSC { get; internal set; }
     public static Font? JetBrainsMono { get; internal set; }
+    public static Font? JetBrainsMonoBold { get; internal set; }
     public static Font? PhosphorBold { get; internal set; }
     public static Font? RpgAwesome { get; internal set; }
 }

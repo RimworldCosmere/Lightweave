@@ -5,7 +5,7 @@ namespace Cosmere.Lightweave.Theme;
 
 [LightweaveTheme("default", "CL_Theme_Default", Order = 0, SubLabelKey = "CL_Theme_Default_Sub")]
 public static class DefaultTheme {
-    public static Theme Build(Font body, Font bodyBold, Font heading, Font display, Font mono) {
+    public static Theme Build(Font body, Font bodyBold, Font heading, Font display, Font mono, Font monoBold) {
         Dictionary<ThemeSlot, Color> colors = new Dictionary<ThemeSlot, Color> {
             [ThemeSlot.SurfacePrimary] = new Color(0.133f, 0.131f, 0.125f, 0.95f),
             [ThemeSlot.SurfaceRaised] = new Color(0.175f, 0.168f, 0.155f, 1.00f),
@@ -39,6 +39,7 @@ public static class DefaultTheme {
             [ThemeSlot.SurfaceTranslucentDark] = new Color(0.078f, 0.063f, 0.043f, 1.00f),
             [ThemeSlot.SurfaceGhostHover] = new Color(0.157f, 0.125f, 0.086f, 1.00f),
             [ThemeSlot.ScrimDefault] = new Color(0.000f, 0.000f, 0.000f, 1.00f),
+            [ThemeSlot.WindowBackdrop] = new Color(0.000f, 0.000f, 0.000f, 1.00f),
             [ThemeSlot.SurfaceTooltip] = new Color(0.039f, 0.031f, 0.020f, 1.00f),
             [ThemeSlot.BorderTooltip] = new Color(0.769f, 0.667f, 0.510f, 0.28f),
             [ThemeSlot.Glass1] = new Color(0.059f, 0.047f, 0.031f, 0.55f),
@@ -68,6 +69,6 @@ public static class DefaultTheme {
             [ThemeSlot.ExpansionBarSurface] = new Color(0.0314f, 0.0235f, 0.0157f, 0.78f),
             [ThemeSlot.ExpansionPillSurface] = new Color(0.1098f, 0.0863f, 0.0549f, 0.85f),
         };
-        return BaseTheme.Compose(colors, body, bodyBold, heading, display, mono, BaseTheme.BuildFlatRadii());
+        return BaseTheme.Compose(colors, body, bodyBold, heading, display, mono, monoBold, BaseTheme.BuildFlatRadii());
     }
 }
