@@ -8,6 +8,7 @@ using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
 using RimWorld;
+using RimWorld.Planet;
 using Verse;
 using Button = Cosmere.Lightweave.Input.Button;
 using Display = Cosmere.Lightweave.Typography.Display;
@@ -28,16 +29,45 @@ public static class NewColonyRoot {
         Hooks.Hooks.StateHandle<string?> diffDefName = Hooks.Hooks.UseState<string?>(DefaultDifficultyDefName());
         Hooks.Hooks.StateHandle<WorldParams> world = Hooks.Hooks.UseState<WorldParams>(WorldParams.Default());
         Hooks.Hooks.StateHandle<AnomalyParams> anomalyParams = Hooks.Hooks.UseState<AnomalyParams>(AnomalyParams.Default());
+        Hooks.Hooks.StateHandle<int> pickedTile = Hooks.Hooks.UseState<int>(-1);
 
         List<string> order = TabOrder(anomaly);
         string activeTab = order.Contains(tab.Value) ? tab.Value : "scenario";
         bool onLastTab = activeTab == order[order.Count - 1];
 
+        // Teardown is handled uniformly in NewColonyWindow.PostClose so every close path
+        // (Escape, click-away, this button) cleans up; here we just dismiss the window.
+        Action close = onClose;
+
+        Hooks.Hooks.UseEffect(() => {
+            if (activeTab == "world") {
+                NewColonyLauncher.PrepareProvision(scenarioName.Value, tellerDefName.Value, diffDefName.Value, anomalyParams.Value);
+                if (!NewColonyLauncher.WorldReady) {
+                    NewColonyLauncher.GenerateWorld(world.Value);
+                }
+            }
+            return null;
+        }, [activeTab]);
+
         return Stack.Create(SpacingScale.None, root => {
-            root.Add(BuildHeadline(onClose));
+            root.Add(BuildHeadline(close));
             root.Add(BuildTabs(activeTab, anomaly, scenarioName, tellerDefName, diffDefName, world, anomalyParams, tab));
-            root.AddFlex(BuildBody(activeTab, scenarioName, tellerDefName, diffDefName, world, anomalyParams));
-            root.Add(BuildCommit(activeTab, order, onLastTab, tab, onClose, scenarioName, tellerDefName, diffDefName, world, anomalyParams));
+            root.AddFlex(BuildBody(activeTab, scenarioName, tellerDefName, diffDefName, world, anomalyParams, pickedTile));
+            root.Add(BuildCommit(activeTab, order, onLastTab, tab, close, scenarioName, tellerDefName, diffDefName, world, anomalyParams, pickedTile));
+            if (NewColonyLauncher.Generating) {
+                root.Add(BuildDisabledScrim());
+            }
+        }, style: new Style { Position = Position.Relative });
+    }
+
+    private static LightweaveNode BuildDisabledScrim() {
+        return Stack.Create(SpacingScale.None, _ => { }, style: new Style {
+            Position = Position.Absolute,
+            Top = new Rem(0f),
+            Right = new Rem(0f),
+            Bottom = new Rem(0f),
+            Left = new Rem(0f),
+            Background = BackgroundSpec.Of(ThemeSlot.OverlayDim),
         });
     }
 
@@ -85,16 +115,16 @@ public static class NewColonyRoot {
                 subtitle: ScenarioSummary(scenarioName.Value)),
             new TabItem("storyteller", "CL_NewColony_Tab_Storyteller".Translate(), number: 2,
                 subtitle: TellerName(tellerDefName.Value)),
-            new TabItem("world", "CL_NewColony_Tab_World".Translate(), number: 3,
-                subtitle: WorldSummary(world.Value)),
         ];
         if (anomaly) {
-            items.Add(new TabItem("anomaly", "CL_NewColony_Tab_Anomaly".Translate(), number: 4,
+            items.Add(new TabItem("anomaly", "CL_NewColony_Tab_Anomaly".Translate(), number: 3,
                 subtitle: AnomalySummary(anomalyParams.Value)));
+            items.Add(new TabItem("world", "CL_NewColony_Tab_World".Translate(), number: 4,
+                subtitle: WorldSummary(world.Value)));
         }
         else {
-            items.Add(new TabItem("anomaly", "CL_NewColony_Tab_Anomaly".Translate(), number: 4,
-                subtitle: "CL_NewColony_Tab_AnomalyLocked".Translate(), disabled: true));
+            items.Add(new TabItem("world", "CL_NewColony_Tab_World".Translate(), number: 3,
+                subtitle: WorldSummary(world.Value)));
         }
 
         return Stack.Create(SpacingScale.None, s => s.Add(Tabs.Create(items, activeTab, (string id) => tab.Set(id), TabsVariant.Dossier)),
@@ -109,21 +139,27 @@ public static class NewColonyRoot {
         Hooks.Hooks.StateHandle<string?> tellerDefName,
         Hooks.Hooks.StateHandle<string?> diffDefName,
         Hooks.Hooks.StateHandle<WorldParams> world,
-        Hooks.Hooks.StateHandle<AnomalyParams> anomalyParams
+        Hooks.Hooks.StateHandle<AnomalyParams> anomalyParams,
+        Hooks.Hooks.StateHandle<int> pickedTile
     ) {
         LightweaveNode content = activeTab switch {
             "storyteller" => StorytellerTab.Build(tellerDefName, diffDefName),
-            "world" => WorldTab.Build(world),
+            "world" => WorldTab.Build(world, pickedTile),
             "anomaly" => AnomalyTab.Build(anomalyParams),
             _ => ScenarioTab.Build(scenarioName),
         };
+
+        bool flush = activeTab == "world";
+        EdgeInsets padding = flush
+            ? new EdgeInsets(new Rem(0f), new Rem(0f), new Rem(0f), new Rem(0f))
+            : new EdgeInsets(new Rem(1.25f), new Rem(1.5f), new Rem(1.25f), new Rem(1.5f));
 
         return Stack.Create(SpacingScale.None, s => s.AddFlex(content),
             style: new Style {
                 Width = Length.Stretch,
                 Height = Length.Stretch,
                 Margin = new EdgeInsets(new Rem(0.75f), new Rem(1.75f), new Rem(0.75f), new Rem(1.75f)),
-                Padding = new EdgeInsets(new Rem(1.25f), new Rem(1.5f), new Rem(1.25f), new Rem(1.5f)),
+                Padding = padding,
                 Background = BackgroundSpec.Of(ThemeSlot.ShelfTint),
                 Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderSubtle),
                 Radius = RadiusSpec.All(RadiusScale.Md),
@@ -140,7 +176,8 @@ public static class NewColonyRoot {
         Hooks.Hooks.StateHandle<string?> tellerDefName,
         Hooks.Hooks.StateHandle<string?> diffDefName,
         Hooks.Hooks.StateHandle<WorldParams> world,
-        Hooks.Hooks.StateHandle<AnomalyParams> anomalyParams
+        Hooks.Hooks.StateHandle<AnomalyParams> anomalyParams,
+        Hooks.Hooks.StateHandle<int> pickedTile
     ) {
         int index = order.IndexOf(activeTab);
 
@@ -149,7 +186,10 @@ public static class NewColonyRoot {
             : () => tab.Set(order[index - 1]);
 
         Action primary = onLastTab
-            ? () => NewColonyLauncher.Launch(scenarioName.Value, tellerDefName.Value, diffDefName.Value, world.Value, anomalyParams.Value, onClose)
+            ? () => NewColonyLauncher.Commit(
+                world.Value,
+                pickedTile.Value < 0 ? PlanetTile.Invalid : new PlanetTile(pickedTile.Value),
+                onClose)
             : () => tab.Set(order[index + 1]);
 
         string backLabel = index <= 0
@@ -240,10 +280,11 @@ public static class NewColonyRoot {
     }
 
     private static List<string> TabOrder(bool anomaly) {
-        List<string> order = ["scenario", "storyteller", "world"];
+        List<string> order = ["scenario", "storyteller"];
         if (anomaly) {
             order.Add("anomaly");
         }
+        order.Add("world");
         return order;
     }
 

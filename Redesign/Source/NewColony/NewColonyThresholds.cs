@@ -55,4 +55,15 @@ public static class NewColonyThresholds {
         string lead = breakIndex >= 0 ? description.Substring(0, breakIndex) : description;
         return lead.Trim();
     }
+
+    public static string TimeZoneLabel(int zone) {
+        return zone >= 0 ? "GMT+" + zone : "GMT" + zone;
+    }
+
+    public static string DiseaseFrequencyLabel(float mtbDays) {
+        if (mtbDays <= 0f) {
+            return "—";
+        }
+        return (60f / mtbDays).ToString("F1") + "/yr";
+    }
 }
