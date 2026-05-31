@@ -9,6 +9,7 @@ using Cosmere.Lightweave.Types;
 using UnityEngine;
 using Verse;
 using static Cosmere.Lightweave.Typography.Typography;
+using Cosmere.Lightweave.Data;
 
 namespace Cosmere.Lightweave.Input;
 
@@ -94,7 +95,8 @@ public static class IconButton {
                 onClick != null &&
                 e.type == EventType.MouseUp &&
                 e.button == 0 &&
-                square.Contains(e.mousePosition)) {
+                square.Contains(e.mousePosition) &&
+                LightweaveHitTracker.IsTopmost(square)) {
                 onClick.Invoke();
                 e.Use();
             }
@@ -111,40 +113,35 @@ public static class IconButton {
 
     [DocVariant("CL_Playground_Label_Ghost")]
     public static DocSample DocsGhost() {
-        bool forced = RenderContext.Current.ForceDisabled;
-        return new DocSample(() => Create(Icon.Create(TexButton.Reveal, new Rem(1f), style: new Style { TextColor = ThemeSlot.TextPrimary }), () => { }, disabled: forced));
+        return new DocSample(() => Create(Icon.Create(TexButton.Reveal, new Rem(1f), style: new Style { TextColor = ThemeSlot.TextPrimary }), () => { }));
     }
 
     [DocVariant("CL_Playground_Label_Primary")]
     public static DocSample DocsPrimary() {
-        bool forced = RenderContext.Current.ForceDisabled;
-        return new DocSample(() => Create(Icon.Create(TexButton.NewItem, new Rem(1f), style: new Style { TextColor = ThemeSlot.TextPrimary }), () => { }, Variant.Primary, disabled: forced));
+        return new DocSample(() => Create(Icon.Create(TexButton.NewItem, new Rem(1f), style: new Style { TextColor = ThemeSlot.TextPrimary }), () => { }, Variant.Primary));
     }
 
     [DocVariant("CL_Playground_Label_Secondary")]
     public static DocSample DocsSecondary() {
-        bool forced = RenderContext.Current.ForceDisabled;
-        return new DocSample(() => Create(Icon.Create(TexButton.Search, new Rem(1f), style: new Style { TextColor = ThemeSlot.TextPrimary }), () => { }, Variant.Secondary, disabled: forced));
+        return new DocSample(() => Create(Icon.Create(TexButton.Search, new Rem(1f), style: new Style { TextColor = ThemeSlot.TextPrimary }), () => { }, Variant.Secondary));
     }
 
-    [DocState("CL_Playground_Label_Default")]
+    [DocState("CL_Playground_Label_Default", HideCode = true)]
     public static DocSample DocsDefault() {
-        bool forced = RenderContext.Current.ForceDisabled;
-        return new DocSample(() => Create(Icon.Create(TexButton.Info, new Rem(1f), style: new Style { TextColor = ThemeSlot.TextPrimary }), () => { }, disabled: forced));
+        return new DocSample(() => Create(Icon.Create(TexButton.Info, new Rem(1f), style: new Style { TextColor = ThemeSlot.TextPrimary }), () => { }));
     }
 
-    [DocState("CL_Playground_Label_Hover")]
+    [DocState("CL_Playground_Label_Hover", HideCode = true)]
     public static DocSample DocsHover() {
-        bool forced = RenderContext.Current.ForceDisabled;
-        return new DocSample(() => Create(Icon.Create(TexButton.Rename, new Rem(1f), style: new Style { TextColor = ThemeSlot.TextPrimary }), () => { }, disabled: forced));
+        return new DocSample(() => Create(Icon.Create(TexButton.Rename, new Rem(1f), style: new Style { TextColor = ThemeSlot.TextPrimary }), () => { }));
     }
 
-    [DocState("CL_Playground_Label_Active")]
+    [DocState("CL_Playground_Label_Active", HideCode = true)]
     public static DocSample DocsActive() {
         return new DocSample(() => Create(Icon.Create(TexButton.Info, new Rem(1f), style: new Style { TextColor = ThemeSlot.SurfaceAccent }), () => { }, active: true));
     }
 
-    [DocState("CL_Playground_Label_Disabled")]
+    [DocState("CL_Playground_Label_Disabled", HideCode = true)]
     public static DocSample DocsDisabled() {
         return new DocSample(() => Create(Icon.Create(TexButton.CloseXSmall, new Rem(1f), style: new Style { TextColor = ThemeSlot.TextPrimary }), () => { }, disabled: true));
     }

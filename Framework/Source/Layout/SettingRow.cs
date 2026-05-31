@@ -1,11 +1,14 @@
 using System.Runtime.CompilerServices;
 using Cosmere.Lightweave.Doc;
+using Cosmere.Lightweave.Feedback;
 using Cosmere.Lightweave.Input;
 using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
 using static Cosmere.Lightweave.Typography.Typography;
+using Cosmere.Lightweave.Surfaces;
+using Cosmere.Lightweave.Data;
 
 namespace Cosmere.Lightweave.Layout;
 
@@ -76,8 +79,8 @@ public static class SettingRow {
                 if (edited) {
                     row.AddHug(Chip.Create(
                         label: editedLabel ?? "EDITED",
-                        on: true,
-                        tone: ChipTone.Warn,
+                        variant: ChipVariant.Warn,
+                        state: true,
                         showDot: false
                     ));
                 }

@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 using Cosmere.Lightweave.Hooks;
 using static Cosmere.Lightweave.Hooks.Hooks;
 using Cosmere.Lightweave.Layout;
-using Cosmere.Lightweave.Overlay;
+using Cosmere.Lightweave.Feedback;
 using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
@@ -43,7 +43,8 @@ public static class ThemeButton {
             placement: PopoverPlacement.Top,
             content: ThemePopover.Create(() => open.Set(false)),
             onDismiss: () => open.Set(false),
-            preferredSize: new Vector2(new Rem(16f).ToPixels(), -1f)
+            preferredSize: new Vector2(new Rem(16f).ToPixels(), -1f),
+            showShadow: false
         );
 
         node.MeasureWidth = () => trigger.MeasureWidth?.Invoke() ?? new Rem(10f).ToPixels();

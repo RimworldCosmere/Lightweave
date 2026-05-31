@@ -17,9 +17,10 @@ public readonly record struct InteractionState(bool Hovered, bool Pressed, bool 
             return new InteractionState(false, false, false, true);
         }
 
-        if (ctx.ForceHovered || ctx.ForcePressed) {
-            bool focusedForced = focusName != null && GUI.GetNameOfFocusedControl() == focusName;
-            return new InteractionState(true, ctx.ForcePressed, focusedForced, false);
+        if (ctx.ForceHovered || ctx.ForcePressed || ctx.ForceFocused) {
+            bool forcedHover = ctx.ForceHovered || ctx.ForcePressed;
+            bool forcedFocus = ctx.ForceFocused || (focusName != null && GUI.GetNameOfFocusedControl() == focusName);
+            return new InteractionState(forcedHover, ctx.ForcePressed, forcedFocus, false);
         }
 
         bool hovered = Mouse.IsOver(rect);

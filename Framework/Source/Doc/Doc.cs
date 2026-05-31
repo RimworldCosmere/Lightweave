@@ -104,7 +104,7 @@ public static partial class Doc {
 
                 if (isActive) {
                     Rect bar = new Rect(rect.x, y, 2f, entryHeightPx);
-                    GUI.color = theme.GetColor(ThemeSlot.BorderFocus);
+                    GUI.color = theme.GetColor(ThemeSlot.SurfaceAccent);
                     GUI.DrawTexture(bar, Texture2D.whiteTexture);
                 }
 

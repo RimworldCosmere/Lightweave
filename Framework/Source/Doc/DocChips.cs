@@ -5,6 +5,7 @@ using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
 using UnityEngine;
 using static Cosmere.Lightweave.Typography.Typography;
+using Cosmere.Lightweave.Surfaces;
 
 namespace Cosmere.Lightweave.Doc;
 

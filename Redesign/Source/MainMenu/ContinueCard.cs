@@ -9,6 +9,7 @@ using Cosmere.Lightweave.Types;
 using UnityEngine;
 using Verse;
 using static Cosmere.Lightweave.Typography.Typography;
+using Cosmere.Lightweave.Surfaces;
 using Display = Cosmere.Lightweave.Typography.Display;
 using Eyebrow = Cosmere.Lightweave.Typography.Eyebrow;
 using HotkeyBadge = Cosmere.Lightweave.Typography.HotkeyBadge;

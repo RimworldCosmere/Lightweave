@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <CL_NewColony_Title>New Colony</CL_NewColony_Title>
+  <CL_NewColony_Subtitle>5503 A.D. &#183; Choose each piece of your beginning, then commit.</CL_NewColony_Subtitle>
+  <CL_NewColony_Close>Esc</CL_NewColony_Close>
+  <CL_NewColony_Close_Tooltip>Back to main menu</CL_NewColony_Close_Tooltip>
+  <CL_NewColony_None>None</CL_NewColony_None>
+
+  <CL_NewColony_Tab_Scenario>Scenario</CL_NewColony_Tab_Scenario>
+  <CL_NewColony_Tab_Storyteller>Storyteller</CL_NewColony_Tab_Storyteller>
+  <CL_NewColony_Tab_World>World</CL_NewColony_Tab_World>
+  <CL_NewColony_Tab_Anomaly>Anomaly</CL_NewColony_Tab_Anomaly>
+  <CL_NewColony_Tab_AnomalyLocked>Requires Anomaly</CL_NewColony_Tab_AnomalyLocked>
+
+  <CL_NewColony_Back_MainMenu>Main menu</CL_NewColony_Back_MainMenu>
+  <CL_NewColony_Back_Previous>Back</CL_NewColony_Back_Previous>
+  <CL_NewColony_Continue>Continue</CL_NewColony_Continue>
+  <CL_NewColony_Generate>Generate World</CL_NewColony_Generate>
+  <CL_NewColony_BrowseWorkshop>Browse Workshop</CL_NewColony_BrowseWorkshop>
+
+  <CL_NewColony_Stat_Scenario>Scenario</CL_NewColony_Stat_Scenario>
+  <CL_NewColony_Stat_Storyteller>Storyteller</CL_NewColony_Stat_Storyteller>
+  <CL_NewColony_Stat_Difficulty>Difficulty</CL_NewColony_Stat_Difficulty>
+  <CL_NewColony_Stat_MapSize>Map size</CL_NewColony_Stat_MapSize>
+  <CL_NewColony_Stat_Factions>Factions</CL_NewColony_Stat_Factions>
+
+  <CL_NewColony_Scenario_Official>Official scenarios</CL_NewColony_Scenario_Official>
+  <CL_NewColony_Scenario_Modded>Modded scenarios</CL_NewColony_Scenario_Modded>
+  <CL_NewColony_Scenario_Custom>Custom scenarios</CL_NewColony_Scenario_Custom>
+  <CL_NewColony_Scenario_Workshop>Workshop scenarios</CL_NewColony_Scenario_Workshop>
+  <CL_NewColony_Scenario_Empty>No scenario selected.</CL_NewColony_Scenario_Empty>
+  <CL_NewColony_Scenario_Summary>Summary</CL_NewColony_Scenario_Summary>
+  <CL_NewColony_Scenario_Colonists>{COUNT} colonists</CL_NewColony_Scenario_Colonists>
+  <CL_NewColony_Scenario_StartingColonists>Starting colonists</CL_NewColony_Scenario_StartingColonists>
+  <CL_NewColony_Scenario_StartingItems>Starting items</CL_NewColony_Scenario_StartingItems>
+  <CL_NewColony_Scenario_StartingAnimals>Starting animals</CL_NewColony_Scenario_StartingAnimals>
+  <CL_NewColony_Scenario_Arrival>Arrival</CL_NewColony_Scenario_Arrival>
+  <CL_NewColony_Scenario_PlanetLayer>Planet layer</CL_NewColony_Scenario_PlanetLayer>
+  <CL_NewColony_Scenario_Loadout>Starting loadout</CL_NewColony_Scenario_Loadout>
+  <CL_NewColony_Scenario_LoadoutEmpty>Nothing. You begin with nothing.</CL_NewColony_Scenario_LoadoutEmpty>
+
+  <CL_NewColony_Storyteller_Heading>Choose your storyteller</CL_NewColony_Storyteller_Heading>
+  <CL_NewColony_Difficulty_Heading>Difficulty</CL_NewColony_Difficulty_Heading>
+
+  <CL_NewColony_World_Subtab_World>World</CL_NewColony_World_Subtab_World>
+  <CL_NewColony_World_Subtab_Factions>Factions</CL_NewColony_World_Subtab_Factions>
+  <CL_NewColony_World_Subtab_Site>Site</CL_NewColony_World_Subtab_Site>
+  <CL_NewColony_World_Coverage>Planet coverage</CL_NewColony_World_Coverage>
+  <CL_NewColony_World_Rainfall>Rainfall</CL_NewColony_World_Rainfall>
+  <CL_NewColony_World_Temperature>Temperature</CL_NewColony_World_Temperature>
+  <CL_NewColony_World_Population>Population</CL_NewColony_World_Population>
+  <CL_NewColony_World_MapSize>Map size</CL_NewColony_World_MapSize>
+  <CL_NewColony_World_Seed>World seed</CL_NewColony_World_Seed>
+  <CL_NewColony_World_Seed_Random>Random each generation</CL_NewColony_World_Seed_Random>
+  <CL_NewColony_World_Seed_Randomize>Randomize seed</CL_NewColony_World_Seed_Randomize>
+
+  <CL_NewColony_Anomaly_Integration>Integration</CL_NewColony_Anomaly_Integration>
+  <CL_NewColony_Anomaly_ThreatsHeading>Threats &amp; study</CL_NewColony_Anomaly_ThreatsHeading>
+  <CL_NewColony_Anomaly_ThreatsCaption>Storyteller settings. These can be modified during the game.</CL_NewColony_Anomaly_ThreatsCaption>
+  <CL_NewColony_Anomaly_ThreatsInactive>Anomaly threats (inactive)</CL_NewColony_Anomaly_ThreatsInactive>
+  <CL_NewColony_Anomaly_ThreatsActive>Anomaly threats (active)</CL_NewColony_Anomaly_ThreatsActive>
+  <CL_NewColony_Anomaly_StudyEfficiency>Study efficiency</CL_NewColony_Anomaly_StudyEfficiency>
+  <CL_NewColony_Anomaly_Reset>Set to standard playstyle</CL_NewColony_Anomaly_Reset>
+
+  <CL_NewColony_Anomaly_Intensity_Rare>Rare</CL_NewColony_Anomaly_Intensity_Rare>
+  <CL_NewColony_Anomaly_Intensity_Light>Light</CL_NewColony_Anomaly_Intensity_Light>
+  <CL_NewColony_Anomaly_Intensity_Balanced>Balanced</CL_NewColony_Anomaly_Intensity_Balanced>
+  <CL_NewColony_Anomaly_Intensity_Frequent>Frequent</CL_NewColony_Anomaly_Intensity_Frequent>
+  <CL_NewColony_Anomaly_Intensity_Severe>Severe</CL_NewColony_Anomaly_Intensity_Severe>
+  <CL_NewColony_Anomaly_Intensity_Overwhelming>Overwhelming</CL_NewColony_Anomaly_Intensity_Overwhelming>
+
+  <CL_NewColony_Rainfall_0>Almost none</CL_NewColony_Rainfall_0>
+  <CL_NewColony_Rainfall_1>Low</CL_NewColony_Rainfall_1>
+  <CL_NewColony_Rainfall_2>Below normal</CL_NewColony_Rainfall_2>
+  <CL_NewColony_Rainfall_3>Normal</CL_NewColony_Rainfall_3>
+  <CL_NewColony_Rainfall_4>Above normal</CL_NewColony_Rainfall_4>
+  <CL_NewColony_Rainfall_5>High</CL_NewColony_Rainfall_5>
+  <CL_NewColony_Rainfall_6>Very high</CL_NewColony_Rainfall_6>
+
+  <CL_NewColony_Temperature_0>Very cold</CL_NewColony_Temperature_0>
+  <CL_NewColony_Temperature_1>Cold</CL_NewColony_Temperature_1>
+  <CL_NewColony_Temperature_2>Below normal</CL_NewColony_Temperature_2>
+  <CL_NewColony_Temperature_3>Normal</CL_NewColony_Temperature_3>
+  <CL_NewColony_Temperature_4>Above normal</CL_NewColony_Temperature_4>
+  <CL_NewColony_Temperature_5>Hot</CL_NewColony_Temperature_5>
+  <CL_NewColony_Temperature_6>Very hot</CL_NewColony_Temperature_6>
+
+  <CL_NewColony_Population_0>Almost none</CL_NewColony_Population_0>
+  <CL_NewColony_Population_1>Sparse</CL_NewColony_Population_1>
+  <CL_NewColony_Population_2>Below normal</CL_NewColony_Population_2>
+  <CL_NewColony_Population_3>Normal</CL_NewColony_Population_3>
+  <CL_NewColony_Population_4>Above normal</CL_NewColony_Population_4>
+  <CL_NewColony_Population_5>Abundant</CL_NewColony_Population_5>
+  <CL_NewColony_Population_6>Very high</CL_NewColony_Population_6>
+
+  <CL_NewColony_MapSize_200>Small</CL_NewColony_MapSize_200>
+  <CL_NewColony_MapSize_250>Medium</CL_NewColony_MapSize_250>
+  <CL_NewColony_MapSize_275>Large</CL_NewColony_MapSize_275>
+  <CL_NewColony_MapSize_300>Extreme</CL_NewColony_MapSize_300>
+  <CL_NewColony_MapSize_350>Brutal</CL_NewColony_MapSize_350>
+
+  <CL_NewColony_Error_Incomplete>Pick a scenario, storyteller and difficulty before generating.</CL_NewColony_Error_Incomplete>
+
+</LanguageData>

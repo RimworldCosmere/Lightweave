@@ -12,6 +12,7 @@ using RimWorld;
 using UnityEngine;
 using Verse;
 using Verse.Steam;
+using Cosmere.Lightweave.Surfaces;
 using Eyebrow = Cosmere.Lightweave.Typography.Eyebrow;
 using Text = Cosmere.Lightweave.Typography.Typography.Text;
 

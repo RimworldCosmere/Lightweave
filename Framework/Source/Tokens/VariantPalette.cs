@@ -58,6 +58,30 @@ public static class VariantPalette {
                 GhostForeground = null,
                 GhostBorder = null,
             },
+            [Variant.Quiet] = new VariantSpec {
+                Background = _ => (ThemeSlot?)null,
+                Foreground = state => state.Hovered || state.Pressed ? ThemeSlot.TextPrimary : ThemeSlot.TextMuted,
+                Border = _ => (ThemeSlot?)null,
+                GhostForeground = null,
+                GhostBorder = null,
+            },
+            [Variant.Solid] = new VariantSpec {
+                Background = state => {
+                    if (state.Pressed) {
+                        return ThemeSlot.SurfaceSunken;
+                    }
+
+                    if (state.Hovered) {
+                        return ThemeSlot.SurfaceRaised;
+                    }
+
+                    return ThemeSlot.SurfaceTranslucent;
+                },
+                Foreground = state => state.Hovered || state.Pressed ? ThemeSlot.TextPrimary : ThemeSlot.TextSecondary,
+                Border = _ => (ThemeSlot?)null,
+                GhostForeground = null,
+                GhostBorder = null,
+            },
         };
 
     public static void Register(Variant variant, VariantSpec spec) {

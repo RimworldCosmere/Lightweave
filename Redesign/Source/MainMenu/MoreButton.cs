@@ -50,7 +50,8 @@ public static class MoreButton {
             header: (string)"CL_MainMenu_More_Header".Translate(),
             headerMeta: null,
             searchPlaceholder: null,
-            size: new Vector2(MenuWidth.ToPixels(), -1f)
+            size: new Vector2(MenuWidth.ToPixels(), -1f),
+            showShadow: false
         );
 
         node.Children.Add(tile);

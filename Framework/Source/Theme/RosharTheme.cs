@@ -49,6 +49,12 @@ public static class RosharTheme {
             [ThemeSlot.Glass1] = new Color(0.847f, 0.831f, 0.776f, 0.55f),
             [ThemeSlot.Glass2] = new Color(0.831f, 0.812f, 0.753f, 0.85f),
             [ThemeSlot.Glass3] = new Color(0.831f, 0.812f, 0.753f, 0.95f),
+            [ThemeSlot.WindowGlass] = new Color(0.831f, 0.812f, 0.753f, 0.92f),
+            [ThemeSlot.DlcRoyalty] = new Color(0.831f, 0.659f, 0.341f),
+            [ThemeSlot.DlcIdeology] = new Color(0.788f, 0.478f, 0.357f),
+            [ThemeSlot.DlcBiotech] = new Color(0.416f, 0.553f, 0.659f),
+            [ThemeSlot.DlcAnomaly] = new Color(0.604f, 0.373f, 0.659f),
+            [ThemeSlot.DlcOdyssey] = new Color(0.357f, 0.639f, 0.659f),
             [ThemeSlot.WindowSurface] = new Color(0.760f, 0.738f, 0.680f, 0.97f),
             [ThemeSlot.GlassFrost] = new Color(0.788f, 0.765f, 0.702f, 0.82f),
             [ThemeSlot.AccentGlow] = new Color(0.373f, 0.769f, 0.824f, 0.55f),
@@ -72,6 +78,8 @@ public static class RosharTheme {
             [ThemeSlot.MenuVignette] = new Color(0.788f, 0.765f, 0.702f, 0.85f),
             [ThemeSlot.ExpansionBarSurface] = new Color(0.831f, 0.812f, 0.753f, 0.92f),
             [ThemeSlot.ExpansionPillSurface] = new Color(0.929f, 0.902f, 0.827f, 0.85f),
+            [ThemeSlot.AnomalyAccent] = new Color(0.604f, 0.373f, 0.659f),
+            [ThemeSlot.AnomalyAccentText] = new Color(0.816f, 0.647f, 0.839f),
         };
         return BaseTheme.Compose(colors, body, bodyBold, heading, display, mono, monoBold);
     }

@@ -76,7 +76,7 @@ public static class ToggleButton {
             paintChildren();
 
             Event e = Event.current;
-            if (e.type == EventType.MouseUp && e.button == 0 && rect.Contains(e.mousePosition)) {
+            if (e.type == EventType.MouseUp && e.button == 0 && rect.Contains(e.mousePosition) && LightweaveHitTracker.IsTopmost(rect)) {
                 onChange?.Invoke(!value);
                 RenderContext.Current.Hooks.Invalidate();
                 e.Use();

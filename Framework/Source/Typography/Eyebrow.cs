@@ -20,6 +20,10 @@ public static class Eyebrow {
     public static LightweaveNode Create(
         [DocParam("Eyebrow text. Will be rendered upper-cased.")]
         string content,
+        [DocParam("Text accent color. When set, overrides the default muted text color. Defaults to the resolved style / muted slot.")]
+        ColorRef? accent = null,
+        [DocParam("When true, draws a hairline rule filling the remaining width after the label (left-aligned only).")]
+        bool trailingRule = false,
         [DocParam("Inline style override.", TypeOverride = "Style?", DefaultOverride = "null")]
         Style? style = null,
         [DocParam("Additional class names merged after the base 'eyebrow' class.", TypeOverride = "string[]?", DefaultOverride = "null")]
@@ -31,8 +35,15 @@ public static class Eyebrow {
     ) {
         string upper = content?.ToUpperInvariant() ?? string.Empty;
 
+        if (accent != null) {
+            style = style.HasValue
+                ? style.Value with { TextColor = accent }
+                : new Style { TextColor = accent };
+        }
+
         Tracking? styleTracking = style?.LetterSpacing;
-        if (!styleTracking.HasValue || Mathf.Approximately(styleTracking.Value.Em, 0f)) {
+        bool noTracking = !styleTracking.HasValue || Mathf.Approximately(styleTracking.Value.Em, 0f);
+        if (noTracking && !trailingRule) {
             return Text.Create(
                 upper,
                 style: style,
@@ -45,6 +56,9 @@ public static class Eyebrow {
 
         LightweaveNode node = NodeBuilder.New($"Eyebrow:{upper}", line, file);
         node.ApplyStyling("eyebrow", style, classes, id);
+
+        float ruleThicknessPx = new Rem(1f / 16f).ToPixels();
+        float ruleGapPx = SpacingScale.Sm.ToPixels();
 
         int ResolveLetterSpacing() {
             Style s = node.GetResolvedStyle();
@@ -115,7 +129,7 @@ public static class Eyebrow {
         };
 
         node.Paint = (rect, _) => {
-            if (string.IsNullOrEmpty(upper)) {
+            if (string.IsNullOrEmpty(upper) && !trailingRule) {
                 return;
             }
             Theme.Theme theme = RenderContext.Current.Theme;
@@ -150,6 +164,15 @@ public static class Eyebrow {
                 TextDraw.DrawWithStyle(new Rect(cursor, y, widths[i], h), ch, gs, c);
                 cursor += widths[i] + letterSpacing;
             }
+
+            if (trailingRule && align == TextAlign.Start) {
+                float ruleX = startX + totalW + ruleGapPx;
+                if (ruleX < rect.xMax) {
+                    float ruleY = rect.y + (rect.height - ruleThicknessPx) * 0.5f;
+                    Color ruleColor = theme.GetColor(ThemeSlot.BorderSubtle);
+                    PaintBox.Fill(new Rect(ruleX, ruleY, rect.xMax - ruleX, ruleThicknessPx), ruleColor);
+                }
+            }
         };
         return node;
     }
@@ -162,6 +185,16 @@ public static class Eyebrow {
     [DocVariant("CL_Playground_Label_Accented")]
     public static DocSample DocsAccented() {
         return new DocSample(() => Eyebrow.Create("framerate", style: new Style { TextColor = (ColorRef)ThemeSlot.SurfaceAccent }));
+    }
+
+    [DocVariant("CL_Playground_Label_TrailingRule")]
+    public static DocSample DocsTrailingRule() {
+        return new DocSample(() => Eyebrow.Create(
+            "section",
+            accent: ThemeSlot.SurfaceAccent,
+            trailingRule: true,
+            style: new Style { LetterSpacing = Tracking.Of(0.28f), Width = Length.Stretch }
+        ));
     }
 
     [DocUsage]

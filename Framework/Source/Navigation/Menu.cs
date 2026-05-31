@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using Cosmere.Lightweave.Doc;
 using Cosmere.Lightweave.Hooks;
 using Cosmere.Lightweave.Input;
-using Cosmere.Lightweave.Overlay;
+using Cosmere.Lightweave.Feedback;
 using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
@@ -69,6 +69,8 @@ public static class Menu {
         string? searchPlaceholder = null,
         [DocParam("Explicit popover size in pixels; pass null for default width and content-based height.")]
         Vector2? size = null,
+        [DocParam("Whether to render the drop shadow beneath the menu.")]
+        bool showShadow = true,
         Style? style = null,
         string[]? classes = null,
         string? id = null,
@@ -171,7 +173,8 @@ public static class Menu {
                         () => openSubmenuIndex.Set(-1),
                         MenuAnchor.Right,
                         direction,
-                        instanceKey == null ? submenuIdx : (instanceKey, submenuIdx)
+                        instanceKey == null ? submenuIdx : (instanceKey, submenuIdx),
+                        showShadow: showShadow
                     );
                     submenu.MeasuredRect = submenuAnchor;
                     LightweaveRoot.PaintSubtree(submenu, submenuAnchor);
@@ -190,6 +193,7 @@ public static class Menu {
             content,
             onDismiss,
             popoverSize,
+            showShadow,
             style,
             classes,
             id,

@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using Cosmere.Lightweave.Hooks;
 using static Cosmere.Lightweave.Hooks.Hooks;
-using Cosmere.Lightweave.Overlay;
+using Cosmere.Lightweave.Feedback;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
@@ -45,7 +45,8 @@ public static class LangButton {
                 open.Set(false);
                 query.Set(string.Empty);
             },
-            preferredSize: new Vector2(new Rem(21f).ToPixels(), -1f)
+            preferredSize: new Vector2(new Rem(21f).ToPixels(), -1f),
+            showShadow: false
         );
 
         node.MeasureWidth = () => trigger.MeasureWidth?.Invoke() ?? new Rem(8f).ToPixels();

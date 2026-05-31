@@ -1,10 +1,12 @@
 using System.Runtime.CompilerServices;
+using Cosmere.Lightweave.Adapter;
 using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
 using UnityEngine;
 using Verse;
+using Text = Cosmere.Lightweave.Typography.Typography.Text;
 
 namespace Cosmere.Lightweave.Playground;
 
@@ -156,7 +158,10 @@ public static class PlaygroundRail {
                     pinnedCategoryId.Set(pinned ? null : cat.Id);
                 }
 
-                TooltipHandler.TipRegion(rowRect, (string)cat.DescriptionKey.Translate());
+                if (overRow) {
+                    string tip = (string)cat.DescriptionKey.Translate();
+                    AsTooltip.Attach(rowRect, () => Text.Create(tip, wrap: true), key: cat.Id.GetHashCode());
+                }
 
                 if (!expanded || sortedPerCat[i] == null) {
                     continue;
@@ -277,7 +282,9 @@ public static class PlaygroundRail {
         TextAnchor labelAnchor = rtl ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft;
         TextDraw.Draw(labelRect, labelText, role, new Rem(0.8125f), labelAnchor, textSlot);
 
-        TooltipHandler.TipRegion(rowRect, labelText);
+        if (hovering) {
+            AsTooltip.Attach(rowRect, () => Text.Create(labelText, wrap: true), key: primId.GetHashCode());
+        }
     }
 
     private static string? FindCategoryFor(IReadOnlyList<PlaygroundCategory> categories, string primitiveId) {

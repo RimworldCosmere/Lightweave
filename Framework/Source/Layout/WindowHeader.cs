@@ -12,6 +12,8 @@ using RimWorld;
 using UnityEngine;
 using Verse;
 using Verse.Sound;
+using Cosmere.Lightweave.Surfaces;
+using Cosmere.Lightweave.Data;
 using Display = Cosmere.Lightweave.Typography.Display;
 using Eyebrow = Cosmere.Lightweave.Typography.Eyebrow;
 using Glyph = Cosmere.Lightweave.Typography.Glyph;

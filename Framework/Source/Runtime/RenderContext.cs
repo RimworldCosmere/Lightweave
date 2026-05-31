@@ -28,6 +28,7 @@ public sealed class RenderContext {
     public bool ForceDisabled;
     public bool ForceHovered;
     public bool ForcePressed;
+    public bool ForceFocused;
     internal OverlayQueue PendingOverlays { get; } = new OverlayQueue();
     public int OverlayContentDepth;
     public string? FocusedControlName { get; internal set; }

@@ -11,6 +11,8 @@ using Cosmere.Lightweave.Types;
 using UnityEngine;
 using Verse;
 using Verse.Sound;
+using Cosmere.Lightweave.Surfaces;
+using Cosmere.Lightweave.Data;
 using TypoText = Cosmere.Lightweave.Typography.Typography.Text;
 using Eyebrow = Cosmere.Lightweave.Typography.Eyebrow;
 

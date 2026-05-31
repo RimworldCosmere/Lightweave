@@ -7,6 +7,7 @@ using UnityEngine;
 using Verse;
 using Cosmere.Lightweave.Layout;
 using static Cosmere.Lightweave.Typography.Typography;
+using Cosmere.Lightweave.Surfaces;
 using Text = Cosmere.Lightweave.Typography.Typography.Text;
 
 namespace Cosmere.Lightweave.Navigation;

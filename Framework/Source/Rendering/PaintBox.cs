@@ -75,6 +75,20 @@ public static class PaintBox {
         bool rounded = rad.x > 0f || rad.y > 0f || rad.z > 0f || rad.w > 0f;
         bool bgVisible = IsBgVisible(bg);
 
+        // Opaque solid fill behind a rounded border: draw an outer rounded rect
+        // in the border color, then an inset rounded rect in the fill color.
+        // Both use Unity's GPU rounded-rect rasterizer, so the fill's corner
+        // curve matches the border's exactly and the fill can never poke past
+        // the border into a square corner notch. The hollow-ring path below
+        // bakes its own arc, which does not line up pixel-for-pixel with Unity's
+        // fill arc and leaves a muddy corner wedge where the darker fill shows
+        // through at the corner tip.
+        if (rounded && hasBorder && IsOpaqueSolid(bg, out Color fillColor)) {
+            Color borderColor = ResolveColor(border!.Value.Color!);
+            DrawRoundedFilledBorder(r, bw, rad, fillColor, borderColor);
+            return;
+        }
+
         if (bgVisible) {
             DrawFill(r, bg, rad);
         }
@@ -87,6 +101,130 @@ public static class PaintBox {
                 DrawRectStroke(r, bw, bc);
             }
         }
+    }
+
+    // Outer rounded rect in the border color, then an inset rounded rect in the
+    // fill color. Used only for opaque fills, where painting the border color
+    // edge-to-edge underneath is invisible once the fill covers the interior.
+    private static void DrawRoundedFilledBorder(Rect r, Vector4 bw, Vector4 rad, Color fill, Color border) {
+        // Fill the rounded silhouette from baked corner discs plus straight bands.
+        // The discs share the exact supersampled arc of the border ring drawn on
+        // top, so the fill never pokes past the border (no notch) and no Unity GPU
+        // rounded-rect is used here (no stray corner pixel).
+        if (TryFillRoundedSolid(r, fill, rad)) {
+            DrawRoundedBorderRing(r, bw, rad, border);
+            return;
+        }
+
+        // Per-corner or zero radii can't tile cleanly into corner squares plus
+        // straight bands, so fall back to Unity's GPU rounded rects (outer border
+        // color, inset fill). This path can leave a faint stray corner pixel under
+        // a dark border, but it has no notch and only the uniform case (every
+        // shipping caller) reaches the baked path above.
+        Texture2D whiteFallback = Texture2D.whiteTexture;
+        GUI.DrawTexture(r, whiteFallback, ScaleMode.StretchToFill, true, 0, border, Vector4.zero, rad);
+
+        float l = bw.x;
+        float t = bw.y;
+        float ri = bw.z;
+        float bo = bw.w;
+        Rect innerRect = new Rect(
+            r.x + l,
+            r.y + t,
+            Mathf.Max(0f, r.width - l - ri),
+            Mathf.Max(0f, r.height - t - bo)
+        );
+        if (innerRect.width <= 0f || innerRect.height <= 0f) {
+            return;
+        }
+
+        float maxInner = Mathf.Min(innerRect.width, innerRect.height) * 0.5f;
+        Vector4 innerRad = new Vector4(
+            Mathf.Clamp(rad.x - Mathf.Max(l, t), 0f, maxInner),
+            Mathf.Clamp(rad.y - Mathf.Max(ri, t), 0f, maxInner),
+            Mathf.Clamp(rad.z - Mathf.Max(ri, bo), 0f, maxInner),
+            Mathf.Clamp(rad.w - Mathf.Max(l, bo), 0f, maxInner)
+        );
+        GUI.DrawTexture(innerRect, whiteFallback, ScaleMode.StretchToFill, true, 0, fill, Vector4.zero, innerRad);
+    }
+
+    // Fills a uniform-radius rounded silhouette with one solid color from baked
+    // corner discs plus straight bands. No Unity GPU rounded-rect is used, so a
+    // translucent fill leaves no stray partial-alpha pixel just outside the arc
+    // (which reads as a dark speck once a dark border is drawn over the corner).
+    // The bands tile the rect without overlap, so a translucent color blends each
+    // pixel exactly once. Returns false for non-uniform or zero radius so the
+    // caller falls back to Unity's rasterizer.
+    private static bool TryFillRoundedSolid(Rect r, Color color, Vector4 rad) {
+        int maxR = Mathf.Max(0, Mathf.FloorToInt(Mathf.Min(r.width, r.height) * 0.5f));
+        int rTL = Mathf.Clamp(Mathf.RoundToInt(rad.x), 0, maxR);
+        int rTR = Mathf.Clamp(Mathf.RoundToInt(rad.y), 0, maxR);
+        int rBR = Mathf.Clamp(Mathf.RoundToInt(rad.z), 0, maxR);
+        int rBL = Mathf.Clamp(Mathf.RoundToInt(rad.w), 0, maxR);
+
+        if (rTL <= 0 && rTR <= 0 && rBR <= 0 && rBL <= 0) {
+            return false;
+        }
+
+        // The 4-disc + 3-rect tiling below is gap-free AND overlap-free only when
+        // each edge's two corners share a radius - which holds for every shape the
+        // framework actually produces (All/Top/Bottom/Left/Right, where the odd
+        // corner out is always zero). A pair that is both non-zero and unequal
+        // would leave an uncovered sliver beside the shorter corner, so defer those
+        // exotic radii to Unity's rasterizer. Overlap-free matters because a
+        // translucent fill would double-blend any seam into a visible darker line.
+        bool topPairOk = rTL == rTR || rTL == 0 || rTR == 0;
+        bool botPairOk = rBL == rBR || rBL == 0 || rBR == 0;
+        if (!topPairOk || !botPairOk) {
+            return false;
+        }
+
+        Texture2D white = Texture2D.whiteTexture;
+
+        if (rTL > 0) {
+            GUI.DrawTexture(new Rect(r.x, r.y, rTL, rTL), RoundedBorderTextureCache.QuarterDisc(rTL, RoundedBorderTextureCache.Corner.TopLeft), ScaleMode.StretchToFill, true, 0, color, Vector4.zero, Vector4.zero);
+        }
+        if (rTR > 0) {
+            GUI.DrawTexture(new Rect(r.xMax - rTR, r.y, rTR, rTR), RoundedBorderTextureCache.QuarterDisc(rTR, RoundedBorderTextureCache.Corner.TopRight), ScaleMode.StretchToFill, true, 0, color, Vector4.zero, Vector4.zero);
+        }
+        if (rBR > 0) {
+            GUI.DrawTexture(new Rect(r.xMax - rBR, r.yMax - rBR, rBR, rBR), RoundedBorderTextureCache.QuarterDisc(rBR, RoundedBorderTextureCache.Corner.BottomRight), ScaleMode.StretchToFill, true, 0, color, Vector4.zero, Vector4.zero);
+        }
+        if (rBL > 0) {
+            GUI.DrawTexture(new Rect(r.x, r.yMax - rBL, rBL, rBL), RoundedBorderTextureCache.QuarterDisc(rBL, RoundedBorderTextureCache.Corner.BottomLeft), ScaleMode.StretchToFill, true, 0, color, Vector4.zero, Vector4.zero);
+        }
+
+        int topInset = Mathf.Max(rTL, rTR);
+        int botInset = Mathf.Max(rBL, rBR);
+
+        float topW = r.width - rTL - rTR;
+        if (topInset > 0 && topW > 0f) {
+            GUI.DrawTexture(new Rect(r.x + rTL, r.y, topW, topInset), white, ScaleMode.StretchToFill, true, 0, color, Vector4.zero, Vector4.zero);
+        }
+
+        float botW = r.width - rBL - rBR;
+        if (botInset > 0 && botW > 0f) {
+            GUI.DrawTexture(new Rect(r.x + rBL, r.yMax - botInset, botW, botInset), white, ScaleMode.StretchToFill, true, 0, color, Vector4.zero, Vector4.zero);
+        }
+
+        float midH = r.height - topInset - botInset;
+        if (midH > 0f) {
+            GUI.DrawTexture(new Rect(r.x, r.y + topInset, r.width, midH), white, ScaleMode.StretchToFill, true, 0, color, Vector4.zero, Vector4.zero);
+        }
+
+        return true;
+    }
+
+    private static bool IsOpaqueSolid(BackgroundSpec? bg, out Color color) {
+        color = default;
+        if (bg is BackgroundSpec.Solid solid) {
+            Color c = ResolveColor(solid.Color);
+            if (c.a >= 0.999f) {
+                color = c;
+                return true;
+            }
+        }
+        return false;
     }
 
     public static void DrawShadow(Rect rect, ShadowSpec? spec) {
@@ -183,7 +321,9 @@ public static class PaintBox {
     private static void DrawFill(Rect r, BackgroundSpec? bg, Vector4 rad) {
         if (bg is BackgroundSpec.Solid solid) {
             Color c = ResolveColor(solid.Color);
-            GUI.DrawTexture(r, Texture2D.whiteTexture, ScaleMode.StretchToFill, true, 0, c, Vector4.zero, rad);
+            if (!TryFillRoundedSolid(r, c, rad)) {
+                GUI.DrawTexture(r, Texture2D.whiteTexture, ScaleMode.StretchToFill, true, 0, c, Vector4.zero, rad);
+            }
         }
         else if (bg is BackgroundSpec.Textured tex) {
             Color c = tex.Tint != null ? ResolveColor(tex.Tint) : Color.white;
@@ -194,41 +334,96 @@ public static class PaintBox {
             GUI.DrawTexture(r, grad.GradientTex, ScaleMode.StretchToFill, true, 0, c, Vector4.zero, rad);
         }
         else if (bg is BackgroundSpec.Blurred blurred) {
-            BackdropBlur.Draw(r, blurred.BlurSizePx);
-            if (blurred.Tint != null) {
-                Color c = ResolveColor(blurred.Tint);
-                GUI.DrawTexture(r, Texture2D.whiteTexture, ScaleMode.StretchToFill, true, 0, c, Vector4.zero, rad);
+            Color? tint = blurred.Tint != null ? ResolveColor(blurred.Tint) : null;
+            bool tintOpaque = tint.HasValue && tint.Value.a >= 0.999f;
+            bool radiusUniform = Mathf.Approximately(rad.x, rad.y)
+                                 && Mathf.Approximately(rad.y, rad.z)
+                                 && Mathf.Approximately(rad.z, rad.w);
+
+            // The blur is only ever visible through a translucent tint, and the
+            // shader can only clip it to the silhouette with a single shared
+            // corner radius. Two cases make the blur pure liability:
+            //   - an opaque tint (every theme's SurfaceSunken is alpha 1.0) hides
+            //     the blur entirely, so drawing it is wasted GrabPasses, and
+            //   - a non-uniform radius (e.g. a code block's bottom-only rounding)
+            //     forces the blur square, poking blurred content into the rounded
+            //     corner notches as stray specks just outside each arc.
+            // In either case skip the blur and let the baked per-corner tint fill
+            // own the rounded silhouette.
+            if (!tintOpaque && radiusUniform) {
+                BackdropBlur.Draw(r, blurred.BlurSizePx, cornerRadiusPx: rad.x);
+            }
+
+            if (tint.HasValue) {
+                Color c = tint.Value;
+                if (!TryFillRoundedSolid(r, c, rad)) {
+                    GUI.DrawTexture(r, Texture2D.whiteTexture, ScaleMode.StretchToFill, true, 0, c, Vector4.zero, rad);
+                }
             }
         }
     }
 
+    // Returns the uniform corner radius in pixels when all four corners share it,
+    // else 0. The backdrop-blur shader rounds with a single radius, so a
+    // non-uniform rect falls back to a square blur rather than a distorted corner.
     
 
-    // Draws explicit colored slabs along the four straight edges of a rounded
-    // bordered rect. The two-rect overlay (outer rounded fill + inner rounded
-    // fill) leaves a 1px-ish border visible in theory, but Unity's rounded-
-    // texture path can chew the leftmost column of the outer when the rect's
-    // straight edge meets the rounded corner. These edge slabs sit in the
-    // straight sections only (not over the rounded corners) so they paint
-    // crisp 1px borders without disturbing the corners.
-    
-
-    // Draws a rounded-corner border outline with a transparent interior. Unity's
-    // GUI.DrawTexture borderWidths arg renders only the ring (the outer bw pixels)
-    // following the corner radius, so the corner arcs connect to the straight edges
-    // cleanly. Used for rounded borders over a non-opaque fill, where the opaque
-    // DrawSolidRounded base path can't be used (it would tint the translucent fill).
-    // Paints 1px hard strips along the four straight edges of a rounded border,
-    // between the corner tangents. Unity's borderWidths-based ring rendering
-    // AA-rasterizes both the outer and inner curve; at small radii the inner
-    // AA halo on the straight edges reads as a second border line (double-
-    // border artifact). These strips replace the AA-soft straight-edge slice
-    // of the ring with a crisp 1px slab, so only the corner arcs keep the
-    // ring's natural AA.
-    
-
+    // Draws a hollow rounded border by compositing four baked corner arcs with
+    // four solid straight edges. Unity's GUI.DrawTexture border path ignores
+    // borderRadiuses once a border width is set, so it cannot draw a rounded
+    // ring directly; per-corner masks from RoundedBorderTextureCache supply the
+    // arcs while the straight runs stay crisp solid strips. Falls back to a
+    // square stroke when the edge widths are not uniform (no current caller
+    // needs an asymmetric rounded border).
     private static void DrawRoundedBorderRing(Rect r, Vector4 bw, Vector4 rad, Color color) {
-        GUI.DrawTexture(r, Texture2D.whiteTexture, ScaleMode.StretchToFill, true, 0, color, bw, rad);
+        if (!Mathf.Approximately(bw.x, bw.y)
+            || !Mathf.Approximately(bw.y, bw.z)
+            || !Mathf.Approximately(bw.z, bw.w)) {
+            DrawRectStroke(r, bw, color);
+            return;
+        }
+
+        int b = Mathf.Max(1, Mathf.RoundToInt(bw.x));
+        int maxR = Mathf.Max(0, Mathf.FloorToInt(Mathf.Min(r.width, r.height) * 0.5f));
+        int rTL = Mathf.Min(Mathf.RoundToInt(rad.x), maxR);
+        int rTR = Mathf.Min(Mathf.RoundToInt(rad.y), maxR);
+        int rBR = Mathf.Min(Mathf.RoundToInt(rad.z), maxR);
+        int rBL = Mathf.Min(Mathf.RoundToInt(rad.w), maxR);
+
+        if (rTL > 0) {
+            Texture2D tex = RoundedBorderTextureCache.QuarterRing(rTL, b, RoundedBorderTextureCache.Corner.TopLeft);
+            GUI.DrawTexture(new Rect(r.x, r.y, rTL, rTL), tex, ScaleMode.StretchToFill, true, 0, color, Vector4.zero, Vector4.zero);
+        }
+        if (rTR > 0) {
+            Texture2D tex = RoundedBorderTextureCache.QuarterRing(rTR, b, RoundedBorderTextureCache.Corner.TopRight);
+            GUI.DrawTexture(new Rect(r.xMax - rTR, r.y, rTR, rTR), tex, ScaleMode.StretchToFill, true, 0, color, Vector4.zero, Vector4.zero);
+        }
+        if (rBR > 0) {
+            Texture2D tex = RoundedBorderTextureCache.QuarterRing(rBR, b, RoundedBorderTextureCache.Corner.BottomRight);
+            GUI.DrawTexture(new Rect(r.xMax - rBR, r.yMax - rBR, rBR, rBR), tex, ScaleMode.StretchToFill, true, 0, color, Vector4.zero, Vector4.zero);
+        }
+        if (rBL > 0) {
+            Texture2D tex = RoundedBorderTextureCache.QuarterRing(rBL, b, RoundedBorderTextureCache.Corner.BottomLeft);
+            GUI.DrawTexture(new Rect(r.x, r.yMax - rBL, rBL, rBL), tex, ScaleMode.StretchToFill, true, 0, color, Vector4.zero, Vector4.zero);
+        }
+
+        Texture2D white = Texture2D.whiteTexture;
+        float topW = r.width - rTL - rTR;
+        if (topW > 0f) {
+            GUI.DrawTexture(new Rect(r.x + rTL, r.y, topW, b), white, ScaleMode.StretchToFill, true, 0, color, Vector4.zero, Vector4.zero);
+        }
+        float botW = r.width - rBL - rBR;
+        if (botW > 0f) {
+            GUI.DrawTexture(new Rect(r.x + rBL, r.yMax - b, botW, b), white, ScaleMode.StretchToFill, true, 0, color, Vector4.zero, Vector4.zero);
+        }
+        float leftH = r.height - rTL - rBL;
+        if (leftH > 0f) {
+            GUI.DrawTexture(new Rect(r.x, r.y + rTL, b, leftH), white, ScaleMode.StretchToFill, true, 0, color, Vector4.zero, Vector4.zero);
+        }
+        float rightH = r.height - rTR - rBR;
+        if (rightH > 0f) {
+            GUI.DrawTexture(new Rect(r.xMax - b, r.y + rTR, b, rightH), white, ScaleMode.StretchToFill, true, 0, color, Vector4.zero, Vector4.zero);
+        }
     }
 
     private static void DrawRectStroke(Rect r, Vector4 bw, Color color) {

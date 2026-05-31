@@ -174,7 +174,8 @@ public static class ButtonGroup {
                 if (!item.Disabled &&
                     e.type == EventType.MouseUp &&
                     e.button == 0 &&
-                    segRect.Contains(e.mousePosition)) {
+                    segRect.Contains(e.mousePosition) &&
+                    LightweaveHitTracker.IsTopmost(segRect)) {
                     item.OnClick?.Invoke();
                     e.Use();
                 }
@@ -195,7 +196,6 @@ public static class ButtonGroup {
 
     [DocVariant("CL_Playground_Label_Primary")]
     public static DocSample DocsPrimary() {
-        bool forced = RenderContext.Current.ForceDisabled;
         StateHandle<string> lastPick = UseState<string>(
             (string)"CL_Playground_buttongroup_None".Translate()
         );
@@ -204,18 +204,15 @@ public static class ButtonGroup {
             new List<ButtonGroupItem> {
                 new ButtonGroupItem(
                     (string)"CL_Playground_buttongroup_Day".Translate(),
-                    () => lastPick.Set("Day"),
-                    forced
+                    () => lastPick.Set("Day")
                 ),
                 new ButtonGroupItem(
                     (string)"CL_Playground_buttongroup_Week".Translate(),
-                    () => lastPick.Set("Week"),
-                    forced
+                    () => lastPick.Set("Week")
                 ),
                 new ButtonGroupItem(
                     (string)"CL_Playground_buttongroup_Month".Translate(),
-                    () => lastPick.Set("Month"),
-                    forced
+                    () => lastPick.Set("Month")
                 ),
             },
             Variant.Primary
@@ -224,7 +221,6 @@ public static class ButtonGroup {
 
     [DocVariant("CL_Playground_Label_Secondary")]
     public static DocSample DocsSecondary() {
-        bool forced = RenderContext.Current.ForceDisabled;
         StateHandle<string> lastPick = UseState<string>(
             (string)"CL_Playground_buttongroup_None".Translate()
         );
@@ -233,18 +229,15 @@ public static class ButtonGroup {
             new List<ButtonGroupItem> {
                 new ButtonGroupItem(
                     (string)"CL_Playground_buttongroup_Refresh".Translate(),
-                    () => lastPick.Set("Refresh"),
-                    forced
+                    () => lastPick.Set("Refresh")
                 ),
                 new ButtonGroupItem(
                     (string)"CL_Playground_buttongroup_Export".Translate(),
-                    () => lastPick.Set("Export"),
-                    forced
+                    () => lastPick.Set("Export")
                 ),
                 new ButtonGroupItem(
                     (string)"CL_Playground_buttongroup_Delete".Translate(),
-                    () => lastPick.Set("Delete"),
-                    forced
+                    () => lastPick.Set("Delete")
                 ),
                 new ButtonGroupItem(
                     (string)"CL_Playground_buttongroup_More".Translate(),
@@ -258,25 +251,21 @@ public static class ButtonGroup {
 
     [DocVariant("CL_Playground_Label_Flat")]
     public static DocSample DocsFlat() {
-        bool forced = RenderContext.Current.ForceDisabled;
         StateHandle<string> active = UseState<string>("All");
 
         return new DocSample(() => Create(
             new List<ButtonGroupItem> {
                 new ButtonGroupItem(
                     (string)"CL_Playground_buttongroup_Flat_All".Translate(),
-                    () => active.Set("All"),
-                    forced
+                    () => active.Set("All")
                 ),
                 new ButtonGroupItem(
                     (string)"CL_Playground_buttongroup_Flat_Manual".Translate(),
-                    () => active.Set("Manual"),
-                    forced
+                    () => active.Set("Manual")
                 ),
                 new ButtonGroupItem(
                     (string)"CL_Playground_buttongroup_Flat_Autosaves".Translate(),
-                    () => active.Set("Autosaves"),
-                    forced
+                    () => active.Set("Autosaves")
                 ),
             },
             shape: ButtonGroupShape.Flat

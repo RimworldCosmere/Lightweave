@@ -12,6 +12,8 @@ using UnityEngine;
 using Verse;
 using Verse.Steam;
 using static Cosmere.Lightweave.Typography.Typography;
+using Cosmere.Lightweave.Surfaces;
+using Cosmere.Lightweave.Data;
 
 namespace Cosmere.Lightweave.Redesign.MainMenu;
 

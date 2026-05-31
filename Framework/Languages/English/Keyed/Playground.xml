@@ -170,6 +170,14 @@
     <CL_Playground_Breadcrumbs_LastClicked>Last clicked: {CRUMB}</CL_Playground_Breadcrumbs_LastClicked>
     <CL_Playground_Breadcrumbs_NoneClicked>None clicked</CL_Playground_Breadcrumbs_NoneClicked>
     <CL_Playground_Breadcrumbs_LongDemoTitle>Truncation demo</CL_Playground_Breadcrumbs_LongDemoTitle>
+    <CL_Playground_CheckboxTree_Title>Checkbox Tree</CL_Playground_CheckboxTree_Title>
+    <CL_Playground_CheckboxTree_About>About</CL_Playground_CheckboxTree_About>
+    <CL_Playground_CheckboxTree_Source>Source</CL_Playground_CheckboxTree_Source>
+    <CL_Playground_CheckboxTree_Assemblies>Assemblies</CL_Playground_CheckboxTree_Assemblies>
+    <CL_Playground_CheckboxTree_Defs>Defs</CL_Playground_CheckboxTree_Defs>
+    <CL_Playground_CheckboxTree_AllIncluded>All included</CL_Playground_CheckboxTree_AllIncluded>
+    <CL_Playground_CheckboxTree_PartialFolder>Partial folder</CL_Playground_CheckboxTree_PartialFolder>
+    <CL_Playground_CheckboxTree_DeepNesting>Deep nesting</CL_Playground_CheckboxTree_DeepNesting>
     <CL_Playground_ContextMenu_Title>Context menu</CL_Playground_ContextMenu_Title>
     <CL_Playground_ContextMenu_RightClickHint>Right-click anywhere in this area</CL_Playground_ContextMenu_RightClickHint>
     <CL_Playground_ContextMenu_Inspect>Inspect</CL_Playground_ContextMenu_Inspect>
@@ -243,22 +251,18 @@
     <CL_Playground_Category_Foundation_Desc>Design tokens - colors, fonts, rem/spacing, breakpoints. The vocabulary every other primitive composes from.</CL_Playground_Category_Foundation_Desc>
     <CL_Playground_Category_Layout>Layout</CL_Playground_Category_Layout>
     <CL_Playground_Category_Layout_Desc>Containers that arrange children in rows, columns, grids, and stacks.</CL_Playground_Category_Layout_Desc>
-    <CL_Playground_Category_Typography>Typography</CL_Playground_Category_Typography>
-    <CL_Playground_Category_Typography_Desc>Text roles - headings, body copy, captions, monospace.</CL_Playground_Category_Typography_Desc>
-    <CL_Playground_Category_Buttons>Buttons</CL_Playground_Category_Buttons>
-    <CL_Playground_Category_Buttons_Desc>Buttons of every shape - primary actions, icons, links.</CL_Playground_Category_Buttons_Desc>
     <CL_Playground_Category_Inputs>Inputs</CL_Playground_Category_Inputs>
-    <CL_Playground_Category_Inputs_Desc>Text fields, toggles, sliders, dropdowns - anything the user edits.</CL_Playground_Category_Inputs_Desc>
+    <CL_Playground_Category_Inputs_Desc>Buttons, text fields, toggles, sliders, dropdowns - anything the user clicks or edits.</CL_Playground_Category_Inputs_Desc>
+    <CL_Playground_Category_Surfaces>Surfaces</CL_Playground_Category_Surfaces>
+    <CL_Playground_Category_Surfaces_Desc>Framed regions - cards, boxes, accordions. The panels other primitives sit inside.</CL_Playground_Category_Surfaces_Desc>
     <CL_Playground_Category_Blocks>Blocks</CL_Playground_Category_Blocks>
 <CL_Playground_Category_Blocks_Desc>Composite presets - avatar tiles, profile chips, member rows. Building blocks bigger than a primitive, smaller than a feature.</CL_Playground_Category_Blocks_Desc>
 <CL_Playground_Category_Feedback>Feedback</CL_Playground_Category_Feedback>
     <CL_Playground_Category_Feedback_Desc>Spinners, progress, sparklines - the UI telling the user what is happening.</CL_Playground_Category_Feedback_Desc>
     <CL_Playground_Category_Navigation>Navigation</CL_Playground_Category_Navigation>
     <CL_Playground_Category_Navigation_Desc>Tabs, breadcrumbs, menus - moving between places.</CL_Playground_Category_Navigation_Desc>
-    <CL_Playground_Category_Overlay>Overlay</CL_Playground_Category_Overlay>
-    <CL_Playground_Category_Overlay_Desc>Modals, drawers, popovers, tooltips - temporary surfaces over the main view.</CL_Playground_Category_Overlay_Desc>
-    <CL_Playground_Category_Data>Data</CL_Playground_Category_Data>
-    <CL_Playground_Category_Data_Desc>Lists, tables, trees - surfaces for inspecting collections.</CL_Playground_Category_Data_Desc>
+    <CL_Playground_Category_Data>Data Display</CL_Playground_Category_Data>
+    <CL_Playground_Category_Data_Desc>Lists, tables, trees, chips, avatars, dividers, tooltips, type roles - surfaces for presenting content.</CL_Playground_Category_Data_Desc>
     <CL_Playground_Category_Control>Control</CL_Playground_Category_Control>
     <CL_Playground_Category_Control_Desc>Control-flow primitives - render each item, render conditionally. Composed inside layouts.</CL_Playground_Category_Control_Desc>
     <CL_Playground_Category_Hooks>Hooks</CL_Playground_Category_Hooks>
@@ -270,6 +274,9 @@
     <CL_Playground_card_Title>Card</CL_Playground_card_Title>
     <CL_Playground_card_What>Filled rectangular container with padding, background, and border.</CL_Playground_card_What>
     <CL_Playground_card_When>Group related controls. Default surface for a labeled section or demo cell.</CL_Playground_card_When>
+    <CL_Playground_typography_Title>Typography</CL_Playground_typography_Title>
+    <CL_Playground_typography_What>The full set of text roles in one place - headings, body copy, labels, captions, rich text, monospace, and icon glyphs.</CL_Playground_typography_What>
+    <CL_Playground_typography_When>Reach for a specific role when you need its weight and size. Headings title sections, body carries copy, captions annotate, code shows literals.</CL_Playground_typography_When>
     <CL_Playground_heading_Title>Heading</CL_Playground_heading_Title>
     <CL_Playground_heading_What>Typographic heading at levels 1-4. Level controls size and weight.</CL_Playground_heading_What>
     <CL_Playground_heading_When>Title a section. Match the level to the section's depth, not its importance.</CL_Playground_heading_When>
@@ -578,9 +585,11 @@
     <CL_Playground_Label_Disabled>Disabled</CL_Playground_Label_Disabled>
     <CL_Playground_Label_Hover>Hover</CL_Playground_Label_Hover>
     <CL_Playground_Label_Active>Active</CL_Playground_Label_Active>
+    <CL_Playground_Label_Focus>Focus</CL_Playground_Label_Focus>
     <CL_Playground_Label_Normal>Normal</CL_Playground_Label_Normal>
     <CL_Playground_Label_Accented>Accented</CL_Playground_Label_Accented>
     <CL_Playground_Label_Muted>Muted</CL_Playground_Label_Muted>
+    <CL_Playground_Label_Truncated>Truncated</CL_Playground_Label_Truncated>
     <CL_Playground_Label_Small>Small</CL_Playground_Label_Small>
     <CL_Playground_Label_Medium>Medium</CL_Playground_Label_Medium>
     <CL_Playground_Label_Large>Large</CL_Playground_Label_Large>
@@ -594,6 +603,10 @@
     <CL_Playground_Label_Ghost>Ghost</CL_Playground_Label_Ghost>
     <CL_Playground_Label_Danger>Danger</CL_Playground_Label_Danger>
     <CL_Playground_Label_Frosted>Frosted</CL_Playground_Label_Frosted>
+    <CL_Playground_Label_Quiet>Quiet</CL_Playground_Label_Quiet>
+    <CL_Playground_Label_AnomalyAccent>Anomaly accent</CL_Playground_Label_AnomalyAccent>
+    <CL_Playground_Label_ListRow>List row</CL_Playground_Label_ListRow>
+    <CL_Playground_Label_TrailingRule>Trailing rule</CL_Playground_Label_TrailingRule>
     <CL_Playground_Label_Neutral>Neutral</CL_Playground_Label_Neutral>
     <CL_Playground_Label_Warning>Warning</CL_Playground_Label_Warning>
     <CL_Playground_Feedback_ProgressBar_Animated>Animated</CL_Playground_Feedback_ProgressBar_Animated>
@@ -621,9 +634,11 @@
     <CL_Playground_Label_Closed>Closed</CL_Playground_Label_Closed>
     <CL_Playground_Label_On>On</CL_Playground_Label_On>
     <CL_Playground_Label_Off>Off</CL_Playground_Label_Off>
-    <CL_Playground_Label_Severity>Severity</CL_Playground_Label_Severity>
+    <CL_Playground_Label_Variant>Interactive</CL_Playground_Label_Variant>
     <CL_Playground_Label_Filter>Filter</CL_Playground_Label_Filter>
     <CL_Playground_Label_Status>Status</CL_Playground_Label_Status>
+    <CL_Playground_Label_Content>Content pills</CL_Playground_Label_Content>
+    <CL_Playground_Label_Accent>DLC accent</CL_Playground_Label_Accent>
     <CL_Playground_Label_WithHeaderAndSearch>With header and search</CL_Playground_Label_WithHeaderAndSearch>
     <CL_Playground_Label_Confirm>Confirm</CL_Playground_Label_Confirm>
     <CL_Playground_Label_Cancel>Cancel</CL_Playground_Label_Cancel>
@@ -683,6 +698,7 @@
     <CL_Playground_RichText_Sample>The &lt;b&gt;stormwall&lt;/b&gt; draws &lt;i&gt;near&lt;/i&gt;.</CL_Playground_RichText_Sample>
     <CL_Playground_Code_Sample>LightweaveRoot.Render</CL_Playground_Code_Sample>
     <CL_Playground_Text_Sample>Stormlight holds its own weight.</CL_Playground_Text_Sample>
+    <CL_Playground_Text_TruncateSample>Cosmere - Scadrial: Post-Catacendre Survival</CL_Playground_Text_TruncateSample>
     <CL_Playground_Conditional_On>Visible</CL_Playground_Conditional_On>
     <CL_Playground_Conditional_Off>Hidden</CL_Playground_Conditional_Off>
     <CL_Playground_UseState_Label>Count</CL_Playground_UseState_Label>
@@ -750,9 +766,10 @@
     <CL_Playground_container_What>Width-constrained wrapper that caps its child at a maximum width and centers it horizontally. Optional horizontal padding defines the gutter.</CL_Playground_container_What>
     <CL_Playground_container_When>Wrap long-form bodies and dashboards in a Container so their content stays readable on wide windows. Skip it for full-bleed surfaces like HUD panes.</CL_Playground_container_When>
     <CL_Playground_chip_Title>Chip</CL_Playground_chip_Title>
-    <CL_Playground_chip_What>A clickable toggle pill that persists a pressed state. Default for generic on/off, Severity for colour-coded log levels, Filter for facets with a count.</CL_Playground_chip_What>
-    <CL_Playground_chip_When>Use to filter a list by facet or severity, or to expose a sticky tag. Reach for it over a static Badge whenever the player can click to change state.</CL_Playground_chip_When>
-    <CL_Playground_Chip_Trace>Trace</CL_Playground_Chip_Trace>
+    <CL_Playground_chip_What>A square mono pill. Static by default; set interactive to make it a toggle that persists a pressed state. The variant picks a colour-coded semantic tone (trace through error), and an optional count renders after a hairline divider.</CL_Playground_chip_What>
+    <CL_Playground_chip_When>Use as a small status or category tag, or set interactive to filter a list by facet or severity. The single pill primitive — there is no separate Badge or Tag.</CL_Playground_chip_When>
+    <CL_Playground_Chip_None>None</CL_Playground_Chip_None>
+<CL_Playground_Chip_Trace>Trace</CL_Playground_Chip_Trace>
     <CL_Playground_Chip_Debug>Debug</CL_Playground_Chip_Debug>
     <CL_Playground_Chip_Info>Info</CL_Playground_Chip_Info>
     <CL_Playground_Chip_Warn>Warn</CL_Playground_Chip_Warn>
@@ -763,6 +780,9 @@
     <CL_Playground_Chip_Vanilla>Vanilla</CL_Playground_Chip_Vanilla>
     <CL_Playground_Chip_Workshop>Workshop</CL_Playground_Chip_Workshop>
     <CL_Playground_Chip_Dlc>DLC</CL_Playground_Chip_Dlc>
+    <CL_Playground_Chip_Royalty>Royalty</CL_Playground_Chip_Royalty>
+    <CL_Playground_Chip_Biotech>Biotech</CL_Playground_Chip_Biotech>
+    <CL_Playground_Chip_Anomaly>Anomaly</CL_Playground_Chip_Anomaly>
     <CL_Playground_splitpane_Title>Split Pane</CL_Playground_splitpane_Title>
     <CL_Playground_splitpane_What>Two panes separated by a draggable divider. Drag the hairline to trade space; a floating badge shows the live split while dragging.</CL_Playground_splitpane_What>
     <CL_Playground_splitpane_When>Use for tree | list, list | detail, or viewport | inspector layouts where the player should control the balance. Nest two for a three-pane shell.</CL_Playground_splitpane_When>

@@ -12,6 +12,7 @@ using Verse;
 using static Cosmere.Lightweave.Hooks.Hooks;
 using Cosmere.Lightweave.Layout;
 using static Cosmere.Lightweave.Doc.DocChips;
+using Cosmere.Lightweave.Surfaces;
 using Caption = Cosmere.Lightweave.Typography.Typography.Caption;
 using Code = Cosmere.Lightweave.Typography.Typography.Code;
 using Heading = Cosmere.Lightweave.Typography.Typography.Heading;

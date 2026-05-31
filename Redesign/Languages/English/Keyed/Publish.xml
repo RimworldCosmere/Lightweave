@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <CL_Publish_Action_Publish>Publish</CL_Publish_Action_Publish>
+  <CL_Publish_Action_Update>Update</CL_Publish_Action_Update>
+  <CL_Publish_Disabled_SemanticRelease>This mod publishes to the Workshop through semantic-release-steam. Uploads are handled automatically by its release pipeline, so manual publishing is disabled to avoid conflicting with it.</CL_Publish_Disabled_SemanticRelease>
+
+  <CL_Publish_Window_Eyebrow_Publish>Publish to Workshop</CL_Publish_Window_Eyebrow_Publish>
+  <CL_Publish_Window_Eyebrow_Update>Update on Workshop</CL_Publish_Window_Eyebrow_Update>
+
+  <CL_Publish_Field_Title>Title</CL_Publish_Field_Title>
+  <CL_Publish_Field_Preview>Preview image</CL_Publish_Field_Preview>
+  <CL_Publish_Field_Preview_Placeholder>Path to a preview image (defaults to About/Preview.png)</CL_Publish_Field_Preview_Placeholder>
+  <CL_Publish_Field_Tags>Tags</CL_Publish_Field_Tags>
+  <CL_Publish_Field_Tags_Placeholder>Add a tag</CL_Publish_Field_Tags_Placeholder>
+  <CL_Publish_Field_Tags_Add>Add</CL_Publish_Field_Tags_Add>
+  <CL_Publish_Field_Files>Files to include</CL_Publish_Field_Files>
+  <CL_Publish_Field_Changelog>Change note</CL_Publish_Field_Changelog>
+  <CL_Publish_Field_Changelog_Placeholder>Describe what changed in this update</CL_Publish_Field_Changelog_Placeholder>
+
+  <CL_Publish_Confirm_Summary>{COUNT} of {TOTAL} files will be uploaded</CL_Publish_Confirm_Summary>
+  <CL_Publish_Confirm_Hint>Excluded files stay on your machine and never reach the Workshop.</CL_Publish_Confirm_Hint>
+
+  <CL_Publish_Progress_Staging>Staging files...</CL_Publish_Progress_Staging>
+  <CL_Publish_Progress_Creating>Creating Workshop item...</CL_Publish_Progress_Creating>
+  <CL_Publish_Progress_Uploading>Uploading to Workshop...</CL_Publish_Progress_Uploading>
+
+  <CL_Publish_Result_Success_Title>Upload complete</CL_Publish_Result_Success_Title>
+  <CL_Publish_Result_Success_Body>Your mod has been published to the Steam Workshop.</CL_Publish_Result_Success_Body>
+  <CL_Publish_Result_Error_Title>Upload failed</CL_Publish_Result_Error_Title>
+  <CL_Publish_Result_Error_Body>Steam reported an error: {DETAIL}</CL_Publish_Result_Error_Body>
+  <CL_Publish_Result_Legal_Body>You must accept the Steam Workshop legal agreement before publishing. Open the item on Steam to accept it, then try again.</CL_Publish_Result_Legal_Body>
+  <CL_Publish_Result_Mechanism_Body>The Workshop upload entry point could not be found. This build of RimWorld may be incompatible.</CL_Publish_Result_Mechanism_Body>
+  <CL_Publish_Result_NoSteam_Body>Steam is not running. Launch RimWorld through Steam to publish to the Workshop.</CL_Publish_Result_NoSteam_Body>
+
+  <CL_Publish_InProgress>Another Workshop upload is already in progress.</CL_Publish_InProgress>
+
+  <CL_Publish_Button_Cancel>Cancel</CL_Publish_Button_Cancel>
+  <CL_Publish_Button_Back>Back</CL_Publish_Button_Back>
+  <CL_Publish_Button_Next>Next</CL_Publish_Button_Next>
+  <CL_Publish_Button_Publish>Publish</CL_Publish_Button_Publish>
+  <CL_Publish_Button_Close>Close</CL_Publish_Button_Close>
+
+</LanguageData>

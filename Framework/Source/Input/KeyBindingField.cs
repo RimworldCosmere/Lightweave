@@ -4,6 +4,7 @@ using System.Text;
 using Cosmere.Lightweave.Doc;
 using Cosmere.Lightweave.Hooks;
 using static Cosmere.Lightweave.Hooks.Hooks;
+using Cosmere.Lightweave.Layout;
 using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
@@ -60,25 +61,26 @@ public static class KeyBindingField {
 
             Hooks.Hooks.StateHandle<bool> recording = Hooks.Hooks.UseState(false, line, recordingKey);
 
-            bool isRecording = recording.Value && !disabled;
+            RenderContext rc = RenderContext.Current;
+            bool effectiveDisabled = disabled || rc.ForceDisabled;
+            bool isRecording = recording.Value && !effectiveDisabled;
             bool mouseOverField = Mouse.IsOver(rect);
-            if (disabled && mouseOverField) {
+            if (effectiveDisabled && mouseOverField) {
                 CursorOverrides.MarkDisabledHover();
             }
 
-            InteractionState state = new InteractionState(
-                !disabled && mouseOverField,
-                !disabled && mouseOverField && UnityEngine.Input.GetMouseButton(0),
-                isRecording,
-                disabled
-            );
+            bool hovered = !effectiveDisabled && (mouseOverField || rc.ForceHovered || rc.ForcePressed);
+            bool pressed = !effectiveDisabled && ((mouseOverField && UnityEngine.Input.GetMouseButton(0)) || rc.ForcePressed);
+            bool focused = isRecording || (!effectiveDisabled && rc.ForceFocused);
+
+            InteractionState state = new InteractionState(hovered, pressed, focused, effectiveDisabled);
 
             InputSurface.DrawInputChrome(rect, state, variant);
 
             float padX = SpacingScale.Sm.ToPixels();
             float glyphSize = new Rem(1f).ToPixels();
             bool hasBinding = value.Key != KeyCode.None;
-            bool showClear = hasBinding && !disabled && !isRecording;
+            bool showClear = hasBinding && !effectiveDisabled && !isRecording;
 
             bool clearOnRight = dir == Direction.Ltr;
             Rect clearRect = clearOnRight
@@ -98,7 +100,7 @@ public static class KeyBindingField {
                 rect.height
             );
 
-            DrawLabel(labelRect, theme, value, isRecording, disabled);
+            DrawLabel(labelRect, theme, value, isRecording, effectiveDisabled);
 
             if (showClear) {
                 DrawClearButton(clearRect, theme, onChange);
@@ -106,7 +108,7 @@ public static class KeyBindingField {
 
             Event e = Event.current;
 
-            if (!disabled &&
+            if (!effectiveDisabled &&
                 !isRecording &&
                 e.type == EventType.MouseDown &&
                 e.button == 0 &&
@@ -191,7 +193,7 @@ public static class KeyBindingField {
         TextDraw.DrawWithStyle(rect, ClearGlyph, style, theme.GetColor(hovered ? ThemeSlot.TextPrimary : ThemeSlot.TextMuted));
 
         Event e = Event.current;
-        if (e.type == EventType.MouseUp && e.button == 0 && rect.Contains(e.mousePosition)) {
+        if (e.type == EventType.MouseUp && e.button == 0 && rect.Contains(e.mousePosition) && LightweaveHitTracker.IsTopmost(rect)) {
             onChange?.Invoke(new KeyBinding(KeyCode.None, KeyModifiers.None));
             RenderContext.Current.Hooks.Invalidate();
             e.Use();
@@ -232,13 +234,73 @@ public static class KeyBindingField {
 
     [DocVariant("CL_Playground_Label_Default")]
     public static DocSample DocsDefault() {
-        bool forced = RenderContext.Current.ForceDisabled;
         StateHandle<KeyBinding> s = UseState(new KeyBinding(KeyCode.F, KeyModifiers.Control));
         return new DocSample(() => Create(
             s.Value,
-            v => s.Set(v),
-            forced
+            v => s.Set(v)
         ));
+    }
+
+    [DocVariant("CL_Playground_Label_Primary")]
+    public static DocSample DocsPrimary() {
+        StateHandle<KeyBinding> s = UseState(new KeyBinding(KeyCode.F, KeyModifiers.Control));
+        return new DocSample(() => Create(s.Value, v => s.Set(v), variant: Variant.Primary));
+    }
+
+    [DocVariant("CL_Playground_Label_Ghost")]
+    public static DocSample DocsGhost() {
+        StateHandle<KeyBinding> s = UseState(new KeyBinding(KeyCode.F, KeyModifiers.Control));
+        return new DocSample(() => Create(s.Value, v => s.Set(v), variant: Variant.Ghost));
+    }
+
+    [DocVariant("CL_Playground_Label_Danger")]
+    public static DocSample DocsDanger() {
+        StateHandle<KeyBinding> s = UseState(new KeyBinding(KeyCode.F, KeyModifiers.Control));
+        return new DocSample(() => Create(s.Value, v => s.Set(v), variant: Variant.Danger));
+    }
+
+    [DocVariant("CL_Playground_Label_Frosted")]
+    public static DocSample DocsFrosted() {
+        StateHandle<KeyBinding> s = UseState(new KeyBinding(KeyCode.F, KeyModifiers.Control));
+        return new DocSample(() => Create(s.Value, v => s.Set(v), variant: Variant.Frosted));
+    }
+
+    private static LightweaveNode AllVariantsRow() {
+        return HStack.Create(
+            SpacingScale.Lg,
+            row => {
+                row.AddHug(Create(new KeyBinding(KeyCode.F, KeyModifiers.Control), _ => { }, instanceKey: "kbf_v_primary", variant: Variant.Primary));
+                row.AddHug(Create(new KeyBinding(KeyCode.F, KeyModifiers.Control), _ => { }, instanceKey: "kbf_v_ghost", variant: Variant.Ghost));
+                row.AddHug(Create(new KeyBinding(KeyCode.F, KeyModifiers.Control), _ => { }, instanceKey: "kbf_v_danger", variant: Variant.Danger));
+                row.AddHug(Create(new KeyBinding(KeyCode.F, KeyModifiers.Control), _ => { }, instanceKey: "kbf_v_frosted", variant: Variant.Frosted));
+                row.AddHug(Create(new KeyBinding(KeyCode.None, KeyModifiers.None), _ => { }, instanceKey: "kbf_v_unbound"));
+            }
+        );
+    }
+
+    [DocState("CL_Playground_Label_Default", HideCode = true)]
+    public static DocSample DocsDefaultState() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Hover", HideCode = true)]
+    public static DocSample DocsHover() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Active", HideCode = true)]
+    public static DocSample DocsActive() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Focus", HideCode = true)]
+    public static DocSample DocsFocus() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Disabled", HideCode = true)]
+    public static DocSample DocsDisabled() {
+        return new DocSample(() => AllVariantsRow());
     }
 
     [DocUsage]

@@ -120,6 +120,7 @@ public static class LightweaveRoot {
             }
         }
         finally {
+            LightweaveHitTracker.Commit(rootId);
             RenderContext.Clear();
             if (DiagnosticsEnabled) {
                 Cryptiklemur.RimObs.Api.Obs.Metrics.Observe(LightweaveTelemetry.RenderTotalTicks, System.Diagnostics.Stopwatch.GetTimestamp() - renderStart);
@@ -133,6 +134,7 @@ public static class LightweaveRoot {
             stores.Remove(rootId);
         }
         buildCache.Remove(rootId);
+        LightweaveHitTracker.ReleaseRoot(rootId);
     }
 
     private static Theme.Theme GetBaseTheme() {

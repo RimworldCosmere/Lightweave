@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using Cosmere.Lightweave.Doc;
 using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
+using Cosmere.Lightweave.Layout;
 using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
 using UnityEngine;
@@ -85,7 +86,7 @@ public static class SearchField {
             InteractionState state = InteractionState.Resolve(rect, focusName, disabled);
             if (variant == SearchFieldVariant.Frosted) {
                 bool sfActive = state.Hovered || state.Focused || state.Pressed;
-                BackdropBlur.Draw(rect, sfActive ? 8f : 6f);
+                BackdropBlur.Draw(rect, sfActive ? 8f : 6f, cornerRadiusPx: RadiusSpec.All(RadiusScale.Sm).ResolveVector(dir).x);
                 ThemeSlot sfBorderSlot = disabled
                     ? ThemeSlot.BorderOff
                     : (sfActive ? ThemeSlot.BorderHover : ThemeSlot.BorderSubtle);
@@ -147,7 +148,7 @@ public static class SearchField {
                 Color sfTextColor = theme.GetColor(ThemeSlot.TextPrimary);
                 GUIStyle sfStyle = InputSurface.ConfigureChromelessTextFieldStyle(sfFont, sfSize, sfTextColor);
                 GUI.SetNextControlName(focusName);
-                string next = GUI.TextField(RectSnap.Snap(inner), buffer.Value ?? string.Empty, sfStyle);
+                string next = GUI.TextField(RectSnap.SnapText(inner), buffer.Value ?? string.Empty, sfStyle);
                 if (next != buffer.Value) {
                     buffer.Set(next);
                     syncedFrom.Current = next;
@@ -221,7 +222,7 @@ public static class SearchField {
         DrawGlyph(rect, ClearGlyph, theme, glyphSlot);
 
         Event e = Event.current;
-        if (e.type == EventType.MouseUp && e.button == 0 && rect.Contains(e.mousePosition)) {
+        if (e.type == EventType.MouseUp && e.button == 0 && rect.Contains(e.mousePosition) && LightweaveHitTracker.IsTopmost(rect)) {
             buffer.Set(string.Empty);
             syncedFrom.Current = string.Empty;
             onChange?.Invoke(string.Empty);
@@ -257,35 +258,77 @@ public static class SearchField {
 
     [DocVariant("CL_Playground_Label_Empty")]
     public static DocSample DocsEmpty() {
-        bool forced = RenderContext.Current.ForceDisabled;
         StateHandle<string> s = UseState(string.Empty);
         return new DocSample(() => Create(
             s.Value,
             v => s.Set(v),
-            (string)"CL_Playground_SearchField_Placeholder".Translate(),
-            forced
+            (string)"CL_Playground_SearchField_Placeholder".Translate()
         ));
     }
 
     [DocVariant("CL_Playground_Label_Filled")]
     public static DocSample DocsFilled() {
-        bool forced = RenderContext.Current.ForceDisabled;
         StateHandle<string> s = UseState("highstorm");
-        return new DocSample(() => Create(s.Value, v => s.Set(v), disabled: forced));
+        return new DocSample(() => Create(s.Value, v => s.Set(v)));
     }
 
 
-    [DocVariant("CL_Playground_Label_Borderless")]
-    public static DocSample DocsBorderless() {
-        bool forced = RenderContext.Current.ForceDisabled;
+    [DocVariant("CL_Playground_Label_Frosted")]
+    public static DocSample DocsFrosted() {
         StateHandle<string> s = UseState(string.Empty);
         return new DocSample(() => Create(
             s.Value,
             v => s.Set(v),
             (string)"CL_Playground_SearchField_Placeholder".Translate(),
-            forced,
-            SearchFieldVariant.Borderless
+            variant: SearchFieldVariant.Frosted
         ));
+    }
+
+    [DocVariant("CL_Playground_Label_Borderless")]
+    public static DocSample DocsBorderless() {
+        StateHandle<string> s = UseState(string.Empty);
+        return new DocSample(() => Create(
+            s.Value,
+            v => s.Set(v),
+            (string)"CL_Playground_SearchField_Placeholder".Translate(),
+            variant: SearchFieldVariant.Borderless
+        ));
+    }
+
+    private static LightweaveNode AllVariantsRow() {
+        return HStack.Create(
+            SpacingScale.Sm,
+            row => {
+                row.AddHug(Create("highstorm", _ => { }, variant: SearchFieldVariant.Input, instanceKey: "sf_v_input"));
+                row.AddHug(Create("highstorm", _ => { }, variant: SearchFieldVariant.Frosted, instanceKey: "sf_v_frosted"));
+                row.AddHug(Create("highstorm", _ => { }, variant: SearchFieldVariant.Borderless, instanceKey: "sf_v_borderless"));
+            }
+        );
+    }
+
+    [DocState("CL_Playground_Label_Default", HideCode = true)]
+    public static DocSample DocsDefault() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Hover", HideCode = true)]
+    public static DocSample DocsHover() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Active", HideCode = true)]
+    public static DocSample DocsActive() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Focus", HideCode = true)]
+    public static DocSample DocsFocus() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Disabled", HideCode = true)]
+    public static DocSample DocsDisabled() {
+        return new DocSample(() => AllVariantsRow());
     }
 
     [DocUsage]

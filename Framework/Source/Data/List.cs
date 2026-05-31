@@ -9,6 +9,7 @@ using Cosmere.Lightweave.Types;
 using UnityEngine;
 using Verse;
 using Cosmere.Lightweave.Layout;
+using Cosmere.Lightweave.Surfaces;
 using Caption = Cosmere.Lightweave.Typography.Typography.Caption;
 using Code = Cosmere.Lightweave.Typography.Typography.Code;
 using Heading = Cosmere.Lightweave.Typography.Typography.Heading;

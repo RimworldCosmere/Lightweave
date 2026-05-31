@@ -23,60 +23,52 @@ public sealed class LightweavePlayground : LightweaveWindow {
             "CL_Playground_Category_Layout",
             "CL_Playground_Category_Layout_Desc",
             new[] {
-                "stack", "column", "row", "hstack", "grid", "wrap", "scrollarea", "divider", "spacer",
-                "carousel", "container", "card", "box", "vignette", "splitpane",
+                "stack", "column", "row", "hstack", "grid", "wrap", "scrollarea", "spacer",
+                "container", "splitpane",
             }
         ),
         new PlaygroundCategory(
-            "typography",
-            "CL_Playground_Category_Typography",
-            "CL_Playground_Category_Typography_Desc",
-            new[] { "heading", "text", "label", "caption", "richtext", "code", "icon" }
-        ),
-        new PlaygroundCategory(
-            "buttons",
-            "CL_Playground_Category_Buttons",
-            "CL_Playground_Category_Buttons_Desc",
-            new[] { "button", "iconbutton", "togglebutton", "buttongroup" }
+            "surfaces",
+            "CL_Playground_Category_Surfaces",
+            "CL_Playground_Category_Surfaces_Desc",
+            new[] { "accordion", "card", "box" }
         ),
         new PlaygroundCategory(
             "inputs",
             "CL_Playground_Category_Inputs",
             "CL_Playground_Category_Inputs_Desc",
             new[] {
+                "button", "iconbutton", "togglebutton", "buttongroup",
                 "textfield", "checkbox", "switch", "radio", "slider", "textarea", "numberfield", "searchfield",
-                "dropdown", "colorpicker", "keybinding", "chip",
+                "dropdown", "colorpicker", "keybinding",
             }
         ),
         new PlaygroundCategory(
             "feedback",
             "CL_Playground_Category_Feedback",
             "CL_Playground_Category_Feedback_Desc",
-            new[] { "spinner", "progressbar", "ringgauge", "tooltip", "alert" }
+            new[] {
+                "spinner", "progressbar", "ringgauge", "alert", "vignette",
+                "window", "dialog", "popover", "drawer", "toast",
+            }
         ),
         new PlaygroundCategory(
             "blocks",
             "CL_Playground_Category_Blocks",
             "CL_Playground_Category_Blocks_Desc",
-            new[] { "avatar" }
+            new[] { "carousel" }
         ),
         new PlaygroundCategory(
             "navigation",
             "CL_Playground_Category_Navigation",
             "CL_Playground_Category_Navigation_Desc",
-            new[] { "tabs", "segmented", "breadcrumbs", "menu", "contextmenu", "accordion", "sidenav", "section" }
-        ),
-        new PlaygroundCategory(
-            "overlay",
-            "CL_Playground_Category_Overlay",
-            "CL_Playground_Category_Overlay_Desc",
-            new[] { "window", "dialog", "popover", "drawer", "toast" }
+            new[] { "tabs", "segmented", "breadcrumbs", "menu", "contextmenu", "sidenav", "section" }
         ),
         new PlaygroundCategory(
             "data",
             "CL_Playground_Category_Data",
             "CL_Playground_Category_Data_Desc",
-            new[] { "list", "table", "tree", "keyvalue", "chart" }
+            new[] { "list", "table", "tree", "keyvalue", "chart", "divider", "chip", "avatar", "tooltip", "typography" }
         ),
         new PlaygroundCategory(
             "control",
@@ -105,14 +97,14 @@ public sealed class LightweavePlayground : LightweaveWindow {
         { "grid", "Lightweave/Layout/Grid.cs" },
         { "wrap", "Lightweave/Layout/Wrap.cs" },
         { "scrollarea", "Lightweave/Layout/ScrollArea.cs" },
-        { "divider", "Lightweave/Layout/Divider.cs" },
+        { "divider", "Lightweave/Data/Divider.cs" },
         { "spacer", "Lightweave/Layout/Spacer.cs" },
-        { "carousel", "Lightweave/Layout/Carousel.cs" },
+        { "carousel", "Lightweave/Blocks/Carousel.cs" },
         { "container", "Lightweave/Layout/Container.cs" },
         { "splitpane", "Lightweave/Layout/SplitPane.cs" },
-        { "card", "Lightweave/Layout/Card.cs" },
-        { "box", "Lightweave/Layout/Box.cs" },
-        { "vignette", "Lightweave/Layout/Vignette.cs" },
+        { "card", "Lightweave/Surfaces/Card.cs" },
+        { "box", "Lightweave/Surfaces/Box.cs" },
+        { "vignette", "Lightweave/Feedback/Vignette.cs" },
         { "each", "Lightweave/Layout/Each.cs" },
         { "conditional", "Lightweave/Layout/Conditional.cs" },
         { "heading", "Lightweave/Typography/Heading.cs" },
@@ -137,27 +129,27 @@ public sealed class LightweavePlayground : LightweaveWindow {
         { "dropdown", "Lightweave/Input/Dropdown.cs" },
         { "colorpicker", "Lightweave/Input/ColorPicker.cs" },
         { "keybinding", "Lightweave/Input/KeyBindingField.cs" },
-        { "chip", "Lightweave/Input/Chip.cs" },
+        { "chip", "Lightweave/Data/Chip.cs" },
         { "spinner", "Lightweave/Feedback/Spinner.cs" },
         { "progressbar", "Lightweave/Feedback/ProgressBar.cs" },
         { "ringgauge", "Lightweave/Feedback/RingGauge.cs" },
         { "chart", "Lightweave/Feedback/Chart.cs" },
-        { "tooltip", "Lightweave/Feedback/Tooltip.cs" },
+        { "tooltip", "Lightweave/Data/Tooltip.cs" },
         { "alert", "Lightweave/Feedback/Alert.cs" },
-        { "avatar", "Lightweave/Blocks/Avatar.cs" },
+        { "avatar", "Lightweave/Data/Avatar.cs" },
         { "tabs", "Lightweave/Navigation/Tabs.cs" },
         { "segmented", "Lightweave/Navigation/Segmented.cs" },
         { "breadcrumbs", "Lightweave/Navigation/Breadcrumbs.cs" },
         { "menu", "Lightweave/Navigation/Menu.cs" },
         { "contextmenu", "Lightweave/Navigation/ContextMenu.cs" },
-        { "accordion", "Lightweave/Navigation/Accordion.cs" },
+        { "accordion", "Lightweave/Surfaces/Accordion.cs" },
         { "section", "Lightweave/Navigation/Section.cs" },
         { "sidenav", "Lightweave/Playground/PlaygroundRail.cs" },
         { "window", "Lightweave/Runtime/LightweaveWindow.cs" },
-        { "dialog", "Lightweave/Overlay/Dialog.cs" },
-        { "popover", "Lightweave/Overlay/Popover.cs" },
-        { "drawer", "Lightweave/Overlay/Drawer.cs" },
-        { "toast", "Lightweave/Overlay/Toast.cs" },
+        { "dialog", "Lightweave/Feedback/Dialog.cs" },
+        { "popover", "Lightweave/Feedback/Popover.cs" },
+        { "drawer", "Lightweave/Feedback/Drawer.cs" },
+        { "toast", "Lightweave/Feedback/Toast.cs" },
         { "list", "Lightweave/Data/List.cs" },
         { "table", "Lightweave/Data/Table.cs" },
         { "tree", "Lightweave/Data/Tree.cs" },
@@ -298,7 +290,7 @@ public sealed class LightweavePlayground : LightweaveWindow {
         string whenKey = "CL_Playground_" + selectedPrimitiveId + "_When";
 
         (IReadOnlyList<PlaygroundVariant> variants, IReadOnlyList<PlaygroundState> states) demo =
-            DocReflection.BuildSamplesById(selectedPrimitiveId, false);
+            DocReflection.BuildSamplesById(selectedPrimitiveId);
 
         float? rowOverride = DocReflection.GetPreferredVariantHeight(selectedPrimitiveId);
         if (!rowOverride.HasValue && DemoRowHeights.TryGetValue(selectedPrimitiveId, out float rh)) {
@@ -372,7 +364,7 @@ public sealed class LightweavePlayground : LightweaveWindow {
             ctx
         );
 
-        return Layout.Box.Create(
+        return Surfaces.Box.Create(
             c => c.Add(toc),
             style: new Style {
                 Padding = new EdgeInsets(Top: SpacingScale.Xl, Right: SpacingScale.Lg, Bottom: SpacingScale.Xl, Left: SpacingScale.Lg),
