@@ -1,12 +1,14 @@
 using System;
 using System.Runtime.CompilerServices;
 using Cosmere.Lightweave.Doc;
+using Cosmere.Lightweave.Feedback;
 using Cosmere.Lightweave.Input;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
 using UnityEngine;
 using static Cosmere.Lightweave.Doc.DocChips;
+using Cosmere.Lightweave.Data;
 
 namespace Cosmere.Lightweave.Layout;
 
@@ -28,6 +30,8 @@ public static class Wrap {
         Action<List<LightweaveNode>>? children = null,
         [DocParam("Optional explicit row height. Falls back to minChildWidth * 0.6 when unset.", TypeOverride = "Rem?", DefaultOverride = "null")]
         Rem? lineHeight = null,
+        [DocParam("Flow cells at each child's natural width instead of a uniform grid. Use for content-sized tags/chips that should wrap like text.", TypeOverride = "bool", DefaultOverride = "false")]
+        bool flow = false,
         [DocParam("Inline style override.", TypeOverride = "Style?", DefaultOverride = "null")]
         Style? style = null,
         [DocParam("Additional class names merged after the base 'wrap' class.", TypeOverride = "string[]?", DefaultOverride = "null")]
@@ -53,6 +57,31 @@ public static class Wrap {
             return c;
         }
 
+        float CellWidth(LightweaveNode child, float minW) {
+            if (!flow) {
+                return minW;
+            }
+            float natural = child.MeasureWidth?.Invoke() ?? minW;
+            return Mathf.Max(natural, 1f);
+        }
+
+        float RowHeight(float minW) {
+            if (lineHeight.HasValue) {
+                return lineHeight.Value.ToPixels();
+            }
+            if (flow) {
+                float maxChildHeight = 0f;
+                for (int i = 0; i < kids.Count; i++) {
+                    float? childHeight = kids[i].PreferredHeight;
+                    if (kids[i].IsInFlow() && childHeight.HasValue) {
+                        maxChildHeight = Mathf.Max(maxChildHeight, childHeight.Value);
+                    }
+                }
+                return maxChildHeight > 0f ? maxChildHeight : new Rem(1.75f).ToPixels();
+            }
+            return minW * 0.6f;
+        }
+
         node.MeasureWidth = () => {
             int flowCount = FlowCount();
             if (flowCount == 0) {
@@ -60,6 +89,21 @@ public static class Wrap {
             }
             float gapPx = gap.ToPixels();
             float minW = Mathf.Max(minChildWidth.ToPixels(), 1f);
+            if (flow) {
+                float total = 0f;
+                bool first = true;
+                foreach (LightweaveNode child in kids) {
+                    if (!child.IsInFlow()) {
+                        continue;
+                    }
+                    if (!first) {
+                        total += gapPx;
+                    }
+                    total += CellWidth(child, minW);
+                    first = false;
+                }
+                return total;
+            }
             return flowCount * minW + Math.Max(0, flowCount - 1) * gapPx;
         };
 
@@ -71,29 +115,54 @@ public static class Wrap {
 
             float gapPx = gap.ToPixels();
             float minW = Mathf.Max(minChildWidth.ToPixels(), 1f);
-            float rowH = lineHeight.HasValue ? lineHeight.Value.ToPixels() : minW * 0.6f;
+            float rowH = RowHeight(minW);
+
+            if (flow) {
+                int rows = 1;
+                float x = 0f;
+                foreach (LightweaveNode child in kids) {
+                    if (!child.IsInFlow()) {
+                        continue;
+                    }
+                    float cw = CellWidth(child, minW);
+                    if (x > 0f && x + gapPx + cw > availableWidth) {
+                        rows++;
+                        x = cw;
+                    }
+                    else {
+                        x += (x > 0f ? gapPx : 0f) + cw;
+                    }
+                }
+                return rows * rowH + Mathf.Max(0, rows - 1) * gapPx;
+            }
+
             int perRow = Mathf.Max(1, Mathf.FloorToInt((availableWidth + gapPx) / (minW + gapPx)));
-            int rows = (flowCount + perRow - 1) / perRow;
-            return rows * rowH + Mathf.Max(0, rows - 1) * gapPx;
+            int gridRows = (flowCount + perRow - 1) / perRow;
+            return gridRows * rowH + Mathf.Max(0, gridRows - 1) * gapPx;
         };
 
         node.Paint = (rect, paintChildren) => {
             float gapPx = gap.ToPixels();
             float minW = Mathf.Max(minChildWidth.ToPixels(), 1f);
-            float rowH = lineHeight.HasValue ? lineHeight.Value.ToPixels() : minW * 0.6f;
+            float rowH = RowHeight(minW);
             float x = rect.x;
             float y = rect.y;
             foreach (LightweaveNode child in kids) {
                 if (!child.IsInFlow()) {
                     continue;
                 }
-                if (x + minW > rect.xMax) {
+                float cw = CellWidth(child, minW);
+                if (x > rect.x && x + cw > rect.xMax) {
+                    x = rect.x;
+                    y += rowH + gapPx;
+                }
+                else if (!flow && x + minW > rect.xMax) {
                     x = rect.x;
                     y += rowH + gapPx;
                 }
 
-                child.MeasuredRect = new Rect(x, y, minW, rowH);
-                x += minW + gapPx;
+                child.MeasuredRect = new Rect(x, y, cw, rowH);
+                x += cw + gapPx;
             }
 
             paintChildren();
@@ -124,26 +193,44 @@ public static class Wrap {
                 SpacingScale.Xs,
                 new Rem(7.5f),
                 k => {
-                    k.Add(Input.Chip.Create("Windrunner", true, tone: ChipTone.None, showDot: false));
-                    k.Add(Input.Chip.Create("Skybreaker", false, tone: ChipTone.None, showDot: false));
-                    k.Add(Input.Chip.Create("Dustbringer", true, tone: ChipTone.Error, showDot: false));
-                    k.Add(Input.Chip.Create("Edgedancer", true, tone: ChipTone.Info, showDot: false));
-                    k.Add(Input.Chip.Create("Truthwatcher", true, tone: ChipTone.None, showDot: false));
-                    k.Add(Input.Chip.Create("Lightweaver", true, tone: ChipTone.Warn, showDot: false));
-                    k.Add(Input.Chip.Create("Elsecaller", false, tone: ChipTone.None, showDot: false));
-                    k.Add(Input.Chip.Create("Willshaper", false, tone: ChipTone.None, showDot: false));
-                    k.Add(Input.Chip.Create("Stoneward", true, tone: ChipTone.Info, showDot: false));
-                    k.Add(Input.Chip.Create("Bondsmith", true, tone: ChipTone.None, showDot: false));
-                    k.Add(Input.Chip.Create("Mistborn", true, tone: ChipTone.Warn, showDot: false));
-                    k.Add(Input.Chip.Create("Twinborn", false, tone: ChipTone.None, showDot: false));
-                    k.Add(Input.Chip.Create("Coinshot", true, tone: ChipTone.None, showDot: false));
-                    k.Add(Input.Chip.Create("Lurcher", false, tone: ChipTone.None, showDot: false));
-                    k.Add(Input.Chip.Create("Smoker", false, tone: ChipTone.None, showDot: false));
-                    k.Add(Input.Chip.Create("Seeker", false, tone: ChipTone.None, showDot: false));
-                    k.Add(Input.Chip.Create("Soother", true, tone: ChipTone.Info, showDot: false));
-                    k.Add(Input.Chip.Create("Rioter", true, tone: ChipTone.Error, showDot: false));
+                    k.Add(Data.Chip.Create("Windrunner", state: true, variant: ChipVariant.None, showDot: false));
+                    k.Add(Data.Chip.Create("Skybreaker", state: false, variant: ChipVariant.None, showDot: false));
+                    k.Add(Data.Chip.Create("Dustbringer", state: true, variant: ChipVariant.Error, showDot: false));
+                    k.Add(Data.Chip.Create("Edgedancer", state: true, variant: ChipVariant.Info, showDot: false));
+                    k.Add(Data.Chip.Create("Truthwatcher", state: true, variant: ChipVariant.None, showDot: false));
+                    k.Add(Data.Chip.Create("Lightweaver", state: true, variant: ChipVariant.Warn, showDot: false));
+                    k.Add(Data.Chip.Create("Elsecaller", state: false, variant: ChipVariant.None, showDot: false));
+                    k.Add(Data.Chip.Create("Willshaper", state: false, variant: ChipVariant.None, showDot: false));
+                    k.Add(Data.Chip.Create("Stoneward", state: true, variant: ChipVariant.Info, showDot: false));
+                    k.Add(Data.Chip.Create("Bondsmith", state: true, variant: ChipVariant.None, showDot: false));
+                    k.Add(Data.Chip.Create("Mistborn", state: true, variant: ChipVariant.Warn, showDot: false));
+                    k.Add(Data.Chip.Create("Twinborn", state: false, variant: ChipVariant.None, showDot: false));
+                    k.Add(Data.Chip.Create("Coinshot", state: true, variant: ChipVariant.None, showDot: false));
+                    k.Add(Data.Chip.Create("Lurcher", state: false, variant: ChipVariant.None, showDot: false));
+                    k.Add(Data.Chip.Create("Smoker", state: false, variant: ChipVariant.None, showDot: false));
+                    k.Add(Data.Chip.Create("Seeker", state: false, variant: ChipVariant.None, showDot: false));
+                    k.Add(Data.Chip.Create("Soother", state: true, variant: ChipVariant.Info, showDot: false));
+                    k.Add(Data.Chip.Create("Rioter", state: true, variant: ChipVariant.Error, showDot: false));
                 },
                 lineHeight: new Rem(1.75f)
+            )
+        );
+    }
+
+    [DocVariant("CL_Playground_Layout_Wrap_Flow", Order = 2)]
+    public static DocSample DocsFlow() {
+        return new DocSample(() =>
+            Wrap.Create(
+                SpacingScale.Xs,
+                children: k => {
+                    k.Add(Data.Chip.Create("Silver x800", upper: false, bold: false));
+                    k.Add(Data.Chip.Create("Packaged survival meals x10", upper: false, bold: false));
+                    k.Add(Data.Chip.Create("Medicine x30", upper: false, bold: false));
+                    k.Add(Data.Chip.Create("Bolt-action rifle", upper: false, bold: false));
+                    k.Add(Data.Chip.Create("Knife", upper: false, bold: false));
+                    k.Add(Data.Chip.Create("Flak vest", upper: false, bold: false));
+                },
+                flow: true
             )
         );
     }

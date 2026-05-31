@@ -49,6 +49,12 @@ public static class ScadrialTheme {
             [ThemeSlot.Glass1] = new Color(0.102f, 0.125f, 0.157f, 0.55f),
             [ThemeSlot.Glass2] = new Color(0.102f, 0.125f, 0.157f, 0.78f),
             [ThemeSlot.Glass3] = new Color(0.067f, 0.086f, 0.114f, 0.92f),
+            [ThemeSlot.WindowGlass] = new Color(0.067f, 0.086f, 0.114f, 0.92f),
+            [ThemeSlot.DlcRoyalty] = new Color(0.831f, 0.659f, 0.341f),
+            [ThemeSlot.DlcIdeology] = new Color(0.788f, 0.478f, 0.357f),
+            [ThemeSlot.DlcBiotech] = new Color(0.416f, 0.553f, 0.659f),
+            [ThemeSlot.DlcAnomaly] = new Color(0.604f, 0.373f, 0.659f),
+            [ThemeSlot.DlcOdyssey] = new Color(0.357f, 0.639f, 0.659f),
             [ThemeSlot.WindowSurface] = new Color(0.030f, 0.040f, 0.054f, 0.98f),
             [ThemeSlot.GlassFrost] = new Color(0.047f, 0.071f, 0.094f, 0.70f),
             [ThemeSlot.AccentGlow] = new Color(0.847f, 0.831f, 0.910f, 0.45f),
@@ -72,6 +78,8 @@ public static class ScadrialTheme {
             [ThemeSlot.MenuVignette] = new Color(0.024f, 0.039f, 0.063f, 0.62f),
             [ThemeSlot.ExpansionBarSurface] = new Color(0.0314f, 0.0235f, 0.0157f, 0.78f),
             [ThemeSlot.ExpansionPillSurface] = new Color(0.1098f, 0.0863f, 0.0549f, 0.85f),
+            [ThemeSlot.AnomalyAccent] = new Color(0.604f, 0.373f, 0.659f),
+            [ThemeSlot.AnomalyAccentText] = new Color(0.816f, 0.647f, 0.839f),
         };
         return BaseTheme.Compose(colors, body, bodyBold, heading, display, mono, monoBold, BaseTheme.BuildRadii());
     }

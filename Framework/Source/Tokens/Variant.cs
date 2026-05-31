@@ -12,6 +12,8 @@ public readonly struct Variant : System.IEquatable<Variant> {
     public static readonly Variant Ghost = new Variant("ghost");
     public static readonly Variant Danger = new Variant("danger");
     public static readonly Variant Frosted = new Variant("frosted");
+    public static readonly Variant Quiet = new Variant("quiet");
+    public static readonly Variant Solid = new Variant("solid");
 
     public bool Equals(Variant other) {
         return string.Equals(Id, other.Id, System.StringComparison.Ordinal);

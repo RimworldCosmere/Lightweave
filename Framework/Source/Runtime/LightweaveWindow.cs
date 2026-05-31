@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Reflection;
 using Cosmere.Lightweave.Doc;
 using Cosmere.Lightweave.Hooks;
 using Cosmere.Lightweave.Layout;
@@ -24,6 +26,7 @@ public abstract class LightweaveWindow : Verse.Window {
     }
 
     private static readonly Func<float, float> EntryEase = t => 1f - Mathf.Pow(1f - t, 3f);
+    private static FieldInfo? windowStackListField;
     protected bool drawOwnCloseX;
     private ResizeEdge activeResize;
     private Vector2 resizeAnchorScreen;
@@ -136,6 +139,9 @@ public abstract class LightweaveWindow : Verse.Window {
     [DocOverride("Per-savegame Scribe key for persisting window position. Null disables persistence.", TypeOverride = "string?", DefaultOverride = "null")]
     protected virtual string? PersistPositionKey => null;
 
+    [DocOverride("Keep this window pinned above every other window of the same layer, re-fronting each frame even after another window steals focus.", TypeOverride = "bool", DefaultOverride = "false")]
+    protected virtual bool KeepOnTop => false;
+
     [DocOverride("Top chrome slot. Return a WindowHeader (or any node) to add a title bar; return null for a chromeless window.", TypeOverride = "LightweaveNode?", DefaultOverride = "null")]
     protected virtual LightweaveNode? Header() {
         return null;
@@ -216,6 +222,50 @@ public abstract class LightweaveWindow : Verse.Window {
         base.WindowOnGUI();
     }
 
+    public override void ExtraOnGUI() {
+        base.ExtraOnGUI();
+        if (KeepOnTop) {
+            KeepPinnedOnTop();
+        }
+    }
+
+    private void KeepPinnedOnTop() {
+        WindowStack? stack = Find.WindowStack;
+        if (stack == null) {
+            return;
+        }
+
+        windowStackListField ??= typeof(WindowStack).GetField("windows", BindingFlags.Instance | BindingFlags.NonPublic);
+        if (windowStackListField?.GetValue(stack) is not List<Window> windows) {
+            return;
+        }
+
+        int selfIndex = windows.IndexOf(this);
+        if (selfIndex < 0) {
+            return;
+        }
+
+        bool coveredBySamePriority = false;
+        for (int i = selfIndex + 1; i < windows.Count; i++) {
+            if (windows[i].layer <= layer) {
+                coveredBySamePriority = true;
+                break;
+            }
+        }
+        if (!coveredBySamePriority) {
+            return;
+        }
+
+        windows.RemoveAt(selfIndex);
+        int insertAt = 0;
+        for (int i = 0; i < windows.Count; i++) {
+            if (layer >= windows[i].layer) {
+                insertAt = i + 1;
+            }
+        }
+        windows.Insert(insertAt, this);
+    }
+
     public override void DoWindowContents(Rect inRect) {
         bool selfActive = isWindowDragging || activeResize != ResizeEdge.None;
         EventType et = Event.current.type;
@@ -277,10 +327,10 @@ public abstract class LightweaveWindow : Verse.Window {
             }
         );
 
-        LightweaveNode card = Layout.Box.Create(
+        LightweaveNode card = Surfaces.Box.Create(
             children: c => {
                 if (DrawAccentGradient) {
-                    c.Add(Layout.Box.Create(style: new Style {
+                    c.Add(Surfaces.Box.Create(style: new Style {
                         Position = Position.Absolute,
                         Top = new Rem(0f),
                         Right = new Rem(0f),

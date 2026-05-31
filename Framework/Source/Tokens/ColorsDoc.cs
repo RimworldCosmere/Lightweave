@@ -8,6 +8,8 @@ using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Types;
 using UnityEngine;
 using Verse;
+using Cosmere.Lightweave.Surfaces;
+using Cosmere.Lightweave.Data;
 using LText = Cosmere.Lightweave.Typography.Typography.Text;
 
 namespace Cosmere.Lightweave.Tokens;
@@ -164,11 +166,11 @@ public static class ColorsDoc {
             HStack.Create(
                 gap: SpacingScale.Sm,
                 children: row => {
-                    row.AddHug(Chip.Create("Neutral", false, tone: ChipTone.None, showDot: false));
-                    row.AddHug(Chip.Create("Accent", true, tone: ChipTone.None, showDot: false));
-                    row.AddHug(Chip.Create("Success", true, tone: ChipTone.Info, showDot: false));
-                    row.AddHug(Chip.Create("Warning", true, tone: ChipTone.Warn, showDot: false));
-                    row.AddHug(Chip.Create("Danger", true, tone: ChipTone.Error, showDot: false));
+                    row.AddHug(Chip.Create("Neutral", state: false, variant: ChipVariant.None, showDot: false));
+                    row.AddHug(Chip.Create("Accent", state: true, variant: ChipVariant.None, showDot: false));
+                    row.AddHug(Chip.Create("Success", state: true, variant: ChipVariant.Info, showDot: false));
+                    row.AddHug(Chip.Create("Warning", state: true, variant: ChipVariant.Warn, showDot: false));
+                    row.AddHug(Chip.Create("Danger", state: true, variant: ChipVariant.Error, showDot: false));
                 }
             )
         );

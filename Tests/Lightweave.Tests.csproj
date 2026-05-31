@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <IsPackable>false</IsPackable>
+        <RootNamespace>Cosmere.Lightweave.Tests</RootNamespace>
+        <AssemblyName>Lightweave.Tests</AssemblyName>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1"/>
+        <PackageReference Include="xunit" Version="2.9.2"/>
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2"/>
+    </ItemGroup>
+
+    <!--
+        The publish-flow logic under test is pure BCL code (regex matching, dictionary
+        merge, list selection) with no UnityEngine/Verse dependency. The shipping mod
+        targets net48, which does not run under `dotnet test` on Linux, so we link the
+        source directly into this net9.0 project rather than referencing the net48
+        assembly. The types use only APIs that behave identically across both runtimes.
+    -->
+    <ItemGroup>
+        <Compile Include="..\Redesign\Source\Publish\SteamIgnoreMatcher.cs" Link="Linked\SteamIgnoreMatcher.cs"/>
+        <Compile Include="..\Redesign\Source\Publish\PublishFileScanner.cs" Link="Linked\PublishFileScanner.cs"/>
+        <Compile Include="..\Redesign\Source\Publish\SemanticReleaseSteamConfig.cs" Link="Linked\SemanticReleaseSteamConfig.cs"/>
+        <Compile Include="..\Redesign\Source\Publish\SemanticReleaseSteamDetector.cs" Link="Linked\SemanticReleaseSteamDetector.cs"/>
+        <Compile Include="..\Redesign\Source\Publish\PublishSidecar.cs" Link="Linked\PublishSidecar.cs"/>
+        <Compile Include="..\Redesign\Source\Publish\PublishSelection.cs" Link="Linked\PublishSelection.cs"/>
+        <Compile Include="..\Redesign\Source\Publish\PublishEligibility.cs" Link="Linked\PublishEligibility.cs"/>
+        <Compile Include="..\Framework\Source\Data\TriState.cs" Link="Linked\TriState.cs"/>
+        <Compile Include="..\Redesign\Source\NewColony\NewColonyThresholds.cs" Link="Linked\NewColonyThresholds.cs"/>
+        <Compile Include="..\Framework\Source\Runtime\HookKey.cs" Link="Linked\HookKey.cs"/>
+        <Compile Include="..\Framework\Source\Runtime\HookSlot.cs" Link="Linked\HookSlot.cs"/>
+        <Compile Include="..\Framework\Source\Runtime\HookStore.cs" Link="Linked\HookStore.cs"/>
+    </ItemGroup>
+</Project>

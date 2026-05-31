@@ -6,6 +6,7 @@ using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
 using Cosmere.Lightweave.Typography;
+using Cosmere.Lightweave.Surfaces;
 using Text = Cosmere.Lightweave.Typography.Typography.Text;
 
 namespace Cosmere.Lightweave.Feedback;

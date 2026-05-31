@@ -1,4 +1,5 @@
 using System;
+using Cosmere.Lightweave.Redesign.NewColony;
 using Cosmere.Lightweave.Runtime;
 using RimWorld;
 using UnityEngine;
@@ -10,7 +11,7 @@ namespace Cosmere.Lightweave.Redesign.MainMenu;
 
 public static class MainMenuActions {
     public static void NewColony() {
-        Find.WindowStack.Add(new Page_SelectScenario());
+        Find.WindowStack.Add(new NewColonyWindow());
     }
 
     public static void OpenLoadDialog() {

@@ -5,6 +5,8 @@ using Cosmere.Lightweave.Types;
 using Cosmere.Lightweave.Typography;
 using UnityEngine;
 using Verse;
+using Cosmere.Lightweave.Surfaces;
+using Cosmere.Lightweave.Data;
 using Eyebrow = Cosmere.Lightweave.Typography.Eyebrow;
 using Text = Cosmere.Lightweave.Typography.Typography.Text;
 

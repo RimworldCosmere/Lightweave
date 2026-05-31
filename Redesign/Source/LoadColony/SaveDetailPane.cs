@@ -4,6 +4,8 @@ using System.Globalization;
 using System.IO;
 using Cosmere.Lightweave.Fonts;
 using Cosmere.Lightweave.Icons;
+using Cosmere.Lightweave.Data;
+using Cosmere.Lightweave.Feedback;
 using Cosmere.Lightweave.Input;
 using Cosmere.Lightweave.Layout;
 using Cosmere.Lightweave.Redesign.MainMenu;
@@ -16,6 +18,7 @@ using RimWorld;
 using UnityEngine;
 using Verse;
 using static Cosmere.Lightweave.Typography.Typography;
+using Cosmere.Lightweave.Surfaces;
 using Display = Cosmere.Lightweave.Typography.Display;
 using Eyebrow = Cosmere.Lightweave.Typography.Eyebrow;
 using Text = Cosmere.Lightweave.Typography.Typography.Text;
@@ -125,16 +128,16 @@ public static class SaveDetailPane {
     }
 
     private static LightweaveNode BuildConditionTag(string label, ThemeSlot tone) {
-        return Chip.Create(label, true, tone: SlotToTone(tone), showDot: true);
+        return Chip.Create(label, variant: SlotToVariant(tone), state: true, showDot: true);
     }
 
-    private static ChipTone SlotToTone(ThemeSlot slot) {
+    private static ChipVariant SlotToVariant(ThemeSlot slot) {
         switch (slot) {
-            case ThemeSlot.StatusDanger: return ChipTone.Error;
-            case ThemeSlot.StatusWarning: return ChipTone.Warn;
-            case ThemeSlot.StatusSuccess: return ChipTone.Info;
-            case ThemeSlot.StatusInfo: return ChipTone.Debug;
-            default: return ChipTone.None;
+            case ThemeSlot.StatusDanger: return ChipVariant.Error;
+            case ThemeSlot.StatusWarning: return ChipVariant.Warn;
+            case ThemeSlot.StatusSuccess: return ChipVariant.Info;
+            case ThemeSlot.StatusInfo: return ChipVariant.Debug;
+            default: return ChipVariant.None;
         }
     }
 
@@ -199,7 +202,7 @@ public static class SaveDetailPane {
                     LetterSpacing = Tracking.Wide,
                 }));
             }
-            h.AddHug(Chip.Create(label, true, tone: SlotToTone(tone), showDot: false));
+            h.AddHug(Chip.Create(label, variant: SlotToVariant(tone), state: true, showDot: false));
             h.AddFlex(Spacer.Flex());
         });
     }

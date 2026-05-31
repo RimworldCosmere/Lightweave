@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using Cosmere.Lightweave.Doc;
+using Cosmere.Lightweave.Layout;
 using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
@@ -42,14 +43,40 @@ public static class Button {
             : new Rem(2.875f).ToPixels();
         node.PreferredHeight = intrinsicHeightPx;
 
+        Rem ResolveLabelFontSize(Style ls) => ls.FontSize ?? new Rem(0.875f);
+
+        Font ResolveLabelFont(Style ls, Theme.Theme th) => ls.FontFamily switch {
+            FontRef.Literal lit => lit.Value,
+            FontRef.Role r => th.GetFont(r.RoleValue),
+            _ => th.GetFont(FontRole.BodyBold),
+        };
+
+        float ResolveLabelTrackingPx(Style ls, Rem fontSize) {
+            Tracking? t = ls.LetterSpacing;
+            if (!t.HasValue || Mathf.Approximately(t.Value.Em, 0f)) {
+                return 0f;
+            }
+            return t.Value.ToPixels(fontSize.ToFontPx());
+        }
+
         node.MeasureWidth = () => {
             Theme.Theme theme = RenderContext.Current.Theme;
-            Font font = theme.GetFont(FontRole.BodyBold);
-            int pixelSize = Mathf.RoundToInt(new Rem(0.875f).ToFontPx());
+            Style s = node.GetResolvedStyle();
+            Rem fontSize = ResolveLabelFontSize(s);
+            Font font = ResolveLabelFont(s, theme);
+            int pixelSize = Mathf.RoundToInt(fontSize.ToFontPx());
             GUIStyle gstyle = GuiStyleCache.GetOrCreate(font, pixelSize);
-            float labelWidth = string.IsNullOrEmpty(label) || body != null
-                ? 0f
-                : gstyle.CalcSize(new GUIContent(label)).x;
+            float trackingPx = ResolveLabelTrackingPx(s, fontSize);
+            float labelWidth;
+            if (string.IsNullOrEmpty(label) || body != null) {
+                labelWidth = 0f;
+            }
+            else if (trackingPx > 0f) {
+                labelWidth = TextDraw.MeasureTracked(label, FontRole.BodyBold, fontSize, trackingPx, FontStyle.Normal, font);
+            }
+            else {
+                labelWidth = gstyle.CalcSize(new GUIContent(label)).x;
+            }
             float padXPx = new Rem(2f).ToPixels();
             float padYPx = new Rem(1f).ToPixels();
             float iconGapPx = SpacingScale.Sm.ToPixels();
@@ -88,14 +115,23 @@ public static class Button {
             float iconGapPx = SpacingScale.Sm.ToPixels();
             float iconSize = Mathf.Min(h - padYPx, new Rem(1.25f).ToPixels());
 
-            Font font = theme.GetFont(FontRole.BodyBold);
-            int pixelSize = Mathf.RoundToInt(new Rem(0.875f).ToFontPx());
+            Rem fontSize = ResolveLabelFontSize(s);
+            Font font = ResolveLabelFont(s, theme);
+            int pixelSize = Mathf.RoundToInt(fontSize.ToFontPx());
             GUIStyle gstyle = GuiStyleCache.GetOrCreate(font, pixelSize);
             gstyle.alignment = TextAnchor.MiddleCenter;
+            float trackingPx = ResolveLabelTrackingPx(s, fontSize);
 
-            float labelWidth = string.IsNullOrEmpty(label) || body != null
-                ? 0f
-                : gstyle.CalcSize(new GUIContent(label)).x;
+            float labelWidth;
+            if (string.IsNullOrEmpty(label) || body != null) {
+                labelWidth = 0f;
+            }
+            else if (trackingPx > 0f) {
+                labelWidth = TextDraw.MeasureTracked(label, FontRole.BodyBold, fontSize, trackingPx, FontStyle.Normal, font);
+            }
+            else {
+                labelWidth = gstyle.CalcSize(new GUIContent(label)).x;
+            }
             float iconAllowance = (leading != null ? iconSize + iconGapPx : 0f)
                                 + (trailing != null ? iconSize + iconGapPx : 0f);
             float naturalWidth = labelWidth + iconAllowance + padXPx * 2f;
@@ -126,14 +162,14 @@ public static class Button {
             if (isRepaint) {
                 if (variant == Variant.Frosted && !ghost) {
                     bool active = state.Hovered || state.Pressed;
-                    BackdropBlur.Draw(rect, active ? 8f : 6f);
+                    BackdropBlur.Draw(rect, active ? 8f : 6f, cornerRadiusPx: radius.ResolveVector(dir).x);
                     PaintBox.Draw(rect, BackgroundSpec.Of(ThemeSlot.Glass3), border, radius);
                 }
                 else {
                     ThemeSlot? bgSlot = VariantPalette.Background(variant, state, ghost);
                     BackgroundSpec? bg;
                     if (!bgSlot.HasValue) {
-                        if (variant == Variant.Ghost && state.Hovered && !disabled) {
+                        if ((variant == Variant.Ghost || variant == Variant.Quiet) && state.Hovered && !disabled) {
                             Color ghostHoverBase = theme.GetColor(ThemeSlot.SurfaceGhostHover);
                             bg = BackgroundSpec.Of(new Color(ghostHoverBase.r, ghostHoverBase.g, ghostHoverBase.b, 0.4f));
                         }
@@ -154,8 +190,12 @@ public static class Button {
                         bottom.a = accent.a;
                         bg = new BackgroundSpec.Gradient(GradientTextureCache.Vertical(top, bottom));
                     }
-                    else if (variant == Variant.Secondary && state.Hovered && !state.Pressed && !disabled) {
-                        bg = BackgroundSpec.Of(theme.GetColor(ThemeSlot.HoverTint));
+                    else if (variant == Variant.Secondary && (state.Hovered || state.Pressed) && !disabled) {
+                        Color secondaryTint = theme.GetColor(ThemeSlot.HoverTint);
+                        if (state.Pressed) {
+                            secondaryTint.a = Mathf.Clamp01(secondaryTint.a * 1.6f);
+                        }
+                        bg = BackgroundSpec.Of(secondaryTint);
                     }
                     else {
                         bg = BackgroundSpec.Of(bgSlot.Value);
@@ -195,21 +235,37 @@ public static class Button {
             }
 
             if (trailing != null) {
-                float trailingX = rtl
-                    ? rect.x + padXPx
-                    : rect.xMax - padXPx - iconSize;
-                Rect trailingRect = new Rect(trailingX, rect.y + (rect.height - iconSize) / 2f, iconSize, iconSize);
-                trailing.MeasuredRect = trailingRect;
-                if (rtl) {
-                    labelRect = new Rect(
-                        trailingX + iconSize + iconGapPx,
-                        labelRect.y,
-                        labelRect.xMax - (trailingX + iconSize + iconGapPx),
-                        labelRect.height
-                    );
+                if (!fullWidth && body == null && leading == null) {
+                    float groupW = labelWidth + iconGapPx + iconSize;
+                    float centeredStart = Mathf.Max(rect.x + padXPx, rect.x + (rect.width - groupW) * 0.5f);
+                    float iconY = rect.y + (rect.height - iconSize) / 2f;
+                    if (rtl) {
+                        trailing.MeasuredRect = new Rect(centeredStart, iconY, iconSize, iconSize);
+                        float labelX = centeredStart + iconSize + iconGapPx;
+                        labelRect = new Rect(labelX, labelRect.y, labelWidth, labelRect.height);
+                    }
+                    else {
+                        labelRect = new Rect(centeredStart, labelRect.y, labelWidth, labelRect.height);
+                        trailing.MeasuredRect = new Rect(centeredStart + labelWidth + iconGapPx, iconY, iconSize, iconSize);
+                    }
+                    gstyle.alignment = TextAnchor.MiddleLeft;
                 }
                 else {
-                    labelRect = new Rect(labelRect.x, labelRect.y, trailingX - padXPx - labelRect.x, labelRect.height);
+                    float trailingX = rtl
+                        ? rect.x + padXPx
+                        : rect.xMax - padXPx - iconSize;
+                    trailing.MeasuredRect = new Rect(trailingX, rect.y + (rect.height - iconSize) / 2f, iconSize, iconSize);
+                    if (rtl) {
+                        labelRect = new Rect(
+                            trailingX + iconSize + iconGapPx,
+                            labelRect.y,
+                            labelRect.xMax - (trailingX + iconSize + iconGapPx),
+                            labelRect.height
+                        );
+                    }
+                    else {
+                        labelRect = new Rect(labelRect.x, labelRect.y, trailingX - padXPx - labelRect.x, labelRect.height);
+                    }
                 }
             }
 
@@ -224,14 +280,19 @@ public static class Button {
                     _ => theme.GetColor(fgSlot),
                 };
 
-                TextDraw.DrawWithStyle(labelRect, label, gstyle, fg);
+                if (trackingPx > 0f) {
+                    TextDraw.DrawTracked(labelRect, label, FontRole.BodyBold, fontSize, gstyle.alignment, fg, trackingPx, FontStyle.Normal, font);
+                }
+                else {
+                    TextDraw.DrawWithStyle(labelRect, label, gstyle, fg);
+                }
             }
 
             paintChildren();
 
             InteractionFeedback.Apply(rect, !disabled, playHoverSound ?? true);
 
-            if (!disabled && onClick != null && Widgets.ButtonInvisible(rect, doMouseoverSound: false)) {
+            if (!disabled && onClick != null && Widgets.ButtonInvisible(rect, doMouseoverSound: false) && LightweaveHitTracker.IsTopmost(rect)) {
                 onClick.Invoke();
             }
         };
@@ -241,50 +302,67 @@ public static class Button {
 
     [DocVariant("CL_Playground_Label_Primary")]
     public static DocSample DocsPrimary() {
-        bool forced = RenderContext.Current.ForceDisabled;
-        return new DocSample(() => Create("Primary", () => { }, disabled: forced));
+        return new DocSample(() => Create("Primary", () => { }));
     }
 
     [DocVariant("CL_Playground_Label_Secondary")]
     public static DocSample DocsSecondary() {
-        bool forced = RenderContext.Current.ForceDisabled;
-        return new DocSample(() => Create("Secondary", () => { }, Variant.Secondary, disabled: forced));
+        return new DocSample(() => Create("Secondary", () => { }, Variant.Secondary));
     }
 
     [DocVariant("CL_Playground_Label_Ghost")]
     public static DocSample DocsGhost() {
-        bool forced = RenderContext.Current.ForceDisabled;
-        return new DocSample(() => Create("Ghost", () => { }, Variant.Ghost, disabled: forced));
+        return new DocSample(() => Create("Ghost", () => { }, Variant.Ghost));
     }
 
     [DocVariant("CL_Playground_Label_Danger")]
     public static DocSample DocsDanger() {
-        bool forced = RenderContext.Current.ForceDisabled;
-        return new DocSample(() => Create("Danger", () => { }, Variant.Danger, disabled: forced));
+        return new DocSample(() => Create("Danger", () => { }, Variant.Danger));
     }
 
 
     [DocVariant("CL_Playground_Label_Frosted")]
     public static DocSample DocsFrosted() {
-        bool forced = RenderContext.Current.ForceDisabled;
-        return new DocSample(() => Create("Frosted", () => { }, Variant.Frosted, disabled: forced));
+        return new DocSample(() => Create("Frosted", () => { }, Variant.Frosted));
     }
 
-    [DocState("CL_Playground_Label_Default")]
+    [DocVariant("CL_Playground_Label_Quiet")]
+    public static DocSample DocsQuiet() {
+        return new DocSample(() => Create("Quiet", () => { }, Variant.Quiet));
+    }
+
+    private static LightweaveNode AllVariantsRow() {
+        return HStack.Create(
+            gap: SpacingScale.Sm,
+            children: row => {
+                row.AddHug(Create(Variant.Primary.Id, null, Variant.Primary));
+                row.AddHug(Create(Variant.Secondary.Id, null, Variant.Secondary));
+                row.AddHug(Create(Variant.Ghost.Id, null, Variant.Ghost));
+                row.AddHug(Create(Variant.Danger.Id, null, Variant.Danger));
+                row.AddHug(Create(Variant.Frosted.Id, null, Variant.Frosted));
+                row.AddHug(Create(Variant.Quiet.Id, null, Variant.Quiet));
+            }
+        );
+    }
+
+    [DocState("CL_Playground_Label_Default", HideCode = true)]
     public static DocSample DocsDefault() {
-        bool forced = RenderContext.Current.ForceDisabled;
-        return new DocSample(() => Create("Default", () => { }, disabled: forced));
+        return new DocSample(() => AllVariantsRow());
     }
 
-    [DocState("CL_Playground_Label_Hover")]
+    [DocState("CL_Playground_Label_Hover", HideCode = true)]
     public static DocSample DocsHover() {
-        bool forced = RenderContext.Current.ForceDisabled;
-        return new DocSample(() => Create("Hover me", () => { }, disabled: forced));
+        return new DocSample(() => AllVariantsRow());
     }
 
-    [DocState("CL_Playground_Label_Disabled")]
+    [DocState("CL_Playground_Label_Active", HideCode = true)]
+    public static DocSample DocsActive() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Disabled", HideCode = true)]
     public static DocSample DocsDisabled() {
-        return new DocSample(() => Create("Disabled", () => { }, disabled: true));
+        return new DocSample(() => AllVariantsRow());
     }
 
     [DocUsage]

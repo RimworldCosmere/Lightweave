@@ -4,9 +4,10 @@
 using System;
 using System.Runtime.CompilerServices;
 using Cosmere.Lightweave.Doc;
-using Cosmere.Lightweave.Overlay;
+using Cosmere.Lightweave.Feedback;
 using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
+using Cosmere.Lightweave.Layout;
 using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
 using UnityEngine;
@@ -161,7 +162,7 @@ public static class Dropdown {
 
             if (buttonStyle == Variant.Frosted) {
                 bool active = state.Hovered || state.Pressed;
-                BackdropBlur.Draw(rect, active ? 8f : 6f);
+                BackdropBlur.Draw(rect, active ? 8f : 6f, cornerRadiusPx: radiusSpec.ResolveVector(RenderContext.Current.Direction).x);
                 PaintBox.Draw(rect, BackgroundSpec.Of(ThemeSlot.Glass3), borderSpec, radiusSpec);
             }
             else {
@@ -235,12 +236,12 @@ public static class Dropdown {
 
         Event e = Event.current;
 
-        if (e.type == EventType.MouseDown && e.button == 0 && rect.Contains(e.mousePosition)) {
+        if (e.type == EventType.MouseDown && e.button == 0 && rect.Contains(e.mousePosition) && LightweaveHitTracker.IsTopmost(rect)) {
             e.Use();
             return;
         }
 
-        if (e.type == EventType.MouseUp && e.button == 0 && rect.Contains(e.mousePosition)) {
+        if (e.type == EventType.MouseUp && e.button == 0 && rect.Contains(e.mousePosition) && LightweaveHitTracker.IsTopmost(rect)) {
             bool willOpen = !isOpen.Value;
             isOpen.Set(willOpen);
             if (willOpen) {
@@ -597,21 +598,18 @@ public static class Dropdown {
 
     [DocVariant("CL_Playground_Label_Input")]
     public static DocSample DocsInput() {
-        bool forced = RenderContext.Current.ForceDisabled;
         StateHandle<string> s = UseState("Scadrial");
         return new DocSample(() => Create<string>(
             s.Value,
             DocOptions,
             v => v,
             v => s.Set(v),
-            disabled: forced,
             instanceKey: "doc-input"
         ));
     }
 
     [DocVariant("CL_Playground_Label_Button")]
     public static DocSample DocsButton() {
-        bool forced = RenderContext.Current.ForceDisabled;
         StateHandle<string> s = UseState("Scadrial");
         return new DocSample(() => Create<string>(
             s.Value,
@@ -620,14 +618,12 @@ public static class Dropdown {
             v => s.Set(v),
             variant: DropdownVariant.Button,
             buttonStyle: Variant.Secondary,
-            disabled: forced,
             instanceKey: "doc-btn-secondary"
         ));
     }
 
     [DocVariant("CL_Playground_Label_Primary")]
     public static DocSample DocsPrimary() {
-        bool forced = RenderContext.Current.ForceDisabled;
         StateHandle<string> s = UseState("Scadrial");
         return new DocSample(() => Create<string>(
             s.Value,
@@ -636,7 +632,6 @@ public static class Dropdown {
             v => s.Set(v),
             variant: DropdownVariant.Button,
             buttonStyle: Variant.Primary,
-            disabled: forced,
             instanceKey: "doc-btn-primary"
         ));
     }
@@ -644,7 +639,6 @@ public static class Dropdown {
 
     [DocVariant("CL_Playground_Label_Secondary")]
     public static DocSample DocsSecondary() {
-        bool forced = RenderContext.Current.ForceDisabled;
         StateHandle<string> s = UseState("Scadrial");
         return new DocSample(() => Create<string>(
             s.Value,
@@ -653,14 +647,12 @@ public static class Dropdown {
             v => s.Set(v),
             variant: DropdownVariant.Button,
             buttonStyle: Variant.Secondary,
-            disabled: forced,
             instanceKey: "doc-btn-secondary"
         ));
     }
 
     [DocVariant("CL_Playground_Label_Ghost")]
     public static DocSample DocsGhost() {
-        bool forced = RenderContext.Current.ForceDisabled;
         StateHandle<string> s = UseState("Scadrial");
         return new DocSample(() => Create<string>(
             s.Value,
@@ -669,14 +661,12 @@ public static class Dropdown {
             v => s.Set(v),
             variant: DropdownVariant.Button,
             buttonStyle: Variant.Ghost,
-            disabled: forced,
             instanceKey: "doc-btn-ghost"
         ));
     }
 
     [DocVariant("CL_Playground_Label_Danger")]
     public static DocSample DocsDanger() {
-        bool forced = RenderContext.Current.ForceDisabled;
         StateHandle<string> s = UseState("Scadrial");
         return new DocSample(() => Create<string>(
             s.Value,
@@ -685,7 +675,6 @@ public static class Dropdown {
             v => s.Set(v),
             variant: DropdownVariant.Button,
             buttonStyle: Variant.Danger,
-            disabled: forced,
             instanceKey: "doc-btn-danger"
         ));
     }
@@ -693,7 +682,6 @@ public static class Dropdown {
 
     [DocVariant("CL_Playground_Label_Frosted")]
     public static DocSample DocsFrosted() {
-        bool forced = RenderContext.Current.ForceDisabled;
         StateHandle<string> s = UseState("Scadrial");
         return new DocSample(() => Create<string>(
             s.Value,
@@ -702,50 +690,47 @@ public static class Dropdown {
             v => s.Set(v),
             variant: DropdownVariant.Button,
             buttonStyle: Variant.Frosted,
-            disabled: forced,
             instanceKey: "doc-btn-frosted"
         ));
     }
 
-    [DocState("CL_Playground_Label_Default")]
+    private static LightweaveNode AllVariantsRow() {
+        return HStack.Create(
+            SpacingScale.Sm,
+            row => {
+                row.AddHug(Create<string>("Scadrial", DocOptions, v => v, _ => { }, instanceKey: "dd_v_input"));
+                row.AddHug(Create<string>("Scadrial", DocOptions, v => v, _ => { }, variant: DropdownVariant.Button, buttonStyle: Variant.Primary, instanceKey: "dd_v_primary"));
+                row.AddHug(Create<string>("Scadrial", DocOptions, v => v, _ => { }, variant: DropdownVariant.Button, buttonStyle: Variant.Secondary, instanceKey: "dd_v_secondary"));
+                row.AddHug(Create<string>("Scadrial", DocOptions, v => v, _ => { }, variant: DropdownVariant.Button, buttonStyle: Variant.Ghost, instanceKey: "dd_v_ghost"));
+                row.AddHug(Create<string>("Scadrial", DocOptions, v => v, _ => { }, variant: DropdownVariant.Button, buttonStyle: Variant.Danger, instanceKey: "dd_v_danger"));
+                row.AddHug(Create<string>("Scadrial", DocOptions, v => v, _ => { }, variant: DropdownVariant.Button, buttonStyle: Variant.Frosted, instanceKey: "dd_v_frosted"));
+            }
+        );
+    }
+
+    [DocState("CL_Playground_Label_Default", HideCode = true)]
     public static DocSample DocsDefault() {
-        bool forced = RenderContext.Current.ForceDisabled;
-        StateHandle<string> s = UseState("Scadrial");
-        return new DocSample(() => Create<string>(
-            s.Value,
-            DocOptions,
-            v => v,
-            v => s.Set(v),
-            disabled: forced,
-            instanceKey: "doc-st-default"
-        ));
+        return new DocSample(() => AllVariantsRow());
     }
 
-    [DocState("CL_Playground_Label_Hover")]
+    [DocState("CL_Playground_Label_Hover", HideCode = true)]
     public static DocSample DocsHover() {
-        bool forced = RenderContext.Current.ForceDisabled;
-        StateHandle<string> s = UseState("Roshar");
-        return new DocSample(() => Create<string>(
-            s.Value,
-            DocOptions,
-            v => v,
-            v => s.Set(v),
-            disabled: forced,
-            instanceKey: "doc-st-hover"
-        ));
+        return new DocSample(() => AllVariantsRow());
     }
 
-    [DocState("CL_Playground_Label_Disabled")]
+    [DocState("CL_Playground_Label_Active", HideCode = true)]
+    public static DocSample DocsActive() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Focus", HideCode = true)]
+    public static DocSample DocsFocus() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Disabled", HideCode = true)]
     public static DocSample DocsDisabled() {
-        StateHandle<string> s = UseState("Nalthis");
-        return new DocSample(() => Create<string>(
-            s.Value,
-            DocOptions,
-            v => v,
-            v => s.Set(v),
-            disabled: true,
-            instanceKey: "doc-st-disabled"
-        ));
+        return new DocSample(() => AllVariantsRow());
     }
 
     [DocUsage]

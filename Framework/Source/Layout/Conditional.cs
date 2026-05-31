@@ -7,6 +7,7 @@ using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
 using static Cosmere.Lightweave.Doc.DocChips;
 using Verse;
+using Cosmere.Lightweave.Surfaces;
 
 namespace Cosmere.Lightweave.Layout;
 

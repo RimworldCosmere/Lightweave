@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Cosmere.Lightweave.Feedback;
 using Cosmere.Lightweave.Input;
 using Cosmere.Lightweave.Layout;
 using Cosmere.Lightweave.Redesign.MainMenu;
@@ -13,6 +14,8 @@ using Cosmere.Lightweave.Typography;
 using UnityEngine;
 using Verse;
 using static Cosmere.Lightweave.Typography.Typography;
+using Cosmere.Lightweave.Surfaces;
+using Cosmere.Lightweave.Data;
 using Eyebrow = Cosmere.Lightweave.Typography.Eyebrow;
 using Text = Cosmere.Lightweave.Typography.Typography.Text;
 
@@ -138,8 +141,8 @@ public static class SaveListPane {
             if (isAuto) {
                 LightweaveNode autoChip = Chip.Create(
                     (string)"CL_LoadColony_AutoChip".Translate(),
-                    false,
-                    tone: ChipTone.None,
+                    variant: ChipVariant.None,
+                    state: false,
                     showDot: false
                 );
                 float chipW = autoChip.MeasureWidth?.Invoke() ?? new Rem(3f).ToPixels();

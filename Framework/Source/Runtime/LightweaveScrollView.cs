@@ -119,7 +119,9 @@ public struct LightweaveScrollView : IDisposable {
         Event scrollEvt = Event.current;
         if (scrollEvt != null
             && scrollEvt.rawType == EventType.ScrollWheel
-            && scrollEvt.type == EventType.ScrollWheel) {
+            && scrollEvt.type == EventType.ScrollWheel
+            && status.VerticalVisible
+            && outRect.Contains(scrollEvt.mousePosition)) {
             _pendingWheelDeltaY = scrollEvt.delta.y;
             _pendingWheel = true;
             scrollEvt.Use();
@@ -138,7 +140,7 @@ public struct LightweaveScrollView : IDisposable {
     public void Dispose() {
         Widgets.EndScrollView();
 
-        if (_pendingWheel && status.VerticalVisible && Mouse.IsOver(outRect)) {
+        if (_pendingWheel && status.VerticalVisible && outRect.Contains(Event.current.mousePosition)) {
             float scrollRange = Math.Max(0f, contentHeight - outRect.height);
             float delta = _pendingWheelDeltaY * 20f;
             float prevY = status.Position.y;

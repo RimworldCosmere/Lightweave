@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Cosmere.Lightweave.Input;
 using Cosmere.Lightweave.Layout;
 using Cosmere.Lightweave.Redesign.Options.Tabs;
-using Cosmere.Lightweave.Overlay;
+using Cosmere.Lightweave.Feedback;
 using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
@@ -12,6 +12,8 @@ using Cosmere.Lightweave.Typography;
 using RimWorld;
 using UnityEngine;
 using Verse;
+using Cosmere.Lightweave.Surfaces;
+using Cosmere.Lightweave.Data;
 using Eyebrow = Cosmere.Lightweave.Typography.Eyebrow;
 
 namespace Cosmere.Lightweave.Redesign.Options;
@@ -50,7 +52,9 @@ public static class OptionsRoot {
                 AppendTab(s, tab, OptionsTab.Audio, "CL_Options_Tab_Audio");
                 AppendTab(s, tab, OptionsTab.Controls, "CL_Options_Tab_Controls");
                 AppendTab(s, tab, OptionsTab.Interface, "CL_Options_Tab_Interface");
-                AppendTab(s, tab, OptionsTab.Developer, "CL_Options_Tab_Developer");
+                if (Prefs.DevMode) {
+                    AppendTab(s, tab, OptionsTab.Developer, "CL_Options_Tab_Developer");
+                }
                 s.Add(Box.Create(
                     children: c => c.Add(Divider.Horizontal()),
                     style: new Style {

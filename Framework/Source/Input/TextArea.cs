@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using Cosmere.Lightweave.Doc;
 using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
+using Cosmere.Lightweave.Layout;
 using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
 using UnityEngine;
@@ -50,16 +51,32 @@ public static class TextArea {
         LightweaveNode node = NodeBuilder.New("TextArea", line, file);
         node.ApplyStyling("text-area", style, classes, id);
         float lineHeightPx = new Rem(1.5f).ToPixels();
-        int initialRows = Mathf.Clamp(
-            CountRows(value ?? string.Empty),
-            Mathf.Max(1, minRows),
-            Mathf.Max(minRows, maxRows)
-        );
-        node.PreferredHeight = SelectorTrigger.Height.ToPixels() + (initialRows - 1) * lineHeightPx;
 
         node.MeasureWidth = () => {
             float padX = InputSurface.PaddingX.ToPixels();
             return Mathf.Ceil(new Rem(20f).ToPixels() + padX * 2f);
+        };
+
+        node.Measure = availableWidth => {
+            string current = value ?? string.Empty;
+            float padX = InputSurface.PaddingX.ToPixels();
+            float innerWidth = Mathf.Max(1f, availableWidth - padX * 2f);
+            int measureSize = Mathf.RoundToInt(new Rem(1f).ToFontPx());
+            int rows;
+            float rowHeight;
+            RenderContext rcx = RenderContext.Current;
+            if (rcx != null) {
+                Font measureFont = rcx.Theme.GetFont(FontRole.Body);
+                rows = CountVisualRows(current, measureFont, measureSize, innerWidth);
+                rowHeight = RowLineHeight(measureFont, measureSize);
+            }
+            else {
+                rows = CountRows(current);
+                rowHeight = lineHeightPx;
+            }
+
+            int clamped = Mathf.Clamp(rows, Mathf.Max(1, minRows), Mathf.Max(minRows, maxRows));
+            return SelectorTrigger.Height.ToPixels() + (clamped - 1) * rowHeight + DescenderPad(measureSize);
         };
 
         node.Paint = (rect, paintChildren) => {
@@ -77,23 +94,27 @@ public static class TextArea {
 
             string effectiveText = readOnly ? (value ?? string.Empty) : (buffer.Value ?? string.Empty);
 
-            float lineHeight = new Rem(1.5f).ToPixels();
-            int contentRows = CountRows(effectiveText);
+            float padX = InputSurface.PaddingX.ToPixels();
+            Font measureFont = theme.GetFont(FontRole.Body);
+            int measureSize = Mathf.RoundToInt(new Rem(1f).ToFontPx());
+            float lineHeight = RowLineHeight(measureFont, measureSize);
+            float descenderPad = DescenderPad(measureSize);
+            float measureWidth = Mathf.Max(1f, rect.width - padX * 2f);
+            int contentRows = CountVisualRows(effectiveText, measureFont, measureSize, measureWidth);
             int clampedRows = Mathf.Clamp(contentRows, Mathf.Max(1, minRows), Mathf.Max(minRows, maxRows));
             Style resolvedStyle = node.GetResolvedStyle();
             bool growVertical = resolvedStyle.Height is { IsGrower: true };
-            float rowBasedHeight = SelectorTrigger.Height.ToPixels() + (clampedRows - 1) * lineHeight;
+            float rowBasedHeight = SelectorTrigger.Height.ToPixels() + (clampedRows - 1) * lineHeight + descenderPad;
             float resolvedHeight = growVertical ? Mathf.Max(rowBasedHeight, rect.height) : rowBasedHeight;
             Rect surfaceRect = new Rect(rect.x, rect.y, rect.width, resolvedHeight);
 
             InteractionState state = InteractionState.Resolve(surfaceRect, focusName, disabled);
             InputSurface.DrawInputChrome(surfaceRect, state, variant);
 
-            float padX = InputSurface.PaddingX.ToPixels();
             float topPad = (SelectorTrigger.Height.ToPixels() - lineHeight) / 2f;
             float innerHeight = growVertical
                 ? Mathf.Max(lineHeight, surfaceRect.height - topPad * 2f)
-                : clampedRows * lineHeight;
+                : clampedRows * lineHeight + descenderPad;
             Rect inner = new Rect(
                 surfaceRect.x + padX,
                 surfaceRect.y + topPad,
@@ -171,107 +192,158 @@ public static class TextArea {
         return rows;
     }
 
+    private static readonly GUIContent MeasureContent = new GUIContent();
+
+    private static int CountVisualRows(string text, Font? font, int pixelSize, float width) {
+        if (string.IsNullOrEmpty(text)) {
+            return 1;
+        }
+
+        if (width <= 1f) {
+            return CountRows(text);
+        }
+
+        GUIStyle measureStyle = InputSurface.ConfigureChromelessTextAreaStyle(font, pixelSize, Color.white);
+        MeasureContent.text = text;
+        float totalHeight = measureStyle.CalcHeight(MeasureContent, width);
+        float fontLineHeight = measureStyle.lineHeight > 0f ? measureStyle.lineHeight : pixelSize;
+        return Mathf.Max(1, Mathf.RoundToInt(totalHeight / fontLineHeight));
+    }
+
+    private static float RowLineHeight(Font? font, int pixelSize) {
+        GUIStyle style = InputSurface.ConfigureChromelessTextAreaStyle(font, pixelSize, Color.white);
+        return style.lineHeight > 0f ? style.lineHeight : pixelSize;
+    }
+
+    private static float DescenderPad(int pixelSize) {
+        return Mathf.Max(2f, pixelSize * 0.25f);
+    }
+
 [DocVariant("CL_Playground_Label_Primary")]
     public static DocSample DocsPrimary() {
-        bool forced = RenderContext.Current.ForceDisabled;
-        StateHandle<string> s = UseState("Multi-line sample.");
+        StateHandle<string> s = UseState("The Stormfather rumbled as Kaladin drew in the Light, and the spren scattered across the chasm like windblown leaves. He clenched the spear, knowing the next breath might be his last as the bridge crews charged the Parshendi line.");
         return new DocSample(() => Create(
             s.Value,
             v => s.Set(v),
             (string)"CL_Playground_Controls_TextArea_Placeholder".Translate(),
             2,
             3,
-            disabled: forced,
             variant: Variant.Primary
         ));
     }
 
     [DocVariant("CL_Playground_Label_Secondary")]
     public static DocSample DocsSecondary() {
-        bool forced = RenderContext.Current.ForceDisabled;
-        StateHandle<string> s = UseState("Multi-line sample.");
+        StateHandle<string> s = UseState("The Stormfather rumbled as Kaladin drew in the Light, and the spren scattered across the chasm like windblown leaves. He clenched the spear, knowing the next breath might be his last as the bridge crews charged the Parshendi line.");
         return new DocSample(() => Create(
             s.Value,
             v => s.Set(v),
             (string)"CL_Playground_Controls_TextArea_Placeholder".Translate(),
             2,
             3,
-            disabled: forced,
             variant: Variant.Secondary
         ));
     }
 
     [DocVariant("CL_Playground_Label_Ghost")]
     public static DocSample DocsGhost() {
-        bool forced = RenderContext.Current.ForceDisabled;
-        StateHandle<string> s = UseState("Multi-line sample.");
+        StateHandle<string> s = UseState("The Stormfather rumbled as Kaladin drew in the Light, and the spren scattered across the chasm like windblown leaves. He clenched the spear, knowing the next breath might be his last as the bridge crews charged the Parshendi line.");
         return new DocSample(() => Create(
             s.Value,
             v => s.Set(v),
             (string)"CL_Playground_Controls_TextArea_Placeholder".Translate(),
             2,
             3,
-            disabled: forced,
             variant: Variant.Ghost
         ));
     }
 
     [DocVariant("CL_Playground_Label_Danger")]
     public static DocSample DocsDanger() {
-        bool forced = RenderContext.Current.ForceDisabled;
-        StateHandle<string> s = UseState("Multi-line sample.");
+        StateHandle<string> s = UseState("The Stormfather rumbled as Kaladin drew in the Light, and the spren scattered across the chasm like windblown leaves. He clenched the spear, knowing the next breath might be his last as the bridge crews charged the Parshendi line.");
         return new DocSample(() => Create(
             s.Value,
             v => s.Set(v),
             (string)"CL_Playground_Controls_TextArea_Placeholder".Translate(),
             2,
             3,
-            disabled: forced,
             variant: Variant.Danger
         ));
     }
 
     [DocVariant("CL_Playground_Label_Frosted")]
     public static DocSample DocsFrosted() {
-        bool forced = RenderContext.Current.ForceDisabled;
-        StateHandle<string> s = UseState("Multi-line sample.");
+        StateHandle<string> s = UseState("The Stormfather rumbled as Kaladin drew in the Light, and the spren scattered across the chasm like windblown leaves. He clenched the spear, knowing the next breath might be his last as the bridge crews charged the Parshendi line.");
         return new DocSample(() => Create(
             s.Value,
             v => s.Set(v),
             (string)"CL_Playground_Controls_TextArea_Placeholder".Translate(),
             2,
             3,
-            disabled: forced,
             variant: Variant.Frosted
         ));
     }
 
     [DocVariant("CL_Playground_Label_Filled")]
     public static DocSample DocsFilled() {
-        bool forced = RenderContext.Current.ForceDisabled;
-        StateHandle<string> s = UseState("Multi-line sample.");
+        StateHandle<string> s = UseState("The Stormfather rumbled as Kaladin drew in the Light, and the spren scattered across the chasm like windblown leaves. He clenched the spear, knowing the next breath might be his last as the bridge crews charged the Parshendi line.");
         return new DocSample(() => Create(
             s.Value,
             v => s.Set(v),
             (string)"CL_Playground_Controls_TextArea_Placeholder".Translate(),
             2,
-            3,
-            disabled: forced
+            3
         ));
     }
 
     [DocVariant("CL_Playground_Label_Empty")]
     public static DocSample DocsEmpty() {
-        bool forced = RenderContext.Current.ForceDisabled;
         StateHandle<string> s = UseState(string.Empty);
         return new DocSample(() => Create(
             s.Value,
             v => s.Set(v),
             (string)"CL_Playground_Controls_TextArea_Placeholder".Translate(),
             2,
-            3,
-            disabled: forced
+            3
         ));
+    }
+
+    private static LightweaveNode AllVariantsRow() {
+        return HStack.Create(
+            SpacingScale.Sm,
+            row => {
+                row.AddHug(Create("Primary", _ => { }, null, 2, 3, instanceKey: "ta_v_primary", variant: Variant.Primary));
+                row.AddHug(Create("Secondary", _ => { }, null, 2, 3, instanceKey: "ta_v_secondary", variant: Variant.Secondary));
+                row.AddHug(Create("Ghost", _ => { }, null, 2, 3, instanceKey: "ta_v_ghost", variant: Variant.Ghost));
+                row.AddHug(Create("Danger", _ => { }, null, 2, 3, instanceKey: "ta_v_danger", variant: Variant.Danger));
+                row.AddHug(Create("Frosted", _ => { }, null, 2, 3, instanceKey: "ta_v_frosted", variant: Variant.Frosted));
+            }
+        );
+    }
+
+    [DocState("CL_Playground_Label_Default", HideCode = true)]
+    public static DocSample DocsDefault() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Hover", HideCode = true)]
+    public static DocSample DocsHover() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Active", HideCode = true)]
+    public static DocSample DocsActive() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Focus", HideCode = true)]
+    public static DocSample DocsFocus() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Disabled", HideCode = true)]
+    public static DocSample DocsDisabled() {
+        return new DocSample(() => AllVariantsRow());
     }
 
     [DocUsage]

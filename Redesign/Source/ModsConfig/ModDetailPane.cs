@@ -12,6 +12,8 @@ using RimWorld;
 using UnityEngine;
 using Verse;
 using Verse.Steam;
+using Cosmere.Lightweave.Surfaces;
+using Cosmere.Lightweave.Data;
 using Display = Cosmere.Lightweave.Typography.Display;
 using Eyebrow = Cosmere.Lightweave.Typography.Eyebrow;
 using Text = Cosmere.Lightweave.Typography.Typography.Text;
@@ -297,6 +299,30 @@ public static class ModDetailPane {
                     disabled: toggleLocked,
                     style: new Style { Width = Length.Stretch }
                 ));
+                if (Publish.PublishGate.CanPublish(mod)) {
+                    bool published = mod.GetPublishedFileId() != Steamworks.PublishedFileId_t.Invalid;
+                    bool releaseManaged = Publish.SemanticReleaseSteamDetector.IsConfigured(mod.RootDir.FullName);
+                    LightweaveNode publishButton = Button.Create(
+                        label: ((string)(published
+                            ? "CL_Publish_Action_Update"
+                            : "CL_Publish_Action_Publish").Translate()).ToUpperInvariant(),
+                        onClick: releaseManaged
+                            ? null
+                            : () => Find.WindowStack.Add(new Publish.Dialog_PublishToWorkshop(mod)),
+                        variant: Variant.Secondary,
+                        disabled: releaseManaged,
+                        style: new Style { Width = Length.Stretch }
+                    );
+                    if (releaseManaged) {
+                        publishButton = Tooltip.Create(
+                            publishButton,
+                            (string)"CL_Publish_Disabled_SemanticRelease".Translate(),
+                            side: TooltipSide.Top
+                        );
+                    }
+
+                    s.Add(publishButton);
+                }
                 if (isWorkshopMod) {
                     s.Add(Button.Create(
                         label: ((string)"CL_ModsConfig_Action_Workshop".Translate()).ToUpperInvariant(),

@@ -10,7 +10,7 @@ public sealed class HookStore {
     }
 
     public HookSlot Acquire(HookKey key) {
-        if (!slots.TryGetValue(key, out HookSlot slot)) {
+        if (!slots.TryGetValue(key, out HookSlot? slot)) {
             slot = new HookSlot();
             slots[key] = slot;
         }

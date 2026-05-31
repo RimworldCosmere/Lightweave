@@ -24,14 +24,17 @@ public static partial class Doc {
         public Dictionary<long, float[]> HeightsByKey = new Dictionary<long, float[]>();
     }
 
-    private static readonly Dictionary<string, ParsedCode> ParsedCodeCache = new Dictionary<string, ParsedCode>();
+    private static readonly Dictionary<(string Raw, bool Light), ParsedCode> ParsedCodeCache =
+        new Dictionary<(string, bool), ParsedCode>();
 
-    private static ParsedCode GetParsed(string? code) {
+    private static ParsedCode GetParsed(string? code, bool light) {
         string raw = code ?? string.Empty;
-        if (ParsedCodeCache.TryGetValue(raw, out ParsedCode? cached)) {
+        (string Raw, bool Light) cacheKey = (raw, light);
+        if (ParsedCodeCache.TryGetValue(cacheKey, out ParsedCode? cached)) {
             return cached;
         }
 
+        SyntaxPalette palette = light ? SyntaxPalette.Light : SyntaxPalette.Dark;
         ParsedCode entry = new ParsedCode();
         entry.Normalized = raw.Replace("\r\n", "\n").TrimEnd('\n');
         entry.CodeLines = entry.Normalized.Length == 0 ? new[] { string.Empty } : entry.Normalized.Split('\n');
@@ -39,11 +42,11 @@ public static partial class Doc {
         int total = entry.CodeLines.Length;
         entry.HighlightedLines = new string[total];
         for (int i = 0; i < total; i++) {
-            entry.HighlightedLines[i] = SyntaxHighlight(entry.CodeLines[i].Replace("<", "<​"));
+            entry.HighlightedLines[i] = SyntaxHighlight(entry.CodeLines[i].Replace("<", "<​"), palette);
         }
 
         entry.MaxLineNumber = total.ToString();
-        ParsedCodeCache[raw] = entry;
+        ParsedCodeCache[cacheKey] = entry;
         return entry;
     }
 
@@ -58,7 +61,11 @@ public static partial class Doc {
     ) {
         LightweaveNode node = NodeBuilder.New("Doc.CodeBlock", line, file);
 
-        ParsedCode parsed = GetParsed(code);
+        // The sunken code surface is light on parchment themes (Cosmere, Roshar)
+        // and dark on Default/Scadrial; pick the syntax palette to match so tokens
+        // stay legible either way. Resolved at build time and cached per lightness.
+        bool lightSurface = RenderContext.Current.Theme.GetColor(ThemeSlot.SurfaceSunken).grayscale > 0.5f;
+        ParsedCode parsed = GetParsed(code, lightSurface);
         string[] highlightedLines = parsed.HighlightedLines;
         string copyText = parsed.CopyText;
         int totalLines = highlightedLines.Length;
@@ -433,7 +440,7 @@ public static partial class Doc {
         return string.Empty;
     }
 
-    private static string SyntaxHighlight(string line) {
+    private static string SyntaxHighlight(string line, SyntaxPalette palette) {
         if (string.IsNullOrEmpty(line)) {
             return line;
         }
@@ -445,7 +452,7 @@ public static partial class Doc {
             char c = line[i];
 
             if (c == '/' && i + 1 < n && line[i + 1] == '/') {
-                AppendColored(sb, line.Substring(i), SyntaxColors.Comment);
+                AppendColored(sb, line.Substring(i), palette.Comment);
                 return sb.ToString();
             }
 
@@ -466,7 +473,7 @@ public static partial class Doc {
                     i++;
                 }
 
-                AppendColored(sb, line.Substring(start, i - start), SyntaxColors.String);
+                AppendColored(sb, line.Substring(start, i - start), palette.String);
                 continue;
             }
 
@@ -482,7 +489,7 @@ public static partial class Doc {
 
                 if (i < n && line[i] == '\'') {
                     i++;
-                    AppendColored(sb, line.Substring(start, i - start), SyntaxColors.String);
+                    AppendColored(sb, line.Substring(start, i - start), palette.String);
                     continue;
                 }
 
@@ -498,7 +505,7 @@ public static partial class Doc {
                     i++;
                 }
 
-                AppendColored(sb, line.Substring(start, i - start), SyntaxColors.Number);
+                AppendColored(sb, line.Substring(start, i - start), palette.Number);
                 continue;
             }
 
@@ -511,18 +518,18 @@ public static partial class Doc {
                 string ident = line.Substring(start, i - start);
                 string color;
                 if (IsKeyword(ident)) {
-                    color = SyntaxColors.Keyword;
+                    color = palette.Keyword;
                 }
                 else if (ident.Length > 0 && char.IsUpper(ident[0])) {
                     bool isMethodCall = i < n && line[i] == '(';
-                    color = isMethodCall ? SyntaxColors.Method : SyntaxColors.Type;
+                    color = isMethodCall ? palette.Method : palette.Type;
                 }
                 else {
                     bool isMethodCall = i < n && line[i] == '(';
-                    color = isMethodCall ? SyntaxColors.Method : SyntaxColors.Default;
+                    color = isMethodCall ? palette.Method : SyntaxDefault;
                 }
 
-                if (color == SyntaxColors.Default) {
+                if (color == SyntaxDefault) {
                     sb.Append(ident);
                 }
                 else {
@@ -660,13 +667,34 @@ public static partial class Doc {
         }
     }
 
-    private static class SyntaxColors {
-        public const string Keyword = "569CD6";
-        public const string String = "CE9178";
-        public const string Number = "B5CEA8";
-        public const string Type = "4EC9B0";
-        public const string Method = "DCDCAA";
-        public const string Comment = "6A9955";
-        public const string Default = "default";
+    // Sentinel meaning "leave the token uncoloured so it inherits the label's
+    // primary text colour" — shared across palettes.
+    private const string SyntaxDefault = "default";
+
+    private readonly struct SyntaxPalette {
+        public readonly string Keyword;
+        public readonly string String;
+        public readonly string Number;
+        public readonly string Type;
+        public readonly string Method;
+        public readonly string Comment;
+
+        public SyntaxPalette(string keyword, string str, string number, string type, string method, string comment) {
+            Keyword = keyword;
+            String = str;
+            Number = number;
+            Type = type;
+            Method = method;
+            Comment = comment;
+        }
+
+        // VS Code Dark+ — tuned for dark sunken surfaces (Default, Scadrial).
+        public static readonly SyntaxPalette Dark =
+            new SyntaxPalette("569CD6", "CE9178", "B5CEA8", "4EC9B0", "DCDCAA", "6A9955");
+
+        // VS Code Light+ — saturated, dark-enough tokens that stay legible on the
+        // light parchment sunken surfaces (Cosmere, Roshar).
+        public static readonly SyntaxPalette Light =
+            new SyntaxPalette("0000C0", "A31515", "098658", "267F99", "795E26", "108000");
     }
 }

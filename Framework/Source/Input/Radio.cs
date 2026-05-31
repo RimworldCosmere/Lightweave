@@ -123,20 +123,25 @@ public static class Radio {
             Rect hitRect = new Rect(rect.x, rowY, rect.width, rowHeight);
             LightweaveHitTracker.Track(hitRect);
 
+            RenderContext rc = RenderContext.Current;
+            bool effectiveDisabled = disabled || rc.ForceDisabled;
             bool mouseOver = Mouse.IsOver(hitRect);
-            bool hovered = !disabled && mouseOver;
-            if (!disabled) {
+            bool hovered = !effectiveDisabled && (mouseOver || rc.ForceHovered || rc.ForcePressed);
+            bool focused = !effectiveDisabled && rc.ForceFocused;
+            if (!effectiveDisabled) {
                 MouseoverSounds.DoRegion(hitRect);
             }
             else if (mouseOver) {
                 CursorOverrides.MarkDisabledHover();
             }
 
-            InteractionState circleState = new InteractionState(hovered, false, false, disabled);
-            ThemeSlot borderSlot = InputSurface.ResolveToggleBorderSlot(circleState, selected);
+            InteractionState circleState = new InteractionState(hovered, false, focused, effectiveDisabled);
+            ThemeSlot borderSlot = focused
+                ? ThemeSlot.BorderFocus
+                : InputSurface.ResolveToggleBorderSlot(circleState, selected);
 
             BackgroundSpec circleBg =
-                BackgroundSpec.Of(disabled ? ThemeSlot.SurfaceDisabled : ThemeSlot.SurfaceInput);
+                BackgroundSpec.Of(effectiveDisabled ? ThemeSlot.SurfaceDisabled : ThemeSlot.SurfaceInput);
             BorderSpec circleBorder = BorderSpec.All(new Rem(2f / 16f), borderSlot);
             RadiusSpec circleRadius = RadiusSpec.All(RadiusScale.Full);
 
@@ -150,7 +155,7 @@ public static class Radio {
                     dotSize,
                     dotSize
                 );
-                ThemeSlot dotSlot = disabled ? ThemeSlot.BorderOff : ThemeSlot.SurfaceAccent;
+                ThemeSlot dotSlot = effectiveDisabled ? ThemeSlot.BorderOff : ThemeSlot.SurfaceAccent;
                 BackgroundSpec dotBg = BackgroundSpec.Of(dotSlot);
                 RadiusSpec dotRadius = RadiusSpec.All(RadiusScale.Full);
                 PaintBox.Draw(dotRect, dotBg, null, dotRadius);
@@ -160,7 +165,7 @@ public static class Radio {
             int labelPixelSize = Mathf.RoundToInt(new Rem(1f).ToFontPx());
             GUIStyle labelStyle = GuiStyleCache.GetOrCreate(labelFont, labelPixelSize);
             labelStyle.alignment = rtl ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft;
-            Color labelColor = disabled
+            Color labelColor = effectiveDisabled
                 ? theme.GetColor(ThemeSlot.TextMuted)
                 : theme.GetColor(ThemeSlot.TextPrimary);
             TextDraw.DrawWithStyle(labelRect, label, labelStyle, labelColor);
@@ -168,7 +173,7 @@ public static class Radio {
             paintChildren();
 
             Event e = Event.current;
-            if (!disabled && e.type == EventType.MouseUp && e.button == 0 && hitRect.Contains(e.mousePosition)) {
+            if (!effectiveDisabled && e.type == EventType.MouseUp && e.button == 0 && hitRect.Contains(e.mousePosition) && LightweaveHitTracker.IsTopmost(hitRect)) {
                 group.OnChange?.Invoke(value);
                 e.Use();
             }
@@ -179,17 +184,52 @@ public static class Radio {
 
     [DocVariant("CL_Playground_Label_Default")]
     public static DocSample DocsDefault() {
-        bool forced = RenderContext.Current.ForceDisabled;
         StateHandle<int> s = UseState(1);
         return new DocSample(() => Group<int>(
             s.Value,
             v => s.Set(v),
             k => {
-                k.Add(Item((string)"CL_Playground_Controls_Radio_OptionA".Translate(), 0, forced));
-                k.Add(Item((string)"CL_Playground_Controls_Radio_OptionB".Translate(), 1, forced));
-                k.Add(Item((string)"CL_Playground_Controls_Radio_OptionC".Translate(), 2, forced));
+                k.Add(Item((string)"CL_Playground_Controls_Radio_OptionA".Translate(), 0));
+                k.Add(Item((string)"CL_Playground_Controls_Radio_OptionB".Translate(), 1));
+                k.Add(Item((string)"CL_Playground_Controls_Radio_OptionC".Translate(), 2));
             }
         ));
+    }
+
+    private static LightweaveNode AllVariantsRow() {
+        return Group<int>(
+            1,
+            _ => { },
+            k => {
+                k.Add(Item("Selected", 1));
+                k.Add(Item("Unselected", 0));
+            }
+        );
+    }
+
+    [DocState("CL_Playground_Label_Default", HideCode = true)]
+    public static DocSample DocsDefaultState() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Hover", HideCode = true)]
+    public static DocSample DocsHover() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Active", HideCode = true)]
+    public static DocSample DocsActive() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Focus", HideCode = true)]
+    public static DocSample DocsFocus() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Disabled", HideCode = true)]
+    public static DocSample DocsDisabled() {
+        return new DocSample(() => AllVariantsRow());
     }
 
     [DocUsage]

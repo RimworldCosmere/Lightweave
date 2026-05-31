@@ -7,6 +7,7 @@ using Cosmere.Lightweave.Types;
 using UnityEngine;
 using Verse;
 using Cosmere.Lightweave.Layout;
+using Cosmere.Lightweave.Surfaces;
 using static Cosmere.Lightweave.Doc.DocChips;
 using static Cosmere.Lightweave.Typography.Typography;
 
@@ -26,6 +27,8 @@ public static partial class Typography {
             string content,
             [DocParam("Wrap to multiple lines when content exceeds available width.")]
             bool wrap = false,
+            [DocParam("When not wrapping, clip the content to the available width with a trailing ellipsis instead of hard-cutting glyphs.")]
+            bool truncate = false,
             [DocParam("Parse Unity rich-text tags (<b>, <i>, <color=...>, etc.) instead of rendering them literally.")]
             bool richText = false,
             [DocParam("Style applied to the text (FontFamily/FontSize/TextColor/TextAlign/FontWeight/etc).", TypeOverride = "Style?", DefaultOverride = "null")]
@@ -108,6 +111,46 @@ public static partial class Typography {
                 return Mathf.Ceil(run.TotalWidth);
             };
 
+            float MeasureRun(string text, GUIStyle gs, bool tracking, int letterSpacing) {
+                if (!tracking) {
+                    return gs.CalcSize(new GUIContent(text)).x;
+                }
+                return TrackedTextGlyphCache.GetOrCreate(gs.font, gs.fontSize, gs.fontStyle, letterSpacing, text).TotalWidth;
+            }
+
+            int cachedTruncWidth = -1;
+            string cachedTruncResult = content;
+
+            string ResolveTruncated(float availWidth, GUIStyle gs, bool tracking, int letterSpacing) {
+                int wkey = Mathf.RoundToInt(availWidth);
+                if (cachedTruncWidth == wkey) {
+                    return cachedTruncResult;
+                }
+                cachedTruncWidth = wkey;
+                if (availWidth <= 0f || MeasureRun(content, gs, tracking, letterSpacing) <= availWidth) {
+                    cachedTruncResult = content;
+                    return content;
+                }
+                const string ellipsis = "…";
+                if (MeasureRun(ellipsis, gs, tracking, letterSpacing) > availWidth) {
+                    cachedTruncResult = "";
+                    return "";
+                }
+                int lo = 0;
+                int hi = content.Length;
+                while (lo < hi) {
+                    int mid = (lo + hi + 1) / 2;
+                    if (MeasureRun(content.Substring(0, mid) + ellipsis, gs, tracking, letterSpacing) <= availWidth) {
+                        lo = mid;
+                    }
+                    else {
+                        hi = mid - 1;
+                    }
+                }
+                cachedTruncResult = content.Substring(0, lo) + ellipsis;
+                return cachedTruncResult;
+            }
+
             node.Draw = rect => {
                 Theme.Theme theme = RenderContext.Current.Theme;
                 Style s = node.GetResolvedStyle();
@@ -130,15 +173,20 @@ public static partial class Typography {
                     _ => theme.GetColor(ThemeSlot.TextPrimary),
                 };
 
-                if (!UseTracking()) {
+                bool tracking = UseTracking();
+                int letterSpacing = tracking ? ResolveLetterSpacingPx() : 0;
+                string display = truncate && !wrap && !string.IsNullOrEmpty(content)
+                    ? ResolveTruncated(rect.width, gs, tracking, letterSpacing)
+                    : content;
+
+                if (!tracking) {
                     gs.alignment = anchor;
                     gs.clipping = TextClipping.Clip;
-                    TextDraw.DrawWithStyle(rect, content, gs, c);
+                    TextDraw.DrawWithStyle(rect, display, gs, c);
                     return;
                 }
 
-                int letterSpacing = ResolveLetterSpacingPx();
-                TrackedGlyphRun run = TrackedTextGlyphCache.GetOrCreate(gs.font, gs.fontSize, gs.fontStyle, letterSpacing, content);
+                TrackedGlyphRun run = TrackedTextGlyphCache.GetOrCreate(gs.font, gs.fontSize, gs.fontStyle, letterSpacing, display);
                 TrackedTextDraw.Draw(run, rect, anchor, c);
             };
             return node;
@@ -171,6 +219,19 @@ public static partial class Typography {
             return new DocSample(() => Text.Create(
                 sample,
                 style: new Style { FontSize = new Rem(0.9375f), TextColor = ThemeSlot.TextMuted }
+            ));
+        }
+
+        [DocVariant("CL_Playground_Label_Truncated")]
+        public static DocSample DocsTruncated() {
+            string sample = (string)"CL_Playground_Text_TruncateSample".Translate();
+            return new DocSample(() => Box.Create(
+                children: kids => kids.Add(Text.Create(
+                    sample,
+                    truncate: true,
+                    style: new Style { FontSize = new Rem(0.9375f) }
+                )),
+                style: new Style { Width = Length.Rem(12f) }
             ));
         }
 

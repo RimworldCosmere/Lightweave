@@ -9,6 +9,7 @@ using Cosmere.Lightweave.Hooks;
 using static Cosmere.Lightweave.Hooks.Hooks;
 using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
+using Cosmere.Lightweave.Layout;
 using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
 using UnityEngine;
@@ -121,7 +122,7 @@ public static class TextField {
                 Color tfTextColor = theme.GetColor(ThemeSlot.TextPrimary);
                 GUIStyle tfStyle = InputSurface.ConfigureChromelessTextFieldStyle(tfFont, tfSize, tfTextColor);
                 GUI.SetNextControlName(focusName);
-                string next = GUI.TextField(RectSnap.Snap(inner), buffer.Value ?? string.Empty, tfStyle);
+                string next = GUI.TextField(RectSnap.SnapText(inner), buffer.Value ?? string.Empty, tfStyle);
                 if (!ReferenceEquals(next, buffer.Value) && next != buffer.Value) {
                     buffer.Set(next);
                 }
@@ -163,111 +164,115 @@ public static class TextField {
 
 [DocVariant("CL_Playground_Label_Primary")]
     public static DocSample DocsPrimary() {
-        bool forced = RenderContext.Current.ForceDisabled;
-        StateHandle<string> s = UseState("Stormlight");
+        StateHandle<string> s = UseState("The Stormfather rumbled as Kaladin drew in the Light across the chasm like windblown leaves on a stormwind.");
         return new DocSample(() => Create(
             s.Value,
             v => s.Set(v),
             (string)"CL_Playground_Controls_TextField_Placeholder".Translate(),
-            disabled: forced,
             variant: Variant.Primary
         ));
     }
 
     [DocVariant("CL_Playground_Label_Secondary")]
     public static DocSample DocsSecondary() {
-        bool forced = RenderContext.Current.ForceDisabled;
         StateHandle<string> s = UseState("Stormlight");
         return new DocSample(() => Create(
             s.Value,
             v => s.Set(v),
             (string)"CL_Playground_Controls_TextField_Placeholder".Translate(),
-            disabled: forced,
             variant: Variant.Secondary
         ));
     }
 
     [DocVariant("CL_Playground_Label_Ghost")]
     public static DocSample DocsGhost() {
-        bool forced = RenderContext.Current.ForceDisabled;
         StateHandle<string> s = UseState("Stormlight");
         return new DocSample(() => Create(
             s.Value,
             v => s.Set(v),
             (string)"CL_Playground_Controls_TextField_Placeholder".Translate(),
-            disabled: forced,
             variant: Variant.Ghost
         ));
     }
 
     [DocVariant("CL_Playground_Label_Danger")]
     public static DocSample DocsDanger() {
-        bool forced = RenderContext.Current.ForceDisabled;
         StateHandle<string> s = UseState("Stormlight");
         return new DocSample(() => Create(
             s.Value,
             v => s.Set(v),
             (string)"CL_Playground_Controls_TextField_Placeholder".Translate(),
-            disabled: forced,
             variant: Variant.Danger
         ));
     }
 
     [DocVariant("CL_Playground_Label_Frosted")]
     public static DocSample DocsFrosted() {
-        bool forced = RenderContext.Current.ForceDisabled;
         StateHandle<string> s = UseState("Stormlight");
         return new DocSample(() => Create(
             s.Value,
             v => s.Set(v),
             (string)"CL_Playground_Controls_TextField_Placeholder".Translate(),
-            disabled: forced,
             variant: Variant.Frosted
         ));
     }
 
     [DocVariant("CL_Playground_Label_Filled")]
     public static DocSample DocsFilled() {
-        bool forced = RenderContext.Current.ForceDisabled;
         StateHandle<string> s = UseState("Stormlight");
         return new DocSample(() => Create(
             s.Value,
             v => s.Set(v),
-            (string)"CL_Playground_Controls_TextField_Placeholder".Translate(),
-            disabled: forced
+            (string)"CL_Playground_Controls_TextField_Placeholder".Translate()
         ));
     }
 
     [DocVariant("CL_Playground_Label_Empty")]
     public static DocSample DocsEmpty() {
-        bool forced = RenderContext.Current.ForceDisabled;
         StateHandle<string> s = UseState(string.Empty);
         return new DocSample(() => Create(
             s.Value,
             v => s.Set(v),
-            (string)"CL_Playground_Controls_TextField_Placeholder".Translate(),
-            disabled: forced
+            (string)"CL_Playground_Controls_TextField_Placeholder".Translate()
         ));
     }
 
-    [DocState("CL_Playground_Label_Default")]
+    private static LightweaveNode AllVariantsRow() {
+        return HStack.Create(
+            SpacingScale.Sm,
+            row => {
+                row.AddHug(Create("Primary", _ => { }, instanceKey: "tf_v_primary", variant: Variant.Primary));
+                row.AddHug(Create("Secondary", _ => { }, instanceKey: "tf_v_secondary", variant: Variant.Secondary));
+                row.AddHug(Create("Ghost", _ => { }, instanceKey: "tf_v_ghost", variant: Variant.Ghost));
+                row.AddHug(Create("Danger", _ => { }, instanceKey: "tf_v_danger", variant: Variant.Danger));
+                row.AddHug(Create("Frosted", _ => { }, instanceKey: "tf_v_frosted", variant: Variant.Frosted));
+            }
+        );
+    }
+
+    [DocState("CL_Playground_Label_Default", HideCode = true)]
     public static DocSample DocsDefault() {
-        bool forced = RenderContext.Current.ForceDisabled;
-        StateHandle<string> s = UseState("Default");
-        return new DocSample(() => Create(s.Value, v => s.Set(v), disabled: forced));
+        return new DocSample(() => AllVariantsRow());
     }
 
-    [DocState("CL_Playground_Label_Hover")]
+    [DocState("CL_Playground_Label_Hover", HideCode = true)]
     public static DocSample DocsHover() {
-        bool forced = RenderContext.Current.ForceDisabled;
-        StateHandle<string> s = UseState("Hover");
-        return new DocSample(() => Create(s.Value, v => s.Set(v), disabled: forced));
+        return new DocSample(() => AllVariantsRow());
     }
 
-    [DocState("CL_Playground_Label_Disabled")]
+    [DocState("CL_Playground_Label_Active", HideCode = true)]
+    public static DocSample DocsActive() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Focus", HideCode = true)]
+    public static DocSample DocsFocus() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Disabled", HideCode = true)]
     public static DocSample DocsDisabled() {
-        StateHandle<string> s = UseState("Disabled");
-        return new DocSample(() => Create(s.Value, v => s.Set(v), disabled: true));
+        return new DocSample(() => AllVariantsRow());
     }
 
     [DocUsage]

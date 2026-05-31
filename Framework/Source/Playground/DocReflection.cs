@@ -13,6 +13,10 @@ internal static class DocReflection {
     private static readonly IReadOnlyList<PlaygroundVariant> EmptyVariants = Array.Empty<PlaygroundVariant>();
     private static readonly IReadOnlyList<PlaygroundState> EmptyStates = Array.Empty<PlaygroundState>();
 
+    private const string TypographyPageId = "typography";
+    private static readonly string[] TypographyMemberIds =
+        ["heading", "text", "label", "caption", "richtext", "code", "icon"];
+
     private static Dictionary<string, Type>? primitiveIndex;
     private static readonly object indexLock = new object();
 
@@ -32,18 +36,25 @@ internal static class DocReflection {
     }
 
     internal static (IReadOnlyList<PlaygroundVariant> variants, IReadOnlyList<PlaygroundState> states) BuildSamplesById(
-        string id,
-        bool forceDisabled
+        string id
     ) {
+        if (id == TypographyPageId) {
+            return (BuildTypographyVariants(), EmptyStates);
+        }
+
         Type? primitive = GetPrimitiveType(id);
         if (primitive == null) {
             return (EmptyVariants, EmptyStates);
         }
 
-        return (BuildVariants(primitive, forceDisabled), BuildStates(primitive, forceDisabled));
+        return (BuildVariants(primitive), BuildStates(primitive));
     }
 
     internal static PlaygroundDocs? BuildDocsById(string id) {
+        if (id == TypographyPageId) {
+            return new PlaygroundDocs(HideUsage: true, HideSource: true);
+        }
+
         Type? primitive = GetPrimitiveType(id);
         if (primitive == null) {
             return null;
@@ -126,10 +137,9 @@ internal static class DocReflection {
         );
     }
 
-    internal static IReadOnlyList<PlaygroundVariant> BuildVariants(Type primitive, bool forceDisabled) {
+    internal static IReadOnlyList<PlaygroundVariant> BuildVariants(Type primitive) {
         return BuildSamples<DocVariantAttribute, PlaygroundVariant>(
             primitive,
-            forceDisabled,
             (attr, sample, factory) => new PlaygroundVariant(attr.LabelKey, () => (factory() ?? sample).Build(), sample.Code) {
                 HideCode = attr.HideCode,
             },
@@ -137,18 +147,18 @@ internal static class DocReflection {
         );
     }
 
-    internal static IReadOnlyList<PlaygroundState> BuildStates(Type primitive, bool forceDisabled) {
+    internal static IReadOnlyList<PlaygroundState> BuildStates(Type primitive) {
         return BuildSamples<DocStateAttribute, PlaygroundState>(
             primitive,
-            forceDisabled,
-            (attr, sample, factory) => new PlaygroundState(attr.LabelKey, () => (factory() ?? sample).Build(), sample.Code),
+            (attr, sample, factory) => new PlaygroundState(attr.LabelKey, () => (factory() ?? sample).Build(), sample.Code) {
+                HideCode = attr.HideCode,
+            },
             attr => attr.Order
         );
     }
 
     private static IReadOnlyList<TItem> BuildSamples<TAttr, TItem>(
         Type primitive,
-        bool forceDisabled,
         Func<TAttr, DocSample, Func<DocSample?>, TItem> map,
         Func<TAttr, int> orderOf
     ) where TAttr : Attribute {
@@ -158,20 +168,12 @@ internal static class DocReflection {
         }
 
         List<TItem> result = new List<TItem>(sources.Count);
-        RenderContext ctx = RenderContext.Current;
-        bool previousForceDisabled = ctx.ForceDisabled;
-        ctx.ForceDisabled = forceDisabled;
-        try {
-            for (int i = 0; i < sources.Count; i++) {
-                TAttr attr = sources[i].attr;
-                MemberInfo member = sources[i].member;
-                DocSample fallback = GetCachedFallback(member);
-                Func<DocSample?> factory = () => InvokeForSample(member);
-                result.Add(map(attr, fallback, factory));
-            }
-        }
-        finally {
-            ctx.ForceDisabled = previousForceDisabled;
+        for (int i = 0; i < sources.Count; i++) {
+            TAttr attr = sources[i].attr;
+            MemberInfo member = sources[i].member;
+            DocSample fallback = GetCachedFallback(member);
+            Func<DocSample?> factory = () => InvokeForSample(member);
+            result.Add(map(attr, fallback, factory));
         }
 
         return result;
@@ -483,12 +485,16 @@ internal static class DocReflection {
     }
 
     private static string? BuildUsageCode(Type primitive) {
+        return GetUsageSample(primitive)?.Code;
+    }
+
+    private static DocSample? GetUsageSample(Type primitive) {
         MethodInfo[] methods = primitive.GetMethods(MemberFlags);
         for (int i = 0; i < methods.Length; i++) {
             if (methods[i].GetCustomAttribute<DocUsageAttribute>() == null) continue;
             try {
                 object? result = methods[i].Invoke(null, null);
-                if (result is DocSample sample) return sample.Code;
+                if (result is DocSample sample) return sample;
             }
             catch (TargetInvocationException ex) {
                 LightweaveLog.Error($"DocUsage provider {primitive.Name}.{methods[i].Name} threw: {ex.InnerException ?? ex}");
@@ -503,7 +509,7 @@ internal static class DocReflection {
             if (fields[i].GetCustomAttribute<DocUsageAttribute>() == null) continue;
             try {
                 object? value = fields[i].GetValue(null);
-                if (value is DocSample sample) return sample.Code;
+                if (value is DocSample sample) return sample;
             }
             catch (Exception ex) {
                 LightweaveLog.Error($"Failed to read DocUsage field {primitive.Name}.{fields[i].Name}: {ex}");
@@ -515,7 +521,7 @@ internal static class DocReflection {
             if (props[i].GetCustomAttribute<DocUsageAttribute>() == null) continue;
             try {
                 object? value = props[i].GetValue(null);
-                if (value is DocSample sample) return sample.Code;
+                if (value is DocSample sample) return sample;
             }
             catch (TargetInvocationException ex) {
                 LightweaveLog.Error($"DocUsage property {primitive.Name}.{props[i].Name} threw: {ex.InnerException ?? ex}");
@@ -526,5 +532,30 @@ internal static class DocReflection {
         }
 
         return null;
+    }
+
+    private static IReadOnlyList<PlaygroundVariant> BuildTypographyVariants() {
+        List<PlaygroundVariant> variants = new List<PlaygroundVariant>(TypographyMemberIds.Length);
+        for (int i = 0; i < TypographyMemberIds.Length; i++) {
+            string memberId = TypographyMemberIds[i];
+            Type? primitive = GetPrimitiveType(memberId);
+            if (primitive == null) {
+                continue;
+            }
+
+            DocSample? sample = GetUsageSample(primitive);
+            if (sample == null) {
+                continue;
+            }
+
+            DocSample resolved = sample;
+            variants.Add(new PlaygroundVariant(
+                "CL_Playground_" + memberId + "_Title",
+                () => resolved.Build(),
+                resolved.Code
+            ));
+        }
+
+        return variants;
     }
 }

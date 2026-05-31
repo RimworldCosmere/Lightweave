@@ -113,6 +113,14 @@ public static class InputSurface {
         return VariantPalette.Background(variant, state);
     }
 
+    public static ThemeSlot ResolveAccentFillSlot(Variant variant) {
+        return variant == Variant.Danger ? ThemeSlot.StatusDanger : ThemeSlot.SurfaceAccent;
+    }
+
+    public static ThemeSlot ResolveOnAccentSlot(Variant variant) {
+        return variant == Variant.Danger ? ThemeSlot.TextOnDanger : ThemeSlot.TextOnAccent;
+    }
+
     public static void Draw(Rect rect, InteractionState state, Variant variant = default) {
         ThemeSlot borderSlot = ResolveBorderSlot(state, variant);
         ThemeSlot? surfaceSlot = ResolveSurfaceSlot(state, variant);

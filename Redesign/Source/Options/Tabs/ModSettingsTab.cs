@@ -17,6 +17,7 @@ using RimWorld;
 using UnityEngine;
 using Verse;
 using Cosmere.Lightweave.Redesign.ModsConfig;
+using Cosmere.Lightweave.Surfaces;
 using Heading = Cosmere.Lightweave.Typography.Typography.Heading;
 using Caption = Cosmere.Lightweave.Typography.Typography.Caption;
 using Text = Cosmere.Lightweave.Typography.Typography.Text;

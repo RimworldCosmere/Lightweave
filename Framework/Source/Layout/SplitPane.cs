@@ -11,6 +11,7 @@ using UnityEngine;
 using Verse;
 using static Cosmere.Lightweave.Hooks.Hooks;
 using static Cosmere.Lightweave.Typography.Typography;
+using Cosmere.Lightweave.Surfaces;
 using Text = Cosmere.Lightweave.Typography.Typography.Text;
 
 namespace Cosmere.Lightweave.Layout;

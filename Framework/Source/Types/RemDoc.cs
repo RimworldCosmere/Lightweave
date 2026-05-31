@@ -7,6 +7,7 @@ using Cosmere.Lightweave.Theme;
 using Cosmere.Lightweave.Tokens;
 using UnityEngine;
 using Verse;
+using Cosmere.Lightweave.Surfaces;
 using LText = Cosmere.Lightweave.Typography.Typography.Text;
 
 namespace Cosmere.Lightweave.Types;

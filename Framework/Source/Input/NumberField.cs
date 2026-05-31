@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Cosmere.Lightweave.Doc;
+using Cosmere.Lightweave.Layout;
 using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
@@ -138,7 +139,7 @@ public static class NumberField {
                 Color nfTextColor = theme.GetColor(ThemeSlot.TextPrimary);
                 GUIStyle nfStyle = InputSurface.ConfigureChromelessTextFieldStyle(nfFont, nfSize, nfTextColor);
                 GUI.SetNextControlName(focusName);
-                string next = GUI.TextField(RectSnap.Snap(inner), buffer.Value ?? string.Empty, nfStyle);
+                string next = GUI.TextField(RectSnap.SnapText(inner), buffer.Value ?? string.Empty, nfStyle);
                 if (!ReferenceEquals(next, buffer.Value) && next != buffer.Value) {
                     string sanitized = SanitizeNumeric(next, localAllowDecimal);
                     buffer.Set(sanitized);
@@ -234,36 +235,76 @@ public static class NumberField {
 
     [DocVariant("CL_Playground_Label_Default")]
     public static DocSample DocsDefault() {
-        bool forced = RenderContext.Current.ForceDisabled;
         StateHandle<float> s = UseState(42f);
         return new DocSample(() => Create(
             s.Value,
             v => s.Set(v),
             0f,
             100f,
-            placeholder: (string)"CL_Playground_Controls_NumberField_Label".Translate(),
-            disabled: forced
+            placeholder: (string)"CL_Playground_Controls_NumberField_Label".Translate()
         ));
     }
 
-    [DocState("CL_Playground_Label_Default")]
-    public static DocSample DocsDefaultState() {
-        bool forced = RenderContext.Current.ForceDisabled;
+    [DocVariant("CL_Playground_Label_Primary")]
+    public static DocSample DocsPrimary() {
         StateHandle<float> s = UseState(42f);
-        return new DocSample(() => Create(s.Value, v => s.Set(v), 0f, 100f, disabled: forced));
+        return new DocSample(() => Create(s.Value, v => s.Set(v), 0f, 100f, variant: Variant.Primary));
     }
 
-    [DocState("CL_Playground_Label_Hover")]
+    [DocVariant("CL_Playground_Label_Ghost")]
+    public static DocSample DocsGhost() {
+        StateHandle<float> s = UseState(42f);
+        return new DocSample(() => Create(s.Value, v => s.Set(v), 0f, 100f, variant: Variant.Ghost));
+    }
+
+    [DocVariant("CL_Playground_Label_Danger")]
+    public static DocSample DocsDanger() {
+        StateHandle<float> s = UseState(42f);
+        return new DocSample(() => Create(s.Value, v => s.Set(v), 0f, 100f, variant: Variant.Danger));
+    }
+
+    [DocVariant("CL_Playground_Label_Frosted")]
+    public static DocSample DocsFrosted() {
+        StateHandle<float> s = UseState(42f);
+        return new DocSample(() => Create(s.Value, v => s.Set(v), 0f, 100f, variant: Variant.Frosted));
+    }
+
+    private static LightweaveNode AllVariantsRow() {
+        return HStack.Create(
+            SpacingScale.Sm,
+            row => {
+                row.AddHug(Create(42f, _ => { }, 0f, 100f, instanceKey: "nf_v_primary", variant: Variant.Primary));
+                row.AddHug(Create(42f, _ => { }, 0f, 100f, instanceKey: "nf_v_secondary", variant: Variant.Secondary));
+                row.AddHug(Create(42f, _ => { }, 0f, 100f, instanceKey: "nf_v_ghost", variant: Variant.Ghost));
+                row.AddHug(Create(42f, _ => { }, 0f, 100f, instanceKey: "nf_v_danger", variant: Variant.Danger));
+                row.AddHug(Create(42f, _ => { }, 0f, 100f, instanceKey: "nf_v_frosted", variant: Variant.Frosted));
+            }
+        );
+    }
+
+    [DocState("CL_Playground_Label_Default", HideCode = true)]
+    public static DocSample DocsDefaultState() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Hover", HideCode = true)]
     public static DocSample DocsHover() {
-        bool forced = RenderContext.Current.ForceDisabled;
-        StateHandle<float> s = UseState(7f);
-        return new DocSample(() => Create(s.Value, v => s.Set(v), 0f, 100f, disabled: forced));
+        return new DocSample(() => AllVariantsRow());
     }
 
-    [DocState("CL_Playground_Label_Disabled")]
+    [DocState("CL_Playground_Label_Active", HideCode = true)]
+    public static DocSample DocsActive() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Focus", HideCode = true)]
+    public static DocSample DocsFocus() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Disabled", HideCode = true)]
     public static DocSample DocsDisabled() {
-        StateHandle<float> s = UseState(13f);
-        return new DocSample(() => Create(s.Value, v => s.Set(v), 0f, 100f, disabled: true));
+        return new DocSample(() => AllVariantsRow());
     }
 
     [DocUsage]

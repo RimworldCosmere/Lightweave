@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Cosmere.Lightweave.Data;
 using Cosmere.Lightweave.Doc;
 using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;

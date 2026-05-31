@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using Cosmere.Lightweave.Doc;
+using Cosmere.Lightweave.Layout;
 using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
@@ -43,6 +44,8 @@ public static class Slider {
         [DocParam("Readout column width. Defaults to 4rem.", TypeOverride = "Rem", DefaultOverride = "4")]
         Rem? readoutWidth = null,
         Variant variant = default,
+        [DocParam("Optional accent slot override recoloring the filled track + thumb + glow. Defaults to the variant accent (gold).")]
+        ThemeSlot? accent = null,
         Style? style = null,
         string[]? classes = null,
         string? id = null,
@@ -66,6 +69,11 @@ public static class Slider {
             Direction dir = RenderContext.Current.Direction;
             bool rtl = dir == Direction.Rtl;
 
+            RenderContext rc = RenderContext.Current;
+            bool effectiveDisabled = disabled || rc.ForceDisabled;
+            bool forcedHover = rc.ForceHovered || rc.ForcePressed;
+            bool focused = !effectiveDisabled && rc.ForceFocused;
+
             RefHandle<bool> dragging = UseRef(false, line, file);
             RefHandle<float> draftValue = UseRef(value, line, file + "#draft");
             RefHandle<int> lastFireFrame = UseRef(int.MinValue, line, file + "#lastFire");
@@ -75,7 +83,7 @@ public static class Slider {
 
             float trackBandHeight = new Rem(1.25f).ToPixels();
             float trackThickness = new Rem(0.5f).ToPixels();
-            float thumbSize = new Rem(0.875f).ToPixels();
+            float thumbSize = new Rem(1.0f).ToPixels();
             float tickWidth = new Rem(1f / 16f).ToPixels();
             float tickHeight = new Rem(0.75f).ToPixels();
             float edgePadding = thumbSize / 2f;
@@ -107,8 +115,9 @@ public static class Slider {
             float trackWidth = Mathf.Max(0f, trackRight - trackLeft);
             float trackY = trackBand.y + (trackBand.height - trackThickness) / 2f;
             Rect trackRect = new Rect(trackLeft, trackY, trackWidth, trackThickness);
+            LightweaveHitTracker.Track(trackBand);
 
-            if (!disabled && dragging.Current && trackWidth > 0f) {
+            if (!effectiveDisabled && dragging.Current && trackWidth > 0f) {
                 float computed = ComputeValue(Event.current.mousePosition.x, trackRect, min, max, step, rtl);
                 if (!Mathf.Approximately(computed, draftValue.Current)) {
                     draftValue.Current = computed;
@@ -125,47 +134,35 @@ public static class Slider {
             float thumbY = trackBand.y + (trackBand.height - thumbSize) / 2f;
             Rect thumbRect = new Rect(thumbX, thumbY, thumbSize, thumbSize);
 
-            bool thumbHovered = !disabled && thumbRect.Contains(Event.current.mousePosition);
+            bool thumbHovered = !effectiveDisabled && (thumbRect.Contains(Event.current.mousePosition) || forcedHover);
 
-            ThemeSlot filledSlot = disabled ? ThemeSlot.SurfaceDisabled : ThemeSlot.SurfaceAccent;
-            ThemeSlot unfilledSlot = disabled ? ThemeSlot.SurfaceDisabled : ThemeSlot.SurfaceInput;
-            RadiusSpec trackRadius = RadiusSpec.All(new Rem(0.5f / 2f));
+            ThemeSlot accentSlot = InputSurface.ResolveAccentFillSlot(variant);
+            if (accent.HasValue) {
+                accentSlot = accent.Value;
+            }
+            ThemeSlot filledSlot = effectiveDisabled ? ThemeSlot.SurfaceDisabled : accentSlot;
+            ThemeSlot unfilledSlot = effectiveDisabled ? ThemeSlot.SurfaceDisabled : ThemeSlot.SurfaceInput;
+            RadiusSpec trackRadius = RadiusSpec.All(RadiusScale.Pill);
             BorderSpec trackBorder = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderSubtle);
 
+            PaintBox.Draw(trackRect, BackgroundSpec.Of(unfilledSlot), trackBorder, trackRadius);
+
             if (rtl) {
-                Rect rightUnfilled = new Rect(
-                    trackRect.x,
-                    trackRect.y,
-                    Mathf.Max(0f, thumbCenterX - trackRect.x),
-                    trackRect.height
-                );
-                Rect leftFilled = new Rect(
-                    thumbCenterX,
-                    trackRect.y,
-                    Mathf.Max(0f, trackRect.xMax - thumbCenterX),
-                    trackRect.height
-                );
-                PaintBox.Draw(rightUnfilled, BackgroundSpec.Of(unfilledSlot), trackBorder, trackRadius);
-                PaintBox.Draw(leftFilled, BackgroundSpec.Of(filledSlot), trackBorder, trackRadius);
+                float fillWidth = Mathf.Max(0f, trackRect.xMax - thumbCenterX);
+                if (fillWidth > 0f) {
+                    Rect filledRect = new Rect(thumbCenterX, trackRect.y, fillWidth, trackRect.height);
+                    PaintBox.Draw(filledRect, BackgroundSpec.Of(filledSlot), null, RadiusSpec.Right(RadiusScale.Pill));
+                }
             } else {
-                Rect leftFilled = new Rect(
-                    trackRect.x,
-                    trackRect.y,
-                    Mathf.Max(0f, thumbCenterX - trackRect.x),
-                    trackRect.height
-                );
-                Rect rightUnfilled = new Rect(
-                    thumbCenterX,
-                    trackRect.y,
-                    Mathf.Max(0f, trackRect.xMax - thumbCenterX),
-                    trackRect.height
-                );
-                PaintBox.Draw(leftFilled, BackgroundSpec.Of(filledSlot), trackBorder, trackRadius);
-                PaintBox.Draw(rightUnfilled, BackgroundSpec.Of(unfilledSlot), trackBorder, trackRadius);
+                float fillWidth = Mathf.Max(0f, thumbCenterX - trackRect.x);
+                if (fillWidth > 0f) {
+                    Rect filledRect = new Rect(trackRect.x, trackRect.y, fillWidth, trackRect.height);
+                    PaintBox.Draw(filledRect, BackgroundSpec.Of(filledSlot), null, RadiusSpec.Left(RadiusScale.Pill));
+                }
             }
 
             if (marks != null && marks.Length > 0 && range > 0f) {
-                ThemeSlot markSlot = disabled ? ThemeSlot.BorderSubtle : ThemeSlot.BorderDefault;
+                ThemeSlot markSlot = effectiveDisabled ? ThemeSlot.BorderSubtle : ThemeSlot.BorderDefault;
                 BackgroundSpec markBg = BackgroundSpec.Of(markSlot);
                 float markY = trackBand.y + (trackBand.height - tickHeight) / 2f;
                 for (int i = 0; i < marks.Length; i++) {
@@ -178,10 +175,10 @@ public static class Slider {
                 }
             }
 
-            RadiusSpec thumbRadius = RadiusSpec.All(new Rem(0.875f / 2f));
+            RadiusSpec thumbRadius = RadiusSpec.All(RadiusScale.Pill);
 
-            if ((thumbHovered || dragging.Current) && !disabled) {
-                Rem glowRem = new Rem(0.875f + 0.625f);
+            if ((thumbHovered || dragging.Current || focused) && !effectiveDisabled) {
+                Rem glowRem = new Rem(1.0f + 0.625f);
                 float glowSize = glowRem.ToPixels();
                 Rect glowRect = new Rect(
                     thumbRect.center.x - glowSize / 2f,
@@ -189,17 +186,20 @@ public static class Slider {
                     glowSize,
                     glowSize
                 );
-                Color glow = theme.GetColor(ThemeSlot.SurfaceAccent);
+                Color glow = theme.GetColor(accentSlot);
                 glow.a *= 0.28f;
                 RadiusSpec glowRadius = RadiusSpec.All(glowRem * 0.5f);
                 PaintBox.Draw(glowRect, BackgroundSpec.Of(glow), null, glowRadius);
             }
 
-            ThemeSlot thumbFillSlot = disabled
+            ThemeSlot thumbFillSlot = effectiveDisabled
                 ? ThemeSlot.SurfaceDisabled
-                : ThemeSlot.SurfaceAccent;
+                : accentSlot;
             BackgroundSpec thumbBg = BackgroundSpec.Of(thumbFillSlot);
-            PaintBox.Draw(thumbRect, thumbBg, null, thumbRadius);
+            BorderSpec? thumbBorder = focused
+                ? BorderSpec.All(new Rem(2f / 16f), ThemeSlot.BorderFocus)
+                : null;
+            PaintBox.Draw(thumbRect, thumbBg, thumbBorder, thumbRadius);
 
             if (readout && Event.current.type == EventType.Repaint) {
                 int currentFrame = Time.frameCount;
@@ -219,7 +219,7 @@ public static class Slider {
                 int readoutPixelSize = Mathf.RoundToInt(new Rem(0.78f).ToFontPx());
                 GUIStyle readoutStyle = GuiStyleCache.GetOrCreate(readoutFont, readoutPixelSize, FontStyle.Normal);
                 readoutStyle.alignment = rtl ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight;
-                Color readoutColor = disabled
+                Color readoutColor = effectiveDisabled
                     ? theme.GetColor(ThemeSlot.TextMuted)
                     : theme.GetColor(ThemeSlot.TextPrimary);
                 TextDraw.DrawWithStyle(readoutRect, cachedLabel.Current, readoutStyle, readoutColor);
@@ -227,12 +227,12 @@ public static class Slider {
 
             paintChildren();
 
-            if (disabled) {
+            if (effectiveDisabled) {
                 return;
             }
 
             Event e = Event.current;
-            if (e.type == EventType.MouseDown && e.button == 0 && trackBand.Contains(e.mousePosition)) {
+            if (e.type == EventType.MouseDown && e.button == 0 && trackBand.Contains(e.mousePosition) && LightweaveHitTracker.IsTopmost(trackBand)) {
                 dragging.Current = true;
                 float computed = ComputeValue(e.mousePosition.x, trackRect, min, max, step, rtl);
                 draftValue.Current = computed;
@@ -302,14 +302,12 @@ public static class Slider {
 
     [DocVariant("CL_Playground_Label_Default")]
     public static DocSample DocsDefault() {
-        bool forced = RenderContext.Current.ForceDisabled;
         StateHandle<float> s = UseState(0.4f);
-        return new DocSample(() => Create(s.Value, v => s.Set(v), disabled: forced));
+        return new DocSample(() => Create(s.Value, v => s.Set(v)));
     }
 
     [DocVariant("CL_Playground_Label_Accented")]
     public static DocSample DocsAccented() {
-        bool forced = RenderContext.Current.ForceDisabled;
         StateHandle<float> s = UseState(0.4f);
         return new DocSample(() => Create(
                 s.Value,
@@ -317,30 +315,64 @@ public static class Slider {
                 0f,
                 1f,
                 0.25f,
-                new[] { 0f, 0.25f, 0.5f, 0.75f, 1f },
-                disabled: forced
+                new[] { 0f, 0.25f, 0.5f, 0.75f, 1f }
             )
         );
     }
 
-    [DocState("CL_Playground_Label_Default")]
+    [DocVariant("CL_Playground_Label_Danger")]
+    public static DocSample DocsDanger() {
+        StateHandle<float> s = UseState(0.4f);
+        return new DocSample(() => Create(s.Value, v => s.Set(v), variant: Variant.Danger));
+    }
+
+    [DocVariant("CL_Playground_Label_AnomalyAccent")]
+    public static DocSample DocsAnomalyAccent() {
+        StateHandle<float> s = UseState(0.4f);
+        return new DocSample(() => Create(
+                s.Value,
+                v => s.Set(v),
+                0f,
+                1f,
+                accent: ThemeSlot.AnomalyAccent
+            )
+        );
+    }
+
+    private static LightweaveNode AllVariantsRow() {
+        return Stack.Create(
+            SpacingScale.Md,
+            col => {
+                col.Add(Create(0.4f, _ => { }));
+                col.Add(Create(0.6f, _ => { }, 0f, 1f, 0.25f, new[] { 0f, 0.25f, 0.5f, 0.75f, 1f }));
+                col.Add(Create(0.5f, _ => { }, variant: Variant.Danger));
+            }
+        );
+    }
+
+    [DocState("CL_Playground_Label_Default", HideCode = true)]
     public static DocSample DocsDefaultState() {
-        bool forced = RenderContext.Current.ForceDisabled;
-        StateHandle<float> s = UseState(0.4f);
-        return new DocSample(() => Create(s.Value, v => s.Set(v), disabled: forced));
+        return new DocSample(() => AllVariantsRow());
     }
 
-    [DocState("CL_Playground_Label_Hover")]
+    [DocState("CL_Playground_Label_Hover", HideCode = true)]
     public static DocSample DocsHover() {
-        bool forced = RenderContext.Current.ForceDisabled;
-        StateHandle<float> s = UseState(0.7f);
-        return new DocSample(() => Create(s.Value, v => s.Set(v), disabled: forced));
+        return new DocSample(() => AllVariantsRow());
     }
 
-    [DocState("CL_Playground_Label_Disabled")]
+    [DocState("CL_Playground_Label_Active", HideCode = true)]
+    public static DocSample DocsActive() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Focus", HideCode = true)]
+    public static DocSample DocsFocus() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Disabled", HideCode = true)]
     public static DocSample DocsDisabled() {
-        StateHandle<float> s = UseState(0.4f);
-        return new DocSample(() => Create(s.Value, v => s.Set(v), disabled: true));
+        return new DocSample(() => AllVariantsRow());
     }
 
     [DocUsage]

@@ -23,7 +23,9 @@ public sealed record PlaygroundState(
     string LabelKey,
     Func<LightweaveNode> Demo,
     [CallerArgumentExpression("Demo")] string Code = ""
-);
+) {
+    public bool HideCode { get; init; }
+}
 
 public sealed record PlaygroundPanelResult(LightweaveNode Body, IReadOnlyList<TocEntry> TocEntries);
 
@@ -92,7 +94,7 @@ public static class PlaygroundPanel {
                 );
 
                 s.Add(intro);
-                s.Add(Layout.Divider.Horizontal());
+                s.Add(Data.Divider.Horizontal());
 
                 if (hasVariants) {
                     tocEntries.Add(new TocEntry(ExamplesAnchor, (string)"CL_Playground_Panel_Examples".Translate(), 2));
@@ -181,7 +183,9 @@ public static class PlaygroundPanel {
                     tocEntries.Add(new TocEntry(anchor, label, 3));
                     Func<LightweaveNode> stateDemo = WrapWithStateFlag(st.LabelKey, st.Demo);
                     LightweaveNode demo = BuildSaltedDemo(anchor, stateDemo);
-                    s.Add(BuildExampleItem(anchor, label, demo, ctx, variantMinHeight, NormalizeCode(st.Code), sourcePath));
+                    string? code = st.HideCode ? null : NormalizeCode(st.Code);
+                    string itemSourcePath = st.HideCode ? "" : sourcePath;
+                    s.Add(BuildExampleItem(anchor, label, demo, ctx, variantMinHeight, code, itemSourcePath));
                 }
             }
         );
@@ -303,6 +307,7 @@ public static class PlaygroundPanel {
         bool forceHover = false;
         bool forcePressed = false;
         bool forceDisabled = false;
+        bool forceFocused = false;
         switch (labelKey) {
             case "CL_Playground_Label_Hover":
                 forceHover = true;
@@ -312,12 +317,15 @@ public static class PlaygroundPanel {
                 forceHover = true;
                 forcePressed = true;
                 break;
+            case "CL_Playground_Label_Focus":
+                forceFocused = true;
+                break;
             case "CL_Playground_Label_Disabled":
                 forceDisabled = true;
                 break;
         }
 
-        if (!forceHover && !forcePressed && !forceDisabled) {
+        if (!forceHover && !forcePressed && !forceDisabled && !forceFocused) {
             return demo;
         }
 
@@ -326,15 +334,18 @@ public static class PlaygroundPanel {
             LightweaveNode wrapper = NodeBuilder.New($"StateFlag:{labelKey}", 0, "");
             wrapper.Children.Add(inner);
             wrapper.PreferredHeight = inner.PreferredHeight;
-            wrapper.MeasureWidth = () => inner.MeasureWidth?.Invoke() ?? 0f;
+            wrapper.Measure = inner.Measure;
+            wrapper.MeasureWidth = inner.MeasureWidth;
             wrapper.Paint = (rect, paintChildren) => {
                 RenderContext rc = RenderContext.Current;
                 bool prevHover = rc.ForceHovered;
                 bool prevPressed = rc.ForcePressed;
                 bool prevDisabled = rc.ForceDisabled;
+                bool prevFocused = rc.ForceFocused;
                 rc.ForceHovered = forceHover;
                 rc.ForcePressed = forcePressed;
                 rc.ForceDisabled = forceDisabled;
+                rc.ForceFocused = forceFocused;
                 try {
                     inner.MeasuredRect = rect;
                     paintChildren();
@@ -343,6 +354,7 @@ public static class PlaygroundPanel {
                     rc.ForceHovered = prevHover;
                     rc.ForcePressed = prevPressed;
                     rc.ForceDisabled = prevDisabled;
+                    rc.ForceFocused = prevFocused;
                 }
             };
             return wrapper;
@@ -378,7 +390,7 @@ public static class PlaygroundPanel {
             ? WrapMinHeight(demo, minHeight.Value)
             : demo;
 
-        return Layout.Box.Create(
+        return Surfaces.Box.Create(
             c => c.Add(content),
             style: new Style {
                 Padding = EdgeInsets.All(SpacingScale.Lg),
@@ -399,7 +411,7 @@ public static class PlaygroundPanel {
             ? WrapMinHeight(demo, minHeight.Value)
             : demo;
 
-        LightweaveNode previewSection = Layout.Box.Create(
+        LightweaveNode previewSection = Surfaces.Box.Create(
             c => c.Add(content),
             style: new Style {
                 Padding = EdgeInsets.All(SpacingScale.Lg),
@@ -413,10 +425,10 @@ public static class PlaygroundPanel {
             backgroundRadius: RadiusSpec.Bottom(RadiusScale.Md)
         );
 
-        return Layout.Box.Create(
+        return Surfaces.Box.Create(
             c => {
                 c.Add(previewSection);
-                c.Add(Layout.Divider.Horizontal());
+                c.Add(Data.Divider.Horizontal());
                 c.Add(codeSection);
             },
             style: new Style {
@@ -437,7 +449,10 @@ public static class PlaygroundPanel {
         };
         wrap.MeasureWidth = () => demo.MeasureWidth?.Invoke() ?? 0f;
         wrap.Paint = (rect, paintChildren) => {
-            demo.MeasuredRect = rect;
+            float natural = demo.Measure?.Invoke(rect.width) ?? demo.PreferredHeight ?? rect.height;
+            float h = natural > 0f ? Mathf.Min(natural, rect.height) : rect.height;
+            float y = rect.y + (rect.height - h) * 0.5f;
+            demo.MeasuredRect = new Rect(rect.x, y, rect.width, h);
             paintChildren();
         };
         return wrap;

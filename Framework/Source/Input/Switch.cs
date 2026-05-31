@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using Cosmere.Lightweave.Doc;
 using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
+using Cosmere.Lightweave.Layout;
 using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
 using UnityEngine;
@@ -109,9 +110,12 @@ public static class Switch {
 
             float animFraction = Mathf.Clamp01(progress.Current);
 
+            RenderContext rc = RenderContext.Current;
+            bool effectiveDisabled = disabled || rc.ForceDisabled;
             bool mouseOver = Mouse.IsOver(hitRect);
-            bool hovered = !disabled && mouseOver;
-            if (!disabled) {
+            bool hovered = !effectiveDisabled && (mouseOver || rc.ForceHovered || rc.ForcePressed);
+            bool focused = !effectiveDisabled && rc.ForceFocused;
+            if (!effectiveDisabled) {
                 MouseoverSounds.DoRegion(hitRect);
             }
             else if (mouseOver) {
@@ -119,8 +123,11 @@ public static class Switch {
             }
 
             ThemeSlot? trackBorderSlot;
-            if (disabled) {
+            if (effectiveDisabled) {
                 trackBorderSlot = ThemeSlot.BorderOff;
+            }
+            else if (focused) {
+                trackBorderSlot = ThemeSlot.BorderFocus;
             }
             else if (value) {
                 trackBorderSlot = null;
@@ -132,16 +139,16 @@ public static class Switch {
                 trackBorderSlot = ThemeSlot.BorderSubtle;
             }
 
-            ThemeSlot trackFill = disabled
+            ThemeSlot trackFill = effectiveDisabled
                 ? ThemeSlot.SurfaceDisabled
                 : value
-                    ? ThemeSlot.SurfaceAccent
+                    ? InputSurface.ResolveAccentFillSlot(variant)
                     : ThemeSlot.SurfaceInput;
             BackgroundSpec trackBg = BackgroundSpec.Of(trackFill);
             BorderSpec? trackBorder = trackBorderSlot.HasValue
                 ? BorderSpec.All(new Rem(1f / 16f), trackBorderSlot.Value)
                 : null;
-            RadiusSpec trackRadius = RadiusSpec.All(RadiusScale.Xs);
+            RadiusSpec trackRadius = RadiusSpec.All(RadiusScale.Pill);
             PaintBox.Draw(trackRect, trackBg, trackBorder, trackRadius);
 
             float leftX = trackRect.x + thumbInset;
@@ -152,20 +159,20 @@ public static class Switch {
             float thumbY = trackRect.y + (trackHeight - thumbHeight) / 2f;
             Rect thumbRect = new Rect(thumbX, thumbY, thumbWidth, thumbHeight);
 
-            ThemeSlot thumbSlot = disabled
+            ThemeSlot thumbSlot = effectiveDisabled
                 ? ThemeSlot.BorderOff
                 : value
-                    ? ThemeSlot.TextOnAccent
+                    ? InputSurface.ResolveOnAccentSlot(variant)
                     : ThemeSlot.TextMuted;
             BackgroundSpec thumbBg = BackgroundSpec.Of(thumbSlot);
-            RadiusSpec thumbRadius = RadiusSpec.All(RadiusScale.Xs);
+            RadiusSpec thumbRadius = RadiusSpec.All(RadiusScale.Pill);
             PaintBox.Draw(thumbRect, thumbBg, null, thumbRadius);
 
             Font labelFont = theme.GetFont(FontRole.Body);
             int labelPixelSize = Mathf.RoundToInt(new Rem(1f).ToFontPx());
             GUIStyle labelStyle = GuiStyleCache.GetOrCreate(labelFont, labelPixelSize);
             labelStyle.alignment = rtl ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft;
-            Color labelColor = disabled
+            Color labelColor = effectiveDisabled
                 ? theme.GetColor(ThemeSlot.TextMuted)
                 : theme.GetColor(ThemeSlot.TextPrimary);
             TextDraw.DrawWithStyle(labelRect, label, labelStyle, labelColor);
@@ -173,7 +180,7 @@ public static class Switch {
             paintChildren();
 
             Event e = Event.current;
-            if (!disabled && e.type == EventType.MouseUp && e.button == 0 && hitRect.Contains(e.mousePosition)) {
+            if (!effectiveDisabled && e.type == EventType.MouseUp && e.button == 0 && hitRect.Contains(e.mousePosition) && LightweaveHitTracker.IsTopmost(hitRect)) {
                 onChange?.Invoke(!value);
                 RenderContext.Current.Hooks.Invalidate();
                 e.Use();
@@ -185,41 +192,60 @@ public static class Switch {
 
     [DocVariant("CL_Playground_Label_On")]
     public static DocSample DocsOn() {
-        bool forced = RenderContext.Current.ForceDisabled;
         StateHandle<bool> s = UseState(true);
         return new DocSample(() => Create(
             (string)"CL_Playground_Controls_Switch_Label".Translate(),
             s.Value,
-            v => s.Set(v),
-            forced
+            v => s.Set(v)
         ));
     }
 
     [DocVariant("CL_Playground_Label_Off")]
     public static DocSample DocsOff() {
-        bool forced = RenderContext.Current.ForceDisabled;
         StateHandle<bool> s = UseState(false);
-        return new DocSample(() => Create("Off", s.Value, v => s.Set(v), forced));
+        return new DocSample(() => Create("Off", s.Value, v => s.Set(v)));
     }
 
-    [DocState("CL_Playground_Label_Default")]
+    [DocVariant("CL_Playground_Label_Danger")]
+    public static DocSample DocsDanger() {
+        StateHandle<bool> s = UseState(true);
+        return new DocSample(() => Create("Danger", s.Value, v => s.Set(v), variant: Variant.Danger));
+    }
+
+    private static LightweaveNode AllVariantsRow() {
+        return HStack.Create(
+            SpacingScale.Lg,
+            row => {
+                row.AddHug(Create("On", true, _ => { }, instanceKey: "sw_v_on"));
+                row.AddHug(Create("Off", false, _ => { }, instanceKey: "sw_v_off"));
+                row.AddHug(Create("Danger", true, _ => { }, instanceKey: "sw_v_danger", variant: Variant.Danger));
+            }
+        );
+    }
+
+    [DocState("CL_Playground_Label_Default", HideCode = true)]
     public static DocSample DocsDefault() {
-        bool forced = RenderContext.Current.ForceDisabled;
-        StateHandle<bool> s = UseState(true);
-        return new DocSample(() => Create("Default", s.Value, v => s.Set(v), forced));
+        return new DocSample(() => AllVariantsRow());
     }
 
-    [DocState("CL_Playground_Label_Hover")]
+    [DocState("CL_Playground_Label_Hover", HideCode = true)]
     public static DocSample DocsHover() {
-        bool forced = RenderContext.Current.ForceDisabled;
-        StateHandle<bool> s = UseState(false);
-        return new DocSample(() => Create("Hover", s.Value, v => s.Set(v), forced));
+        return new DocSample(() => AllVariantsRow());
     }
 
-    [DocState("CL_Playground_Label_Disabled")]
+    [DocState("CL_Playground_Label_Active", HideCode = true)]
+    public static DocSample DocsActive() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Focus", HideCode = true)]
+    public static DocSample DocsFocus() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Disabled", HideCode = true)]
     public static DocSample DocsDisabled() {
-        StateHandle<bool> s = UseState(true);
-        return new DocSample(() => Create("Disabled", s.Value, v => s.Set(v), true));
+        return new DocSample(() => AllVariantsRow());
     }
 
     [DocUsage]

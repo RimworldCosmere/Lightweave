@@ -42,9 +42,14 @@ public static class ScrollArea {
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = ""
     ) {
+        // When multiple ScrollAreas are created at the same call site (e.g. one per
+        // carousel slide), the (line, file) hook key collides and they share a single
+        // status, so a sibling that fits its viewport clamps the shared scroll offset
+        // back to zero every frame. An explicit id disambiguates the hook slot.
+        string hookFile = id != null ? file + "#id:" + id : file;
         Hooks.Hooks.RefHandle<LightweaveScrollStatus> statusRef =
-            Hooks.Hooks.UseRef(new LightweaveScrollStatus(), line, file);
-        Hooks.Hooks.RefHandle<object?> lastResetKey = Hooks.Hooks.UseRef<object?>(null, line, file + "#resetKey");
+            Hooks.Hooks.UseRef(new LightweaveScrollStatus(), line, hookFile);
+        Hooks.Hooks.RefHandle<object?> lastResetKey = Hooks.Hooks.UseRef<object?>(null, line, hookFile + "#resetKey");
 
         if (!Equals(lastResetKey.Current, resetKey)) {
             statusRef.Current.Position = Vector2.zero;

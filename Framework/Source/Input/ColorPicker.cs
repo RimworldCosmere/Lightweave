@@ -78,6 +78,11 @@ public static class ColorPicker {
             Theme.Theme theme = RenderContext.Current.Theme;
             Direction dir = RenderContext.Current.Direction;
 
+            RenderContext ctx = RenderContext.Current;
+            bool effectiveDisabled = disabled || ctx.ForceDisabled;
+            bool forcedHover = ctx.ForceHovered || ctx.ForcePressed;
+            bool forcedFocus = !effectiveDisabled && ctx.ForceFocused;
+
             if (effectivePalette.Count == 0) {
                 DrawEmptyLabel(rect, theme);
                 paintChildren();
@@ -89,6 +94,8 @@ public static class ColorPicker {
             int columnsPerRow = Mathf.Max(1, Mathf.FloorToInt((rect.width + gap) / (swatchSize + gap)));
 
             Event e = Event.current;
+            Rect gridBounds = Rect.zero;
+            bool anyDrawn = false;
             for (int i = 0; i < effectivePalette.Count; i++) {
                 int row = i / columnsPerRow;
                 int col = i % columnsPerRow;
@@ -112,19 +119,35 @@ public static class ColorPicker {
                 Color swatchColor = effectivePalette[i];
                 bool selected = ColorsApproximatelyEqual(swatchColor, value);
                 bool isOverSwatch = Mouse.IsOver(swatchRect);
-                if (disabled && isOverSwatch) {
+                if (effectiveDisabled && isOverSwatch) {
                     CursorOverrides.MarkDisabledHover();
                 }
 
-                bool hovered = !disabled && isOverSwatch;
+                bool hovered = !effectiveDisabled && (isOverSwatch || forcedHover);
 
-                DrawSwatch(swatchRect, swatchColor, theme, selected, hovered, disabled);
+                DrawSwatch(swatchRect, swatchColor, theme, selected, hovered, effectiveDisabled);
 
-                if (!disabled && e.type == EventType.MouseUp && e.button == 0 && swatchRect.Contains(e.mousePosition)) {
+                gridBounds = anyDrawn ? RectUnion(gridBounds, swatchRect) : swatchRect;
+                anyDrawn = true;
+
+                if (!effectiveDisabled && e.type == EventType.MouseUp && e.button == 0 && swatchRect.Contains(e.mousePosition) && LightweaveHitTracker.IsTopmost(swatchRect)) {
                     onChange?.Invoke(swatchColor);
                     RenderContext.Current.Hooks.Invalidate();
                     e.Use();
                 }
+            }
+
+            if (forcedFocus && anyDrawn) {
+                float pad = SpacingScale.Xs.ToPixels();
+                Rect focusRect = new Rect(
+                    gridBounds.x - pad,
+                    gridBounds.y - pad,
+                    gridBounds.width + pad * 2f,
+                    gridBounds.height + pad * 2f
+                );
+                BorderSpec focusBorder = BorderSpec.All(new Rem(2f / 16f), ThemeSlot.BorderFocus);
+                RadiusSpec focusRadius = RadiusSpec.All(RadiusScale.Xs);
+                PaintBox.Draw(focusRect, null, focusBorder, focusRadius);
             }
 
             paintChildren();
@@ -187,6 +210,14 @@ public static class ColorPicker {
         TextDraw.DrawWithStyle(rect, (string)"CL_ColorPicker_NoColors".Translate(), style, theme.GetColor(ThemeSlot.TextMuted));
     }
 
+    private static Rect RectUnion(Rect a, Rect b) {
+        float x = Mathf.Min(a.x, b.x);
+        float y = Mathf.Min(a.y, b.y);
+        float xMax = Mathf.Max(a.xMax, b.xMax);
+        float yMax = Mathf.Max(a.yMax, b.yMax);
+        return new Rect(x, y, xMax - x, yMax - y);
+    }
+
     private static bool ColorsApproximatelyEqual(Color a, Color b) {
         return Mathf.Abs(a.r - b.r) < 0.01f &&
                Mathf.Abs(a.g - b.g) < 0.01f &&
@@ -196,9 +227,37 @@ public static class ColorPicker {
 
     [DocVariant("CL_Playground_Label_Default")]
     public static DocSample DocsDefault() {
-        bool forced = RenderContext.Current.ForceDisabled;
         StateHandle<Color> s = UseState(new Color(0.25f, 0.42f, 0.30f));
-        return new DocSample(() => Create(s.Value, v => s.Set(v), disabled: forced));
+        return new DocSample(() => Create(s.Value, v => s.Set(v)));
+    }
+
+    private static LightweaveNode AllVariantsRow() {
+        return Create(new Color(0.25f, 0.42f, 0.30f), _ => { });
+    }
+
+    [DocState("CL_Playground_Label_Default", HideCode = true)]
+    public static DocSample DocsDefaultState() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Hover", HideCode = true)]
+    public static DocSample DocsHover() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Active", HideCode = true)]
+    public static DocSample DocsActive() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Focus", HideCode = true)]
+    public static DocSample DocsFocus() {
+        return new DocSample(() => AllVariantsRow());
+    }
+
+    [DocState("CL_Playground_Label_Disabled", HideCode = true)]
+    public static DocSample DocsDisabled() {
+        return new DocSample(() => AllVariantsRow());
     }
 
     [DocUsage]

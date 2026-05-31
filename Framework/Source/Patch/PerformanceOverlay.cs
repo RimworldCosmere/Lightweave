@@ -34,6 +34,9 @@ internal static class PerformanceOverlay {
 
     private static Texture2D? bgTex;
 
+    private static readonly string[] RowLabels = ["FPS", "AVG", "MAX", "GPU"];
+    private const string ValueMeasureSample = "999.9 ms";
+
     public static void Draw() {
         if (LightweaveMod.Settings is not { ShowPerformanceMetrics: true }) {
             return;
@@ -96,22 +99,45 @@ internal static class PerformanceOverlay {
     private static void DrawBox() {
         EnsureTextures();
 
-        const float pad = 8f;
-        const float lineH = 16f;
-        const float rowGap = 2f;
-        const float labelW = 38f;
-        const float valueW = 70f;
-        const float boxW = pad + labelW + 6f + valueW + pad;
-        const float boxH = pad + lineH * 4f + rowGap * 3f + pad;
-
-        float screenW = Verse.UI.screenWidth;
-        Rect box = new Rect(screenW - boxW - 8f, 8f, boxW, boxH);
-
         Color prevColor = GUI.color;
         Color prevContentColor = GUI.contentColor;
         TextAnchor prevAnchor = Text.Anchor;
         GameFont prevFont = Text.Font;
         bool prevWrap = Text.WordWrap;
+
+        Text.Font = GameFont.Tiny;
+        Text.WordWrap = false;
+
+        // Geometry is measured, not fixed px. The framework's GameFontOverride
+        // rewrites the GameFont GUIStyles' fontSize by the user's FontScale, so Tiny
+        // text grows - but Text.LineHeight reads a startup-baked array that never
+        // tracks that mutation. Text.CalcSize reads the live, scaled GUIStyle, so it
+        // is the only width/height source that follows the setting. Measuring a
+        // fixed "999.9 ms" sample (rather than the live values) keeps the box width
+        // stable as the readouts change digits each frame.
+        float scale = LightweaveMod.Settings?.FontScale ?? 1f;
+        float pad = Mathf.Round(8f * scale);
+        float rowGap = Mathf.Round(2f * scale);
+        float colGap = Mathf.Round(6f * scale);
+
+        Vector2 valueSize = Text.CalcSize(ValueMeasureSample);
+        float rowH = Mathf.Ceil(valueSize.y);
+        float valueW = Mathf.Ceil(valueSize.x);
+
+        float labelW = 0f;
+        for (int i = 0; i < RowLabels.Length; i++) {
+            float w = Text.CalcSize(RowLabels[i]).x;
+            if (w > labelW) {
+                labelW = w;
+            }
+        }
+        labelW = Mathf.Ceil(labelW);
+
+        float boxW = pad + labelW + colGap + valueW + pad;
+        float boxH = pad + rowH * 4f + rowGap * 3f + pad;
+
+        float screenW = Verse.UI.screenWidth;
+        Rect box = new Rect(screenW - boxW - 8f, 8f, boxW, boxH);
 
         GUI.color = new Color(0f, 0f, 0f, 0.78f);
         GUI.DrawTexture(box, bgTex);
@@ -119,20 +145,17 @@ internal static class PerformanceOverlay {
         DrawRectOutline(box);
         GUI.color = Color.white;
 
-        Text.Font = GameFont.Tiny;
-        Text.WordWrap = false;
-
-        Rect cursor = new Rect(box.x + pad, box.y + pad, labelW + 6f + valueW, lineH);
-        DrawRow(cursor, "FPS", FormatFps(emaFps), FpsColor(emaFps), labelW);
-        cursor.y += lineH + rowGap;
-        DrawRow(cursor, "AVG", FormatMs(emaFrameMs), MsColor(emaFrameMs), labelW);
-        cursor.y += lineH + rowGap;
-        DrawRow(cursor, "MAX", FormatMs(displayMaxMs), MsColor(displayMaxMs), labelW);
-        cursor.y += lineH + rowGap;
+        Rect cursor = new Rect(box.x + pad, box.y + pad, labelW + colGap + valueW, rowH);
+        DrawRow(cursor, "FPS", FormatFps(emaFps), FpsColor(emaFps), labelW, colGap);
+        cursor.y += rowH + rowGap;
+        DrawRow(cursor, "AVG", FormatMs(emaFrameMs), MsColor(emaFrameMs), labelW, colGap);
+        cursor.y += rowH + rowGap;
+        DrawRow(cursor, "MAX", FormatMs(displayMaxMs), MsColor(displayMaxMs), labelW, colGap);
+        cursor.y += rowH + rowGap;
         if (recordersAvailable) {
-            DrawRow(cursor, "GPU", FormatMs(emaGpuWaitMs), GpuColor(emaGpuWaitMs, emaFrameMs), labelW);
+            DrawRow(cursor, "GPU", FormatMs(emaGpuWaitMs), GpuColor(emaGpuWaitMs, emaFrameMs), labelW, colGap);
         } else {
-            DrawRow(cursor, "GPU", "n/a", new Color(0.55f, 0.55f, 0.58f, 1f), labelW);
+            DrawRow(cursor, "GPU", "n/a", new Color(0.55f, 0.55f, 0.58f, 1f), labelW, colGap);
         }
 
         Text.Font = prevFont;
@@ -142,9 +165,9 @@ internal static class PerformanceOverlay {
         GUI.contentColor = prevContentColor;
     }
 
-    private static void DrawRow(Rect row, string label, string value, Color valueColor, float labelW) {
+    private static void DrawRow(Rect row, string label, string value, Color valueColor, float labelW, float colGap) {
         Rect labelRect = new Rect(row.x, row.y, labelW, row.height);
-        Rect valueRect = new Rect(row.x + labelW + 6f, row.y, row.width - labelW - 6f, row.height);
+        Rect valueRect = new Rect(row.x + labelW + colGap, row.y, row.width - labelW - colGap, row.height);
 
         Text.Anchor = TextAnchor.MiddleLeft;
         GUI.contentColor = new Color(0.78f, 0.78f, 0.82f, 1f);
