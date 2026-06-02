@@ -97,6 +97,9 @@ public static class PaintBox {
             if (rounded) {
                 DrawRoundedBorderRing(r, bw, rad, bc);
             }
+            else if (border!.Value.Style == BorderStyleKind.Dashed) {
+                DrawDashedRectStroke(r, bw, bc);
+            }
             else {
                 DrawRectStroke(r, bw, bc);
             }
@@ -331,7 +334,12 @@ public static class PaintBox {
         }
         else if (bg is BackgroundSpec.Gradient grad) {
             Color c = grad.Tint != null ? ResolveColor(grad.Tint) : Color.white;
-            GUI.DrawTexture(r, grad.GradientTex, ScaleMode.StretchToFill, true, 0, c, Vector4.zero, rad);
+            DrawGradientTexture(r, grad.GradientTex, c, rad);
+        }
+        else if (bg is BackgroundSpec.GradientSlots vgrad) {
+            Texture2D gradTex = GradientTextureCache.Vertical(ResolveColor(vgrad.Top), ResolveColor(vgrad.Bottom));
+            Color c = vgrad.Tint != null ? ResolveColor(vgrad.Tint) : Color.white;
+            DrawGradientTexture(r, gradTex, c, rad);
         }
         else if (bg is BackgroundSpec.Blurred blurred) {
             Color? tint = blurred.Tint != null ? ResolveColor(blurred.Tint) : null;
@@ -361,6 +369,25 @@ public static class PaintBox {
                 }
             }
         }
+    }
+
+
+    // GUI.DrawTexture's rounded-rect overload (the one taking borderRadiuses) applies only the
+    // uniform tint alpha and discards the texture's PER-PIXEL alpha, so a translucent gradient
+    // (e.g. AccentSoft at 8%) renders fully opaque and washes out anything drawn over it. When the
+    // rect has no corner radius we can use the plain alpha-blending overload, which honors the
+    // texture's own alpha. Rounded gradients still fall back to the masked overload.
+    private static void DrawGradientTexture(Rect r, Texture2D tex, Color tint, Vector4 rad) {
+        bool noRadius = rad.x <= 0f && rad.y <= 0f && rad.z <= 0f && rad.w <= 0f;
+        if (noRadius) {
+            Color saved = GUI.color;
+            GUI.color = tint;
+            GUI.DrawTexture(r, tex, ScaleMode.StretchToFill, true);
+            GUI.color = saved;
+            return;
+        }
+
+        GUI.DrawTexture(r, tex, ScaleMode.StretchToFill, true, 0, tint, Vector4.zero, rad);
     }
 
     // Returns the uniform corner radius in pixels when all four corners share it,
@@ -450,6 +477,50 @@ public static class PaintBox {
 
         if (right > 0f) {
             GUI.DrawTexture(new Rect(r.xMax - right, r.y + top, right, Mathf.Max(0f, r.height - top - bottom)), tex);
+        }
+
+        GUI.color = saved;
+    }
+
+    // Dashed square stroke: each edge is a run of short segments (dash 4px / gap 3px).
+    // Allocation-free — only GUI.DrawTexture calls in the loops. Used for square borders
+    // whose BorderSpec.Style is Dashed; rounded dashed borders fall back to the solid ring.
+    private static void DrawDashedRectStroke(Rect r, Vector4 bw, Color color) {
+        const float dash = 4f;
+        const float gap = 3f;
+        const float period = dash + gap;
+
+        Color saved = GUI.color;
+        GUI.color = color;
+        Texture2D tex = Texture2D.whiteTexture;
+
+        float left = bw.x;
+        float top = bw.y;
+        float right = bw.z;
+        float bottom = bw.w;
+
+        if (top > 0f) {
+            for (float x = r.x; x < r.xMax; x += period) {
+                GUI.DrawTexture(new Rect(x, r.y, Mathf.Min(dash, r.xMax - x), top), tex);
+            }
+        }
+        if (bottom > 0f) {
+            for (float x = r.x; x < r.xMax; x += period) {
+                GUI.DrawTexture(new Rect(x, r.yMax - bottom, Mathf.Min(dash, r.xMax - x), bottom), tex);
+            }
+        }
+
+        float innerTop = r.y + top;
+        float innerBottom = r.yMax - bottom;
+        if (left > 0f) {
+            for (float y = innerTop; y < innerBottom; y += period) {
+                GUI.DrawTexture(new Rect(r.x, y, left, Mathf.Min(dash, innerBottom - y)), tex);
+            }
+        }
+        if (right > 0f) {
+            for (float y = innerTop; y < innerBottom; y += period) {
+                GUI.DrawTexture(new Rect(r.xMax - right, y, right, Mathf.Min(dash, innerBottom - y)), tex);
+            }
         }
 
         GUI.color = saved;

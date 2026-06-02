@@ -96,4 +96,19 @@
     <CL_MainMenu_ExpansionsActive>Expansions Active</CL_MainMenu_ExpansionsActive>
     <CL_MainMenu_Expansion_VisitStore_Active>Visit {LABEL} store page</CL_MainMenu_Expansion_VisitStore_Active>
     <CL_MainMenu_Expansion_VisitStore_Buy>Buy {LABEL}</CL_MainMenu_Expansion_VisitStore_Buy>
+
+    <CL_MainMenu_Continue_LastPlayed>Last played {WHEN}</CL_MainMenu_Continue_LastPlayed>
+    <CL_MainMenu_Continue_NoSaves>No saves yet</CL_MainMenu_Continue_NoSaves>
+    <CL_MainMenu_Continue_NoSavesHint>Start a new colony to begin.</CL_MainMenu_Continue_NoSavesHint>
+    <CL_MainMenu_Continue_Permadeath>Permadeath</CL_MainMenu_Continue_Permadeath>
+    <CL_MainMenu_ReviewScenario>Review scenario</CL_MainMenu_ReviewScenario>
+    <CL_MainMenu_Save>Save</CL_MainMenu_Save>
+    <CL_MainMenu_QuitToMainMenu>Quit to main menu</CL_MainMenu_QuitToMainMenu>
+    <CL_MainMenu_SaveAndQuitToMainMenu>Save and quit to main menu</CL_MainMenu_SaveAndQuitToMainMenu>
+    <CL_MainMenu_SaveAndQuitToOS>Save and quit to desktop</CL_MainMenu_SaveAndQuitToOS>
+    <CL_MainMenu_Content>Content</CL_MainMenu_Content>
+    <CL_MainMenu_Language>Language</CL_MainMenu_Language>
+    <CL_MainMenu_Link_Soundtrack>Soundtrack</CL_MainMenu_Link_Soundtrack>
+    <CL_MainMenu_Toast_Translation>Translation needs review. View report?</CL_MainMenu_Toast_Translation>
+    <CL_MainMenu_Toast_DevBuild>Developer mode is on.</CL_MainMenu_Toast_DevBuild>
 </LanguageData>

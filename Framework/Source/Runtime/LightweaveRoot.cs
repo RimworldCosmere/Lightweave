@@ -51,6 +51,7 @@ public static class LightweaveRoot {
         ctx.PointerPos = Event.current?.mousePosition ?? Vector2.zero;
         RenderContext.Push(ctx);
         bool didBuild = false;
+        bool painted = false;
         try {
             try {
                 int frame = Time.frameCount;
@@ -101,6 +102,7 @@ public static class LightweaveRoot {
                 root.ContentRect = inRect;
                 EventType currentEvent = Event.current?.type ?? EventType.Used;
                 if (currentEvent != EventType.Layout) {
+                    painted = true;
                     long paintStart = DiagnosticsEnabled ? System.Diagnostics.Stopwatch.GetTimestamp() : 0L;
                     Paint(root);
                     if (DiagnosticsEnabled) {
@@ -120,7 +122,14 @@ public static class LightweaveRoot {
             }
         }
         finally {
-            LightweaveHitTracker.Commit(rootId);
+            // Only snapshot the hit-test rects on passes that actually painted (i.e. tracked).
+            // Layout events clear `rects` but skip Paint, so committing on them would overwrite
+            // the last real snapshot with an empty list - and since Unity sends Layout right
+            // before each MouseUp, every IsTopmost check would then hit its empty-prev fallback
+            // (return true), letting whatever paints first claim clicks meant for controls on top.
+            if (painted) {
+                LightweaveHitTracker.Commit(rootId);
+            }
             RenderContext.Clear();
             if (DiagnosticsEnabled) {
                 Cryptiklemur.RimObs.Api.Obs.Metrics.Observe(LightweaveTelemetry.RenderTotalTicks, System.Diagnostics.Stopwatch.GetTimestamp() - renderStart);
@@ -135,6 +144,12 @@ public static class LightweaveRoot {
         }
         buildCache.Remove(rootId);
         LightweaveHitTracker.ReleaseRoot(rootId);
+    }
+
+    public static void Invalidate(Guid rootId) {
+        if (stores.TryGetValue(rootId, out HookStore store)) {
+            store.Invalidate();
+        }
     }
 
     private static Theme.Theme GetBaseTheme() {

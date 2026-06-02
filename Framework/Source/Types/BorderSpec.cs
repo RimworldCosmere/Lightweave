@@ -9,10 +9,15 @@ public readonly record struct BorderSpec(
     Rem? Left = null,
     Rem? Start = null,
     Rem? End = null,
-    ColorRef? Color = null
+    ColorRef? Color = null,
+    BorderStyleKind Style = BorderStyleKind.Solid
 ) {
     public static BorderSpec All(Rem width, ColorRef color) {
         return new BorderSpec(width, width, width, width, Color: color);
+    }
+
+    public static BorderSpec AllDashed(Rem width, ColorRef color) {
+        return new BorderSpec(width, width, width, width, Color: color, Style: BorderStyleKind.Dashed);
     }
 
     public Vector4 ResolveVector(Direction dir) {

@@ -28,6 +28,7 @@ public static class IconButton {
         bool disabled = false,
         bool active = false,
         string? tooltipKey = null,
+        TooltipSide tooltipSide = TooltipSide.Bottom,
         bool? playHoverSound = null,
         Style? style = null,
         string[]? classes = null,
@@ -103,7 +104,9 @@ public static class IconButton {
         };
 
         if (!string.IsNullOrEmpty(tooltipKey)) {
-            return Tooltip.Create(node, (string)tooltipKey!.Translate(), line: line, file: file);
+            // tooltipKey is unique per logical button; pass it as the tooltip id so sibling
+            // IconButtons routed through one helper (same call site) don't share a hoverTimer slot.
+            return Tooltip.Create(node, (string)tooltipKey!.Translate(), side: tooltipSide, id: id ?? tooltipKey, line: line, file: file);
         }
 
         return node;

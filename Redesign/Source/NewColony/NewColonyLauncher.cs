@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using HarmonyLib;
 using RimWorld;
 using RimWorld.Planet;
@@ -53,7 +54,7 @@ public static class NewColonyLauncher {
         // behind the window.
         OwnsWorld = true;
 
-        int sig = ProvisionSignature(scenarioName, tellerDefName, diffDefName, world.MapSize, anomalyParams);
+        int sig = ProvisionSignature(scenarioName, tellerDefName, diffDefName, world.MapSize, world.StartingSeason, anomalyParams);
         if (Current.Game != null && provisionSig == sig && !committed) {
             return true;
         }
@@ -65,6 +66,7 @@ public static class NewColonyLauncher {
         Current.Game.Scenario.PreConfigure();
         Find.GameInitData.startedFromEntry = true;
         Current.Game.InitData.mapSize = world.MapSize;
+        Current.Game.InitData.startingSeason = world.StartingSeason;
         Current.Game.storyteller = new Storyteller(teller, diff, BuildDifficulty(diff, anomalyParams));
 
         provisionSig = sig;
@@ -171,20 +173,29 @@ public static class NewColonyLauncher {
             return;
         }
 
-        string seedString = world.Seed.NullOrEmpty() ? GenText.RandomSeedString() : world.Seed;
+        // The seed is stable across generations: an explicit seed (typed into the seed field or set
+        // by Randomize) is used verbatim, and an empty field reuses the last generated seed so every
+        // Regenerate reproduces the same planet. Only typing a seed or clicking Randomize changes it;
+        // the first generation rolls one random seed and persists it as LastSeed.
+        string seedString = NewColonyThresholds.ResolveSeed(world.Seed, LastSeed) ?? GenText.RandomSeedString();
         float coverage = world.Coverage;
         OverallRainfall rainfall = NewColonyFormat.Rainfall(world.Rainfall);
         OverallTemperature temperature = NewColonyFormat.Temperature(world.Temperature);
         OverallPopulation population = NewColonyFormat.Population(world.Population);
         LandmarkDensity landmarkDensity = NewColonyFormat.Landmark(world.Landmark);
-        float pollution = world.Pollution;
+        // Vanilla only feeds pollution to world gen when Biotech is active (Page_CreateWorldParams.Reset
+        // sets it to 0 otherwise); mirror that so a non-Biotech save never gets the 0.05 default applied.
+        float pollution = Verse.ModsConfig.BiotechActive ? world.Pollution : 0f;
+        // Null factions means "vanilla default set"; our config list mirrors that default but lets the
+        // Factions subtab add/remove entries before generation, exactly like Page_CreateWorldParams.
+        List<FactionDef>? factions = world.Factions != null && world.Factions.Count > 0 ? world.Factions : null;
 
         LastSeed = seedString;
         worldGenSig = WorldGenSignature(world);
 
         Find.GameInitData.ResetWorldRelatedMapInitData();
         World built = WorldGenerator.GenerateWorld(
-            coverage, seedString, rainfall, temperature, population, landmarkDensity, null, pollution);
+            coverage, seedString, rainfall, temperature, population, landmarkDensity, factions, pollution);
         Current.Game.World = built;
         Find.World.renderer.RegenerateAllLayersNow();
         MemoryUtility.UnloadUnusedUnityAssets();
@@ -200,6 +211,21 @@ public static class NewColonyLauncher {
         hash = hash * 31 + world.Population;
         hash = hash * 31 + world.Landmark;
         hash = hash * 31 + world.Pollution.GetHashCode();
+        hash = hash * 31 + FactionConfigHash(world.Factions);
+        return hash;
+    }
+
+    // Order-independent hash of the faction multiset so reordering never forces a regen but adding or
+    // removing an entry does. Combined additively (per-def count) keeps it stable across list rebuilds.
+    private static int FactionConfigHash(List<FactionDef>? factions) {
+        if (factions == null) {
+            return 0;
+        }
+        int hash = factions.Count;
+        for (int i = 0; i < factions.Count; i++) {
+            FactionDef def = factions[i];
+            hash += def?.shortHash ?? 0;
+        }
         return hash;
     }
 
@@ -208,6 +234,7 @@ public static class NewColonyLauncher {
         string? tellerDefName,
         string? diffDefName,
         int mapSize,
+        Season startingSeason,
         AnomalyParams anomalyParams
     ) {
         int hash = 17;
@@ -215,6 +242,7 @@ public static class NewColonyLauncher {
         hash = hash * 31 + (tellerDefName?.GetHashCode() ?? 0);
         hash = hash * 31 + (diffDefName?.GetHashCode() ?? 0);
         hash = hash * 31 + mapSize;
+        hash = hash * 31 + (int)startingSeason;
         hash = hash * 31 + anomalyParams.GetHashCode();
         return hash;
     }

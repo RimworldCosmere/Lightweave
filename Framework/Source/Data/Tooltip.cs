@@ -417,13 +417,20 @@ public static class Tooltip {
         node.Measure = availableWidth => children.Measure?.Invoke(availableWidth) ?? children.PreferredHeight ?? 0f;
         node.PreferredHeight = children.PreferredHeight;
 
+        // Sibling tooltips created through the same wrapper (e.g. several IconButtons routed through
+        // one helper method) share (line, file) and therefore collide onto a single hoverTimer hook
+        // slot. The non-hovered siblings then reset that shared timer to 0 every frame, so it never
+        // reaches delayDuration and no tooltip ever appears. Fold the explicit id into the hook key
+        // (same convention as ScrollArea) so each instance owns an independent timer.
+        string hookFile = string.IsNullOrEmpty(id) ? file : file + "#id:" + id;
+
         node.Paint = (rect, _) => {
             children.MeasuredRect = rect;
             LightweaveRoot.PaintSubtree(children, rect);
 
             Rect hoverRect = children.MeasuredRect;
 
-            Hooks.Hooks.RefHandle<float> hoverTimer = Hooks.Hooks.UseRef(0f, line, file);
+            Hooks.Hooks.RefHandle<float> hoverTimer = Hooks.Hooks.UseRef(0f, line, hookFile);
 
             bool hovered = Mouse.IsOver(hoverRect);
             Event e = Event.current;

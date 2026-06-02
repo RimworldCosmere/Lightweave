@@ -96,36 +96,39 @@ public static class AnomalyTab {
             }));
             s.Add(NewColonyControls.LabeledSlider(
                 "CL_NewColony_Anomaly_ThreatsInactive".Translate() + " · " + NewColonyFormat.AnomalyIntensityLabel(anomaly.Value.ThreatsInactive),
-                Percent(anomaly.Value.ThreatsInactive),
+                Percent,
                 anomaly.Value.ThreatsInactive,
                 v => {
                     AnomalyParams next = anomaly.Value;
                     next.ThreatsInactive = v;
                     anomaly.Set(next);
                 },
-                0f, 1f, 0.01f
+                0f, 1f, 0.01f,
+                key: "anomaly-threats-inactive"
             ));
             s.Add(NewColonyControls.LabeledSlider(
                 "CL_NewColony_Anomaly_ThreatsActive".Translate() + " · " + NewColonyFormat.AnomalyIntensityLabel(anomaly.Value.ThreatsActive),
-                Percent(anomaly.Value.ThreatsActive),
+                Percent,
                 anomaly.Value.ThreatsActive,
                 v => {
                     AnomalyParams next = anomaly.Value;
                     next.ThreatsActive = v;
                     anomaly.Set(next);
                 },
-                0f, 1f, 0.01f
+                0f, 1f, 0.01f,
+                key: "anomaly-threats-active"
             ));
             s.Add(NewColonyControls.LabeledSlider(
                 "CL_NewColony_Anomaly_StudyEfficiency".Translate(),
-                Percent(anomaly.Value.StudyEfficiency),
+                Percent,
                 anomaly.Value.StudyEfficiency,
                 v => {
                     AnomalyParams next = anomaly.Value;
                     next.StudyEfficiency = v;
                     anomaly.Set(next);
                 },
-                0.5f, 2f, 0.05f
+                0.5f, 2f, 0.05f,
+                key: "anomaly-study-efficiency"
             ));
             s.Add(Button.Create(
                 "CL_NewColony_Anomaly_Reset".Translate(),

@@ -1,4 +1,5 @@
 using Cosmere.Lightweave.Tokens;
+using RimWorld;
 using RimWorld.Planet;
 using UnityEngine;
 using Verse;
@@ -6,11 +7,13 @@ using Verse;
 namespace Cosmere.Lightweave.Redesign.NewColony;
 
 public static class NewColonyFormat {
-    public static readonly int[] MapSizes = [200, 250, 275, 300, 350];
-
-    public static readonly float[] Coverages = [0.3f, 0.5f, 1f];
-
     public static readonly int[] PopulationLevels = [1, 3, 5];
+
+    // The five seasons the vanilla Dialog_AdvancedGameConfig offers; the enum also has
+    // PermanentSummer/PermanentWinter, which that dialog deliberately omits.
+    public static readonly Season[] Seasons = [
+        Season.Undefined, Season.Spring, Season.Summer, Season.Fall, Season.Winter,
+    ];
 
     public static OverallRainfall Rainfall(int ordinal) {
         return (OverallRainfall)Mathf.Clamp(ordinal, 0, 6);
@@ -45,7 +48,23 @@ public static class NewColonyFormat {
     }
 
     public static string MapSizeLabel(int size) {
-        return ("CL_NewColony_MapSize_" + size).Translate();
+        // Maps are square (the new-game flow feeds a single mapSize into both axes), so the readout
+        // shows the literal NxN dimension rather than a Small/Medium/Large tier name.
+        return size + " × " + size;
+    }
+
+    public static string LandmarkLabel(int ordinal) {
+        return ("CL_NewColony_Landmark_" + Mathf.Clamp(ordinal, 0, 6)).Translate();
+    }
+
+    public static string PollutionLabel(float pollution) {
+        return Mathf.RoundToInt(pollution * 100f) + "%";
+    }
+
+    public static string SeasonLabel(Season season) {
+        return season == Season.Undefined
+            ? (string)"CL_NewColony_World_Season_Default".Translate()
+            : ("CL_NewColony_World_Season_" + season).Translate();
     }
 
     public static string AnomalyIntensityLabel(float fraction) {

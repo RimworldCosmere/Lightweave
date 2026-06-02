@@ -63,6 +63,14 @@ public static class NewColonyData {
         return (source.Name, DlcSlotForPackageId(source.PackageId));
     }
 
+    public static (string Name, ThemeSlot Slot)? FactionDlc(FactionDef def) {
+        ModContentPack? source = def?.modContentPack;
+        if (source == null || !source.IsOfficialMod || source.IsCoreMod) {
+            return null;
+        }
+        return (source.Name, DlcSlotForPackageId(source.PackageId));
+    }
+
     private static ThemeSlot DlcSlotForPackageId(string? packageId) {
         if (string.IsNullOrEmpty(packageId)) {
             return ThemeSlot.DlcRoyalty;

@@ -96,7 +96,7 @@ public static class NewColonyRoot {
                 variant: Variant.Secondary,
                 tooltipKey: "CL_NewColony_Close_Tooltip"));
         }, style: new Style {
-            Padding = new EdgeInsets(new Rem(1.5f), new Rem(1.75f), new Rem(1f), new Rem(1.75f)),
+            Padding = new EdgeInsets(new Rem(1.5f), new Rem(1.75f), new Rem(0.5f), new Rem(1.75f)),
         });
     }
 

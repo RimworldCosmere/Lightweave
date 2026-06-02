@@ -41,6 +41,13 @@ public abstract record BackgroundSpec {
         return new Blurred(tint, blurSizePx);
     }
 
+    // Vertical (top-to-bottom) two-stop gradient resolved at paint time from theme slots,
+    // so it stays declarative (no baked texture at build time). PaintBox looks up a cached
+    // gradient texture for the resolved colors.
+    public static BackgroundSpec VerticalGradient(ColorRef top, ColorRef bottom, ColorRef? tint = null) {
+        return new GradientSlots(top, bottom, tint);
+    }
+
     public static implicit operator BackgroundSpec(Color c) {
         return new Solid(c);
     }
@@ -55,6 +62,8 @@ public abstract record BackgroundSpec {
         : BackgroundSpec;
 
     public sealed record Gradient(Texture2D GradientTex, ColorRef? Tint = null) : BackgroundSpec;
+
+    public sealed record GradientSlots(ColorRef Top, ColorRef Bottom, ColorRef? Tint = null) : BackgroundSpec;
 
     public sealed record Blurred(ColorRef? Tint = null, float BlurSizePx = 12f) : BackgroundSpec;
 }

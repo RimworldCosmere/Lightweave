@@ -37,6 +37,22 @@ internal static class PerformanceOverlay {
     private static readonly string[] RowLabels = ["FPS", "AVG", "MAX", "GPU"];
     private const string ValueMeasureSample = "999.9 ms";
 
+    // Stable, nonzero immediate-window id. WindowStack negates it internally.
+    private const int WindowId = 6234607;
+    // One past WindowLayer.Super. The stack only ever compares layers with <= / >=,
+    // so an above-range value sorts last (drawn on top) and is skipped by every
+    // window's KeepPinnedOnTop, which only re-pins against same-or-lower layers.
+    private const WindowLayer AlwaysOnTopLayer = WindowLayer.Super + 1;
+    private static readonly System.Action DrawContentAction = DrawBoxContents;
+
+    private static Rect boxRect;
+    private static float padPx;
+    private static float rowGapPx;
+    private static float colGapPx;
+    private static float rowHeightPx;
+    private static float labelWidthPx;
+    private static float valueWidthPx;
+
     public static void Draw() {
         if (LightweaveMod.Settings is not { ShowPerformanceMetrics: true }) {
             return;
@@ -47,7 +63,33 @@ internal static class PerformanceOverlay {
         }
 
         Sample();
-        DrawBox();
+        MeasureBox();
+        // Route the draw through an immediate window whose layer sits ABOVE Super so
+        // it composites on top of every window's GUI.Window content - including the
+        // fullscreen New Colony window. Drawing directly in the UIRoot postfix lands
+        // on the background GUI layer (covered by any open window), and a plain Super
+        // immediate window loses to LightweaveWindow.KeepPinnedOnTop, which re-pins
+        // the New Colony window above any same-or-lower layer. The above-Super layer
+        // both sorts the overlay last in the stack and makes that pin logic skip it.
+        Find.WindowStack.ImmediateWindow(WindowId, boxRect, AlwaysOnTopLayer, DrawContentAction, doBackground: false);
+    }
+
+    public static void HandleToggleHotkey() {
+        Event e = Event.current;
+        if (e == null || e.type != EventType.KeyDown || e.keyCode != KeyCode.F9) {
+            return;
+        }
+        // Vanilla KeyBindingDef cannot express a modifier chord, so the default toggle
+        // (Alt+F9) is matched against the raw event.
+        if (!e.alt || e.control || e.command || e.shift) {
+            return;
+        }
+        if (LightweaveMod.Settings is not { } settings) {
+            return;
+        }
+        settings.ShowPerformanceMetrics = !settings.ShowPerformanceMetrics;
+        LightweaveMod.Save();
+        e.Use();
     }
 
     private static void Sample() {
@@ -96,11 +138,7 @@ internal static class PerformanceOverlay {
         displayMaxMs = maxMs;
     }
 
-    private static void DrawBox() {
-        EnsureTextures();
-
-        Color prevColor = GUI.color;
-        Color prevContentColor = GUI.contentColor;
+    private static void MeasureBox() {
         TextAnchor prevAnchor = Text.Anchor;
         GameFont prevFont = Text.Font;
         bool prevWrap = Text.WordWrap;
@@ -116,13 +154,13 @@ internal static class PerformanceOverlay {
         // fixed "999.9 ms" sample (rather than the live values) keeps the box width
         // stable as the readouts change digits each frame.
         float scale = LightweaveMod.Settings?.FontScale ?? 1f;
-        float pad = Mathf.Round(8f * scale);
-        float rowGap = Mathf.Round(2f * scale);
-        float colGap = Mathf.Round(6f * scale);
+        padPx = Mathf.Round(8f * scale);
+        rowGapPx = Mathf.Round(2f * scale);
+        colGapPx = Mathf.Round(6f * scale);
 
         Vector2 valueSize = Text.CalcSize(ValueMeasureSample);
-        float rowH = Mathf.Ceil(valueSize.y);
-        float valueW = Mathf.Ceil(valueSize.x);
+        rowHeightPx = Mathf.Ceil(valueSize.y);
+        valueWidthPx = Mathf.Ceil(valueSize.x);
 
         float labelW = 0f;
         for (int i = 0; i < RowLabels.Length; i++) {
@@ -131,13 +169,35 @@ internal static class PerformanceOverlay {
                 labelW = w;
             }
         }
-        labelW = Mathf.Ceil(labelW);
+        labelWidthPx = Mathf.Ceil(labelW);
 
-        float boxW = pad + labelW + colGap + valueW + pad;
-        float boxH = pad + rowH * 4f + rowGap * 3f + pad;
+        float boxW = padPx + labelWidthPx + colGapPx + valueWidthPx + padPx;
+        float boxH = padPx + rowHeightPx * 4f + rowGapPx * 3f + padPx;
 
         float screenW = Verse.UI.screenWidth;
-        Rect box = new Rect(screenW - boxW - 8f, 8f, boxW, boxH);
+        boxRect = new Rect(screenW - boxW - 8f, 8f, boxW, boxH);
+
+        Text.Font = prevFont;
+        Text.Anchor = prevAnchor;
+        Text.WordWrap = prevWrap;
+    }
+
+    // Drawn inside a Super-layer ImmediateWindow, so coordinates are window-local
+    // (origin 0,0) and the geometry comes from the static fields MeasureBox set this
+    // frame. The window rect itself was placed in screen space by MeasureBox.
+    private static void DrawBoxContents() {
+        EnsureTextures();
+
+        Color prevColor = GUI.color;
+        Color prevContentColor = GUI.contentColor;
+        TextAnchor prevAnchor = Text.Anchor;
+        GameFont prevFont = Text.Font;
+        bool prevWrap = Text.WordWrap;
+
+        Text.Font = GameFont.Tiny;
+        Text.WordWrap = false;
+
+        Rect box = new Rect(0f, 0f, boxRect.width, boxRect.height);
 
         GUI.color = new Color(0f, 0f, 0f, 0.78f);
         GUI.DrawTexture(box, bgTex);
@@ -145,17 +205,17 @@ internal static class PerformanceOverlay {
         DrawRectOutline(box);
         GUI.color = Color.white;
 
-        Rect cursor = new Rect(box.x + pad, box.y + pad, labelW + colGap + valueW, rowH);
-        DrawRow(cursor, "FPS", FormatFps(emaFps), FpsColor(emaFps), labelW, colGap);
-        cursor.y += rowH + rowGap;
-        DrawRow(cursor, "AVG", FormatMs(emaFrameMs), MsColor(emaFrameMs), labelW, colGap);
-        cursor.y += rowH + rowGap;
-        DrawRow(cursor, "MAX", FormatMs(displayMaxMs), MsColor(displayMaxMs), labelW, colGap);
-        cursor.y += rowH + rowGap;
+        Rect cursor = new Rect(box.x + padPx, box.y + padPx, labelWidthPx + colGapPx + valueWidthPx, rowHeightPx);
+        DrawRow(cursor, "FPS", FormatFps(emaFps), FpsColor(emaFps), labelWidthPx, colGapPx);
+        cursor.y += rowHeightPx + rowGapPx;
+        DrawRow(cursor, "AVG", FormatMs(emaFrameMs), MsColor(emaFrameMs), labelWidthPx, colGapPx);
+        cursor.y += rowHeightPx + rowGapPx;
+        DrawRow(cursor, "MAX", FormatMs(displayMaxMs), MsColor(displayMaxMs), labelWidthPx, colGapPx);
+        cursor.y += rowHeightPx + rowGapPx;
         if (recordersAvailable) {
-            DrawRow(cursor, "GPU", FormatMs(emaGpuWaitMs), GpuColor(emaGpuWaitMs, emaFrameMs), labelW, colGap);
+            DrawRow(cursor, "GPU", FormatMs(emaGpuWaitMs), GpuColor(emaGpuWaitMs, emaFrameMs), labelWidthPx, colGapPx);
         } else {
-            DrawRow(cursor, "GPU", "n/a", new Color(0.55f, 0.55f, 0.58f, 1f), labelW, colGap);
+            DrawRow(cursor, "GPU", "n/a", new Color(0.55f, 0.55f, 0.58f, 1f), labelWidthPx, colGapPx);
         }
 
         Text.Font = prevFont;

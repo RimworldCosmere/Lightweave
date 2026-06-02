@@ -283,6 +283,12 @@
     <CL_Playground_button_Title>Button</CL_Playground_button_Title>
     <CL_Playground_button_What>Primary interactive trigger. Fires a callback on click.</CL_Playground_button_What>
     <CL_Playground_button_When>Use for discrete actions. Reach for ButtonIcon for icon-only actions in tight space.</CL_Playground_button_When>
+    <CL_Playground_option-row_Title>OptionRow</CL_Playground_option-row_Title>
+    <CL_Playground_option-row_What>Clickable row: optional leading node, flexing label, optional trailing node.</CL_Playground_option-row_What>
+    <CL_Playground_option-row_When>A selectable list or menu item where Button's centered content won't do, like an icon plus name plus trailing tag in a picker.</CL_Playground_option-row_When>
+    <CL_Playground_disclosure_Title>Disclosure</CL_Playground_disclosure_Title>
+    <CL_Playground_disclosure_What>Inline expand/collapse: a toggle row that reveals content in-flow below it.</CL_Playground_disclosure_What>
+    <CL_Playground_disclosure_When>An in-place reveal such as an add-picker or advanced-options panel, distinct from Menu and Popover which float over the surface.</CL_Playground_disclosure_When>
     <CL_Playground_textfield_Title>TextField</CL_Playground_textfield_Title>
     <CL_Playground_textfield_What>Single-line text entry. Fires onSubmit on Enter and onBlur on focus loss.</CL_Playground_textfield_What>
     <CL_Playground_textfield_When>Collect a short string. Reach for SearchField when you want live filtering on keystroke.</CL_Playground_textfield_When>
@@ -585,6 +591,8 @@
     <CL_Playground_Label_Disabled>Disabled</CL_Playground_Label_Disabled>
     <CL_Playground_Label_Hover>Hover</CL_Playground_Label_Hover>
     <CL_Playground_Label_Active>Active</CL_Playground_Label_Active>
+    <CL_Playground_Label_Leading>With leading</CL_Playground_Label_Leading>
+    <CL_Playground_Label_Trailing>With trailing</CL_Playground_Label_Trailing>
     <CL_Playground_Label_Focus>Focus</CL_Playground_Label_Focus>
     <CL_Playground_Label_Normal>Normal</CL_Playground_Label_Normal>
     <CL_Playground_Label_Accented>Accented</CL_Playground_Label_Accented>
@@ -615,6 +623,7 @@
     <CL_Playground_Label_Gap>Gap</CL_Playground_Label_Gap>
     <CL_Playground_Label_Align>Align</CL_Playground_Label_Align>
     <CL_Playground_Label_Justify>Justify</CL_Playground_Label_Justify>
+    <CL_Playground_HStack_Align>Cross-axis align</CL_Playground_HStack_Align>
     <CL_Playground_Label_Horizontal>Horizontal</CL_Playground_Label_Horizontal>
     <CL_Playground_Label_Vertical>Vertical</CL_Playground_Label_Vertical>
     <CL_Playground_Label_Nested>Nested</CL_Playground_Label_Nested>
