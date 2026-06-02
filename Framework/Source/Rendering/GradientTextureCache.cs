@@ -19,10 +19,27 @@ public static class GradientTextureCache {
             filterMode = FilterMode.Bilinear,
             hideFlags = HideFlags.HideAndDontSave,
         };
+        // Interpolate in premultiplied-alpha space (matching CSS linear-gradient), then
+        // un-premultiply for storage so GUI.DrawTexture's straight-alpha blend composites
+        // correctly. Straight Color.Lerp between endpoints of differing alpha (e.g. a 0.55-alpha
+        // dark top and a 0.08-alpha gold bottom) drives RGB toward the bright endpoint faster
+        // than alpha falls, producing a muddy gold mid-band; premultiplied interpolation fades
+        // cleanly. Endpoints of equal alpha (e.g. Button's primary gradient) are unaffected.
+        float topR = top.r * top.a;
+        float topG = top.g * top.a;
+        float topB = top.b * top.a;
+        float botR = bottom.r * bottom.a;
+        float botG = bottom.g * bottom.a;
+        float botB = bottom.b * bottom.a;
         Color[] pixels = new Color[GradientHeight];
         for (int i = 0; i < GradientHeight; i++) {
             float t = i / (float)(GradientHeight - 1);
-            pixels[GradientHeight - 1 - i] = Color.Lerp(top, bottom, t);
+            float a = Mathf.Lerp(top.a, bottom.a, t);
+            float pr = Mathf.Lerp(topR, botR, t);
+            float pg = Mathf.Lerp(topG, botG, t);
+            float pb = Mathf.Lerp(topB, botB, t);
+            Color c = a > 0.0001f ? new Color(pr / a, pg / a, pb / a, a) : new Color(0f, 0f, 0f, 0f);
+            pixels[GradientHeight - 1 - i] = c;
         }
         tex.SetPixels(pixels);
         tex.Apply(updateMipmaps: false, makeNoLongerReadable: true);

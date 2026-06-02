@@ -39,6 +39,10 @@ public static class HStack {
         Rem gap = default,
         [DocParam("Builder callback to populate items via Add(width) / AddFlex().")]
         Action<HStackBuilder>? children = null,
+        [DocParam("When true, records the full row rect (including padding) as a single interactive hit region during layout, so clicks anywhere over the row - including the gaps between children - are claimed by the row instead of falling through to whatever is painted behind it.")]
+        bool captureHits = false,
+        [DocParam("Cross-axis (vertical) alignment of children within the row height. Stretch (default) gives every child the full row height; Start/Center/End size each measurable child to its natural height and pin it to the top/middle/bottom.")]
+        FlexAlign align = FlexAlign.Stretch,
         [DocParam("Inline style override.", TypeOverride = "Style?", DefaultOverride = "null")]
         Style? style = null,
         [DocParam("Additional class names merged after the base 'hstack' class.", TypeOverride = "string[]?", DefaultOverride = "null")]
@@ -184,6 +188,14 @@ public static class HStack {
         float[]? layoutWidths = null;
 
         node.Layout = rect => {
+            if (captureHits) {
+                // node.MeasuredRect is the outer row rect (padding included); the pipeline sets it
+                // before Layout runs and passes us the padding-shrunk inner rect. Tracking the outer
+                // rect here - before children paint and track their own squares - keeps the children
+                // top-most where they sit while the row claims every other pixel under it.
+                LightweaveHitTracker.Track(node.MeasuredRect);
+            }
+
             if (count == 0) {
                 return;
             }
@@ -210,7 +222,20 @@ public static class HStack {
                 }
                 LightweaveNode child = builder.Items[idx].node;
                 float w = layoutWidths![idx];
-                child.MeasuredRect = new Rect(x, rect.y, w, rect.height);
+                float childY = rect.y;
+                float childH = rect.height;
+                if (align != FlexAlign.Stretch) {
+                    float measured = MeasureChildHeight(child, w);
+                    if (measured > 0f && measured < rect.height) {
+                        childH = measured;
+                        childY = align switch {
+                            FlexAlign.Center => rect.y + (rect.height - measured) * 0.5f,
+                            FlexAlign.End => rect.y + (rect.height - measured),
+                            _ => rect.y,
+                        };
+                    }
+                }
+                child.MeasuredRect = new Rect(x, childY, w, childH);
                 x += w + gapPx;
             }
         };
@@ -242,6 +267,22 @@ public static class HStack {
                     r.AddFlex(AccentChip("center"));
                     r.Add(SampleChip("right"), 48f);
                 }
+            )
+        );
+    }
+
+    [DocVariant("CL_Playground_HStack_Align")]
+    public static DocSample DocsAlign() {
+        return new DocSample(() =>
+            HStack.Create(
+                SpacingScale.Xs,
+                r => {
+                    r.Add(SampleChip("48"), 48f);
+                    r.AddHug(AccentChip("centered"));
+                    r.Add(SampleChip("32"), 32f);
+                },
+                align: FlexAlign.Center,
+                style: new Style { Height = new Rem(3f) }
             )
         );
     }

@@ -35,6 +35,8 @@ public static class Segmented {
         bool bordered = true,
         [DocParam("When true (default) labels render in BodyBold for legibility at small pill sizes. Pass false to use the regular Body weight.")]
         bool bold = true,
+        [DocParam("Optional label font size. Defaults to 0.75rem; raise it for larger tab strips.")]
+        Rem? labelSize = null,
         Style? style = null,
         string[]? classes = null,
         string? id = null,
@@ -48,7 +50,7 @@ public static class Segmented {
             ? h0.ToPixels(0f, 0f)
             : new Rem(1.75f).ToPixels();
 
-        Rem labelSize = new Rem(0.75f);
+        Rem labelSizeResolved = labelSize ?? new Rem(0.75f);
         Rem countSize = new Rem(0.656f);
 
         node.MeasureWidth = () => {
@@ -56,13 +58,13 @@ public static class Segmented {
             if (count == 0) {
                 return 0f;
             }
-            float labelTrackingPx = Mathf.Round(labelSize.ToFontPx() * 0.12f);
+            float labelTrackingPx = Mathf.Round(labelSizeResolved.ToFontPx() * 0.12f);
             float padPx = SpacingScale.Md.ToPixels();
             float gapPx = SpacingScale.Sm.ToPixels();
             float total = 0f;
             for (int i = 0; i < count; i++) {
                 string label = labelFn(items[i]) ?? string.Empty;
-                float w = TextDraw.MeasureTracked(label, bold ? FontRole.BodyBold : FontRole.Body, labelSize, labelTrackingPx);
+                float w = TextDraw.MeasureTracked(label, bold ? FontRole.BodyBold : FontRole.Body, labelSizeResolved, labelTrackingPx);
                 string? cnt = countFn?.Invoke(items[i]);
                 if (!string.IsNullOrEmpty(cnt)) {
                     w += gapPx + TextDraw.Measure(cnt!, FontRole.Mono, countSize).x;
@@ -102,7 +104,7 @@ public static class Segmented {
                 inner = rect;
             }
             float segmentWidth = inner.width / count;
-            float labelTrackingPx = Mathf.Round(labelSize.ToFontPx() * 0.12f);
+            float labelTrackingPx = Mathf.Round(labelSizeResolved.ToFontPx() * 0.12f);
             float gapPx = SpacingScale.Sm.ToPixels();
 
             int activeIndex = -1;
@@ -124,11 +126,13 @@ public static class Segmented {
                 LightweaveHitTracker.Track(segRect);
 
                 if (active) {
-                    Color top = theme.GetColor(ThemeSlot.SurfaceAccent);
-                    Color.RGBToHSV(top, out float hue, out float sat, out float val);
-                    Color bottom = Color.HSVToRGB(hue, sat, val * 0.78f);
-                    bottom.a = top.a;
-                    PaintBox.Draw(segRect, new BackgroundSpec.Gradient(GradientTextureCache.Vertical(top, bottom)), null, radius);
+                    // Tab-style active treatment: a subtle warm fill plus a gold underline along the
+                    // bottom edge, rather than a solid gold pill. Reads as a selected tab and lets the
+                    // label keep its accent color instead of inverting to dark-on-gold.
+                    PaintBox.Draw(segRect, BackgroundSpec.Of(ThemeSlot.ActiveTint), null, radius);
+                    float underlinePx = new Rem(2f / 16f).ToPixels();
+                    Rect underline = new Rect(segRect.x, segRect.yMax - underlinePx, segRect.width, underlinePx);
+                    PaintBox.Draw(underline, BackgroundSpec.Of(ThemeSlot.SurfaceAccent), null, null);
                 }
                 else {
                     PaintBox.DrawHighlightIfMouseover(segRect, radius);
@@ -137,15 +141,15 @@ public static class Segmented {
 
                 string label = labelFn(item) ?? string.Empty;
                 string? badge = countFn?.Invoke(item);
-                Color textColor = theme.GetColor(active ? ThemeSlot.TextOnAccent : ThemeSlot.TextSecondary);
+                Color textColor = theme.GetColor(active ? ThemeSlot.SurfaceAccent : ThemeSlot.TextSecondary);
 
-                float labelW = TextDraw.MeasureTracked(label, bold ? FontRole.BodyBold : FontRole.Body, labelSize, labelTrackingPx);
+                float labelW = TextDraw.MeasureTracked(label, bold ? FontRole.BodyBold : FontRole.Body, labelSizeResolved, labelTrackingPx);
                 float badgeW = string.IsNullOrEmpty(badge) ? 0f : TextDraw.Measure(badge!, FontRole.Mono, countSize).x;
                 float groupW = labelW + (badgeW > 0f ? gapPx + badgeW : 0f);
                 float startX = segRect.x + (segRect.width - groupW) * 0.5f;
 
                 Rect labelRect = new Rect(startX, segRect.y, labelW, segRect.height);
-                TextDraw.DrawTracked(labelRect, label, bold ? FontRole.BodyBold : FontRole.Body, labelSize, TextAnchor.MiddleLeft, textColor, labelTrackingPx);
+                TextDraw.DrawTracked(labelRect, label, bold ? FontRole.BodyBold : FontRole.Body, labelSizeResolved, TextAnchor.MiddleLeft, textColor, labelTrackingPx);
 
                 if (badgeW > 0f) {
                     Rect badgeRect = new Rect(startX + labelW + gapPx, segRect.y, badgeW, segRect.height);

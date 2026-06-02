@@ -31,6 +31,8 @@ public static class Slider {
         float[]? marks = null,
         [DocParam("Optional formatter used to render the value label.")]
         Func<float, string>? format = null,
+        [DocParam("Optional eyebrow label. When set, the slider draws a header row (label left, live value right) above the track instead of a beside-track readout. The value reads the live drag draft every frame, so it tracks the thumb without depending on a tree rebuild.")]
+        string? label = null,
         [DocParam("Disables interaction and applies disabled styling.")]
         bool disabled = false,
         [DocParam("When true, fires onChange during drag. When false (default), only on mouse-up.")]
@@ -39,7 +41,7 @@ public static class Slider {
         int liveThrottleFrames = 10,
         [DocParam("Minimum frames between label string re-formats during drag. Default 3 (~20Hz at 60fps).")]
         int labelThrottleFrames = 3,
-        [DocParam("When true, renders a right-aligned mono-font readout column beside the track.")]
+        [DocParam("When true, renders a right-aligned mono-font readout column beside the track. Ignored when `label` is set (the value moves to the header).")]
         bool readout = true,
         [DocParam("Readout column width. Defaults to 4rem.", TypeOverride = "Rem", DefaultOverride = "4")]
         Rem? readoutWidth = null,
@@ -54,10 +56,19 @@ public static class Slider {
     ) {
         LightweaveNode node = NodeBuilder.New("Slider", line, file);
         node.ApplyStyling("slider", style, classes, id);
-        node.PreferredHeight = new Rem(1.25f).ToPixels();
 
-        float readoutColumnPx = readout ? (readoutWidth ?? new Rem(4f)).ToPixels() : 0f;
-        float readoutGapPx = readout ? SpacingScale.Md.ToPixels() : 0f;
+        bool hasHeader = !string.IsNullOrEmpty(label);
+        bool inlineReadout = readout && !hasHeader;
+        string upperLabel = hasHeader ? label!.ToUpperInvariant() : string.Empty;
+        float headerHeightPx = hasHeader ? new Rem(1.5f).ToPixels() : 0f;
+        float headerGapPx = hasHeader ? new Rem(0.875f).ToPixels() : 0f;
+        float trackBandHeightPx = new Rem(1.25f).ToPixels();
+        node.PreferredHeight = hasHeader
+            ? headerHeightPx + headerGapPx + trackBandHeightPx
+            : trackBandHeightPx;
+
+        float readoutColumnPx = inlineReadout ? (readoutWidth ?? new Rem(4f)).ToPixels() : 0f;
+        float readoutGapPx = inlineReadout ? SpacingScale.Md.ToPixels() : 0f;
 
         node.MeasureWidth = () => {
             float trackMin = new Rem(8f).ToPixels();
@@ -81,6 +92,10 @@ public static class Slider {
             RefHandle<int> lastLabelFrame = UseRef(int.MinValue, line, file + "#labelFrame");
             RefHandle<float> lastLabelValue = UseRef(float.NaN, line, file + "#labelValue");
 
+            Rect trackArea = hasHeader
+                ? new Rect(rect.x, rect.y + headerHeightPx + headerGapPx, rect.width, Mathf.Max(0f, rect.height - headerHeightPx - headerGapPx))
+                : rect;
+
             float trackBandHeight = new Rem(1.25f).ToPixels();
             float trackThickness = new Rem(0.5f).ToPixels();
             float thumbSize = new Rem(1.0f).ToPixels();
@@ -88,26 +103,26 @@ public static class Slider {
             float tickHeight = new Rem(0.75f).ToPixels();
             float edgePadding = thumbSize / 2f;
 
-            float trackBandY = rect.y + Mathf.Max(0f, (rect.height - trackBandHeight) / 2f);
+            float trackBandY = trackArea.y + Mathf.Max(0f, (trackArea.height - trackBandHeight) / 2f);
 
             Rect readoutRect;
             Rect trackBand;
-            if (readout) {
+            if (inlineReadout) {
                 if (rtl) {
-                    readoutRect = new Rect(rect.x, trackBandY, readoutColumnPx, trackBandHeight);
-                    float trackX = rect.x + readoutColumnPx + readoutGapPx;
-                    trackBand = new Rect(trackX, trackBandY, Mathf.Max(0f, rect.xMax - trackX), trackBandHeight);
+                    readoutRect = new Rect(trackArea.x, trackBandY, readoutColumnPx, trackBandHeight);
+                    float trackX = trackArea.x + readoutColumnPx + readoutGapPx;
+                    trackBand = new Rect(trackX, trackBandY, Mathf.Max(0f, trackArea.xMax - trackX), trackBandHeight);
                 }
                 else {
-                    float readoutX = rect.xMax - readoutColumnPx;
+                    float readoutX = trackArea.xMax - readoutColumnPx;
                     readoutRect = new Rect(readoutX, trackBandY, readoutColumnPx, trackBandHeight);
-                    float trackWidthPx = Mathf.Max(0f, readoutX - readoutGapPx - rect.x);
-                    trackBand = new Rect(rect.x, trackBandY, trackWidthPx, trackBandHeight);
+                    float trackWidthPx = Mathf.Max(0f, readoutX - readoutGapPx - trackArea.x);
+                    trackBand = new Rect(trackArea.x, trackBandY, trackWidthPx, trackBandHeight);
                 }
             }
             else {
                 readoutRect = Rect.zero;
-                trackBand = new Rect(rect.x, trackBandY, rect.width, trackBandHeight);
+                trackBand = new Rect(trackArea.x, trackBandY, trackArea.width, trackBandHeight);
             }
 
             float trackLeft = trackBand.x + edgePadding;
@@ -201,7 +216,7 @@ public static class Slider {
                 : null;
             PaintBox.Draw(thumbRect, thumbBg, thumbBorder, thumbRadius);
 
-            if (readout && Event.current.type == EventType.Repaint) {
+            if ((inlineReadout || hasHeader) && Event.current.type == EventType.Repaint) {
                 int currentFrame = Time.frameCount;
                 int labelThrottle = Mathf.Max(0, labelThrottleFrames);
                 bool valueChanged = !Mathf.Approximately(lastLabelValue.Current, clampedValue);
@@ -215,14 +230,36 @@ public static class Slider {
                     lastLabelFrame.Current = currentFrame;
                 }
 
-                Font readoutFont = theme.GetFont(FontRole.Mono);
-                int readoutPixelSize = Mathf.RoundToInt(new Rem(0.78f).ToFontPx());
-                GUIStyle readoutStyle = GuiStyleCache.GetOrCreate(readoutFont, readoutPixelSize, FontStyle.Normal);
-                readoutStyle.alignment = rtl ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight;
-                Color readoutColor = effectiveDisabled
-                    ? theme.GetColor(ThemeSlot.TextMuted)
-                    : theme.GetColor(ThemeSlot.TextPrimary);
-                TextDraw.DrawWithStyle(readoutRect, cachedLabel.Current, readoutStyle, readoutColor);
+                if (hasHeader) {
+                    Rect headerRect = new Rect(rect.x, rect.y, rect.width, headerHeightPx);
+
+                    float labelFontPx = new Rem(0.6875f).ToFontPx();
+                    int labelPixelSize = Mathf.RoundToInt(labelFontPx);
+                    GUIStyle labelStyle = GuiStyleCache.GetOrCreate(theme, FontRole.Mono, labelPixelSize, FontStyle.Normal);
+                    int letterSpacingPx = Mathf.Max(0, Mathf.RoundToInt(Tracking.Of(0.18f).ToPixels(labelFontPx)));
+                    Color labelColor = theme.GetColor(ThemeSlot.TextMuted);
+                    TrackedGlyphRun labelRun = TrackedTextGlyphCache.GetOrCreate(labelStyle.font, labelStyle.fontSize, labelStyle.fontStyle, letterSpacingPx, upperLabel);
+                    TrackedTextDraw.Draw(labelRun, headerRect, rtl ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft, labelColor);
+
+                    int valuePixelSize = Mathf.RoundToInt(new Rem(1.375f).ToFontPx());
+                    GUIStyle valueStyle = GuiStyleCache.GetOrCreate(theme, FontRole.Display, valuePixelSize, FontStyle.Normal);
+                    valueStyle.alignment = rtl ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight;
+                    valueStyle.clipping = TextClipping.Overflow;
+                    Color valueColor = effectiveDisabled
+                        ? theme.GetColor(ThemeSlot.TextMuted)
+                        : theme.GetColor(ThemeSlot.TextPrimary);
+                    TextDraw.DrawWithStyle(headerRect, cachedLabel.Current, valueStyle, valueColor);
+                }
+                else {
+                    Font readoutFont = theme.GetFont(FontRole.Mono);
+                    int readoutPixelSize = Mathf.RoundToInt(new Rem(0.78f).ToFontPx());
+                    GUIStyle readoutStyle = GuiStyleCache.GetOrCreate(readoutFont, readoutPixelSize, FontStyle.Normal);
+                    readoutStyle.alignment = rtl ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight;
+                    Color readoutColor = effectiveDisabled
+                        ? theme.GetColor(ThemeSlot.TextMuted)
+                        : theme.GetColor(ThemeSlot.TextPrimary);
+                    TextDraw.DrawWithStyle(readoutRect, cachedLabel.Current, readoutStyle, readoutColor);
+                }
             }
 
             paintChildren();

@@ -51,9 +51,57 @@
   <CL_NewColony_World_Temperature>Temperature</CL_NewColony_World_Temperature>
   <CL_NewColony_World_Population>Population</CL_NewColony_World_Population>
   <CL_NewColony_World_MapSize>Map size</CL_NewColony_World_MapSize>
+  <CL_NewColony_World_MapSize_LargeWarning>Large maps use more memory and slow the simulation.</CL_NewColony_World_MapSize_LargeWarning>
   <CL_NewColony_World_Seed>World seed</CL_NewColony_World_Seed>
   <CL_NewColony_World_Seed_Random>Random each generation</CL_NewColony_World_Seed_Random>
   <CL_NewColony_World_Seed_Randomize>Randomize seed</CL_NewColony_World_Seed_Randomize>
+  <CL_NewColony_World_Regenerate>Regenerate world</CL_NewColony_World_Regenerate>
+  <CL_NewColony_World_Pollution>Pollution</CL_NewColony_World_Pollution>
+  <CL_NewColony_World_Landmark>Landmark density</CL_NewColony_World_Landmark>
+
+  <CL_NewColony_World_Season>Starting season</CL_NewColony_World_Season>
+  <CL_NewColony_World_Season_Default>Default</CL_NewColony_World_Season_Default>
+  <CL_NewColony_World_Season_Spring>Spring</CL_NewColony_World_Season_Spring>
+  <CL_NewColony_World_Season_Summer>Summer</CL_NewColony_World_Season_Summer>
+  <CL_NewColony_World_Season_Fall>Fall</CL_NewColony_World_Season_Fall>
+  <CL_NewColony_World_Season_Winter>Winter</CL_NewColony_World_Season_Winter>
+  <CL_NewColony_World_Season_WinterWarning>Starting in winter is harsh &#8212; crops barely grow and the cold arrives before your colony can stock up.</CL_NewColony_World_Season_WinterWarning>
+
+  <CL_NewColony_World_Generating>Generating world&#8230;</CL_NewColony_World_Generating>
+
+  <CL_NewColony_World_Stat_Seed>Seed</CL_NewColony_World_Stat_Seed>
+  <CL_NewColony_World_Stat_Tiles>Tiles</CL_NewColony_World_Stat_Tiles>
+  <CL_NewColony_World_Stat_Landing>Landing</CL_NewColony_World_Stat_Landing>
+  <CL_NewColony_World_Landing_None>None selected</CL_NewColony_World_Landing_None>
+  <CL_NewColony_World_Controls_Tilt>Q / E  Tilt</CL_NewColony_World_Controls_Tilt>
+
+  <CL_NewColony_World_Factions>Factions</CL_NewColony_World_Factions>
+  <CL_NewColony_World_Factions_Relations>Relations</CL_NewColony_World_Factions_Relations>
+  <CL_NewColony_World_Factions_Relations_Title>Faction relations</CL_NewColony_World_Factions_Relations_Title>
+  <CL_NewColony_World_Factions_Add>Add faction</CL_NewColony_World_Factions_Add>
+  <CL_NewColony_World_Factions_Reset>Reset factions</CL_NewColony_World_Factions_Reset>
+  <CL_NewColony_World_Factions_Remove>Remove faction</CL_NewColony_World_Factions_Remove>
+  <CL_NewColony_World_Factions_Ally>Ally</CL_NewColony_World_Factions_Ally>
+  <CL_NewColony_World_Factions_Neutral>Neutral</CL_NewColony_World_Factions_Neutral>
+  <CL_NewColony_World_Factions_Hostile>Hostile</CL_NewColony_World_Factions_Hostile>
+  <CL_NewColony_World_Factions_Empty>Generate a world to configure its factions.</CL_NewColony_World_Factions_Empty>
+  <CL_NewColony_World_Factions_Pending>Pending</CL_NewColony_World_Factions_Pending>
+  <CL_NewColony_World_Factions_CountMax>max {MAX}</CL_NewColony_World_Factions_CountMax>
+  <CL_NewColony_World_Factions_CountRatio>{COUNT} / {MAX}</CL_NewColony_World_Factions_CountRatio>
+  <CL_NewColony_World_Factions_CountMultiple>×{COUNT}</CL_NewColony_World_Factions_CountMultiple>
+
+  <CL_NewColony_World_Site_Empty>Click a tile on the globe to inspect a landing site.</CL_NewColony_World_Site_Empty>
+  <CL_NewColony_World_Site_Terrain>Terrain</CL_NewColony_World_Site_Terrain>
+  <CL_NewColony_World_Site_Elevation>Elevation</CL_NewColony_World_Site_Elevation>
+  <CL_NewColony_World_Site_Stone>Stone</CL_NewColony_World_Site_Stone>
+  <CL_NewColony_World_Site_Growing>Growing period</CL_NewColony_World_Site_Growing>
+  <CL_NewColony_World_Site_AvgTemp>Avg temperature</CL_NewColony_World_Site_AvgTemp>
+  <CL_NewColony_World_Site_Rainfall>Rainfall</CL_NewColony_World_Site_Rainfall>
+  <CL_NewColony_World_Site_Forageability>Forageability</CL_NewColony_World_Site_Forageability>
+  <CL_NewColony_World_Site_Disease>Disease frequency</CL_NewColony_World_Site_Disease>
+  <CL_NewColony_World_Site_Pollution>Pollution</CL_NewColony_World_Site_Pollution>
+  <CL_NewColony_World_Site_TimeZone>Time zone</CL_NewColony_World_Site_TimeZone>
+  <CL_NewColony_World_Site_Random>Random landing site</CL_NewColony_World_Site_Random>
 
   <CL_NewColony_Anomaly_Integration>Integration</CL_NewColony_Anomaly_Integration>
   <CL_NewColony_Anomaly_ThreatsHeading>Threats &amp; study</CL_NewColony_Anomaly_ThreatsHeading>
@@ -94,11 +142,13 @@
   <CL_NewColony_Population_5>Abundant</CL_NewColony_Population_5>
   <CL_NewColony_Population_6>Very high</CL_NewColony_Population_6>
 
-  <CL_NewColony_MapSize_200>Small</CL_NewColony_MapSize_200>
-  <CL_NewColony_MapSize_250>Medium</CL_NewColony_MapSize_250>
-  <CL_NewColony_MapSize_275>Large</CL_NewColony_MapSize_275>
-  <CL_NewColony_MapSize_300>Extreme</CL_NewColony_MapSize_300>
-  <CL_NewColony_MapSize_350>Brutal</CL_NewColony_MapSize_350>
+  <CL_NewColony_Landmark_0>Minimal</CL_NewColony_Landmark_0>
+  <CL_NewColony_Landmark_1>Sparse</CL_NewColony_Landmark_1>
+  <CL_NewColony_Landmark_2>Light</CL_NewColony_Landmark_2>
+  <CL_NewColony_Landmark_3>Normal</CL_NewColony_Landmark_3>
+  <CL_NewColony_Landmark_4>Plentiful</CL_NewColony_Landmark_4>
+  <CL_NewColony_Landmark_5>Dense</CL_NewColony_Landmark_5>
+  <CL_NewColony_Landmark_6>Abundant</CL_NewColony_Landmark_6>
 
   <CL_NewColony_Error_Incomplete>Pick a scenario, storyteller and difficulty before generating.</CL_NewColony_Error_Incomplete>
 

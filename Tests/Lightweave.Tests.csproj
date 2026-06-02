@@ -33,6 +33,7 @@
         <Compile Include="..\Redesign\Source\Publish\PublishEligibility.cs" Link="Linked\PublishEligibility.cs"/>
         <Compile Include="..\Framework\Source\Data\TriState.cs" Link="Linked\TriState.cs"/>
         <Compile Include="..\Redesign\Source\NewColony\NewColonyThresholds.cs" Link="Linked\NewColonyThresholds.cs"/>
+        <Compile Include="..\Redesign\Source\NewColony\FactionRelationsLayout.cs" Link="Linked\FactionRelationsLayout.cs"/>
         <Compile Include="..\Framework\Source\Runtime\HookKey.cs" Link="Linked\HookKey.cs"/>
         <Compile Include="..\Framework\Source\Runtime\HookSlot.cs" Link="Linked\HookSlot.cs"/>
         <Compile Include="..\Framework\Source\Runtime\HookStore.cs" Link="Linked\HookStore.cs"/>

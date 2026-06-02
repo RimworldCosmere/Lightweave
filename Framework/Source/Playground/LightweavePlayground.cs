@@ -40,7 +40,7 @@ public sealed class LightweavePlayground : LightweaveWindow {
             new[] {
                 "button", "iconbutton", "togglebutton", "buttongroup",
                 "textfield", "checkbox", "switch", "radio", "slider", "textarea", "numberfield", "searchfield",
-                "dropdown", "colorpicker", "keybinding",
+                "dropdown", "colorpicker", "keybinding", "option-row",
             }
         ),
         new PlaygroundCategory(
@@ -62,7 +62,7 @@ public sealed class LightweavePlayground : LightweaveWindow {
             "navigation",
             "CL_Playground_Category_Navigation",
             "CL_Playground_Category_Navigation_Desc",
-            new[] { "tabs", "segmented", "breadcrumbs", "menu", "contextmenu", "sidenav", "section" }
+            new[] { "tabs", "segmented", "breadcrumbs", "menu", "contextmenu", "disclosure", "sidenav", "section" }
         ),
         new PlaygroundCategory(
             "data",
@@ -129,6 +129,7 @@ public sealed class LightweavePlayground : LightweaveWindow {
         { "dropdown", "Lightweave/Input/Dropdown.cs" },
         { "colorpicker", "Lightweave/Input/ColorPicker.cs" },
         { "keybinding", "Lightweave/Input/KeyBindingField.cs" },
+        { "option-row", "Lightweave/Input/OptionRow.cs" },
         { "chip", "Lightweave/Data/Chip.cs" },
         { "spinner", "Lightweave/Feedback/Spinner.cs" },
         { "progressbar", "Lightweave/Feedback/ProgressBar.cs" },
@@ -142,6 +143,7 @@ public sealed class LightweavePlayground : LightweaveWindow {
         { "breadcrumbs", "Lightweave/Navigation/Breadcrumbs.cs" },
         { "menu", "Lightweave/Navigation/Menu.cs" },
         { "contextmenu", "Lightweave/Navigation/ContextMenu.cs" },
+        { "disclosure", "Lightweave/Navigation/Disclosure.cs" },
         { "accordion", "Lightweave/Surfaces/Accordion.cs" },
         { "section", "Lightweave/Navigation/Section.cs" },
         { "sidenav", "Lightweave/Playground/PlaygroundRail.cs" },
