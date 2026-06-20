@@ -6,8 +6,11 @@ const publishedFileIds = JSON.parse(
 const descriptionHeader = readFileSync(new URL('./.github/README.header.md', import.meta.url), 'utf8');
 const descriptionFooter = readFileSync(new URL('./.github/README.footer.md', import.meta.url), 'utf8');
 
-const lightweaveWorkshopIds = publishedFileIds.Lightweave ?? {};
-const hasWorkshopIds = Object.keys(lightweaveWorkshopIds).length > 0;
+const steamMods = [
+    { name: "Lightweave", path: "Framework", workshopIds: publishedFileIds.Framework ?? {} },
+    { name: "Lightweave Redesign", path: "Redesign", workshopIds: publishedFileIds.Redesign ?? {} },
+];
+const hasWorkshopIds = steamMods.some((mod) => Object.keys(mod.workshopIds).length > 0);
 
 const plugins = [
     "@semantic-release/commit-analyzer",
@@ -27,18 +30,18 @@ const plugins = [
         {
             "replacements": [
                 {
-                    "files": ["Lightweave/Runtime/BuildInfo.cs"],
+                    "files": ["Framework/Source/Runtime/BuildInfo.cs"],
                     "from": "Revision = \".*\";",
                     "to": "Revision = \"${nextRelease.version}\";",
                     "countMatches": true
                 },
                 {
-                    "files": ["Lightweave/Runtime/BuildInfo.cs"],
+                    "files": ["Framework/Source/Runtime/BuildInfo.cs"],
                     "from": "BuildTime = \".*\";",
                     "to": "BuildTime = \"${(new Date()).toISOString()}\";",
                     "results": [
                         {
-                            "file": "Lightweave/Runtime/BuildInfo.cs",
+                            "file": "Framework/Source/Runtime/BuildInfo.cs",
                             "hasChanged": true,
                             "numMatches": 1,
                             "numReplacements": 1
@@ -59,7 +62,7 @@ const plugins = [
     [
         "@semantic-release/git",
         {
-            "assets": ["Lightweave/Runtime/BuildInfo.cs"]
+            "assets": ["Framework/Source/Runtime/BuildInfo.cs"]
         }
     ],
 ];
@@ -76,13 +79,7 @@ if (hasWorkshopIds) {
             "descriptionHeader": descriptionHeader,
             "descriptionFooter": descriptionFooter,
             "assetBaseUrlTemplate": "https://raw.githubusercontent.com/RimworldCosmere/Lightweave/{branch}",
-            "mods": [
-                {
-                    "name": "Lightweave",
-                    "path": ".",
-                    "workshopIds": lightweaveWorkshopIds,
-                }
-            ]
+            "mods": steamMods
         }
     ]);
 }
