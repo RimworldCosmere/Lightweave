@@ -51,8 +51,8 @@ jobs:
         id: assetbundle-cache
         uses: actions/cache@v5
         with:
-          path: AssetBundles
-          key: ${{ runner.os }}-assetbundles-${{ hashFiles('scripts/build-assets.csx', 'Makefile', 'Assets/**') }}
+          path: '**/AssetBundles'
+          key: ${{ runner.os }}-assetbundles-${{ hashFiles('scripts/build-assets.csx', 'Makefile', '**/Assets/**') }}
 
       - name: Setup Dotnet
         if: steps.assetbundle-cache.outputs.cache-hit != 'true'
@@ -86,8 +86,12 @@ jobs:
 
       - name: Archive asset bundles
         run: |
-          if [ -d AssetBundles ]; then
-            zip -r "${MOD_NAME}-assetbundles.zip" AssetBundles
+          shopt -s globstar nullglob
+          bundles=(**/AssetBundles)
+          if [ ${#bundles[@]} -gt 0 ]; then
+            zip -r "${MOD_NAME}-assetbundles.zip" "${bundles[@]}"
+          else
+            echo "no AssetBundles directories were produced" >&2
           fi
 
       - name: Upload asset bundles artifact
