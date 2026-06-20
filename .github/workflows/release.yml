@@ -52,7 +52,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: '**/AssetBundles'
-          key: ${{ runner.os }}-assetbundles-${{ hashFiles('scripts/build-assets.csx', 'Makefile', '**/Assets/**') }}
+          key: ${{ runner.os }}-assetbundles-${{ hashFiles('**/.assetbundler.toml', 'scripts/build-assets.csx', 'Makefile', '**/Assets/**') }}
 
       - name: Setup Dotnet
         if: steps.assetbundle-cache.outputs.cache-hit != 'true'
@@ -79,6 +79,13 @@ jobs:
           license: 'Personal'
           username: ${{ secrets.UNITY_EMAIL }}
           password: ${{ secrets.UNITY_PASSWORD }}
+
+      - name: Configure AssetBundleBuilder for CI
+        if: steps.assetbundle-cache.outputs.cache-hit != 'true'
+        run: |
+          # In CI, use copy instead of symlink so bundled/cached assets are real files.
+          sed -i 's/link_method = "symlink"/link_method = "copy"/' Framework/.assetbundler.toml
+          grep -E "link_method|unity_args" Framework/.assetbundler.toml
 
       - name: Build AssetBundles for all platforms
         if: steps.assetbundle-cache.outputs.cache-hit != 'true'
