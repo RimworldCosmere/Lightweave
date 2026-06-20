@@ -26,7 +26,11 @@ jobs:
       steam-username: aequasi
       app-id: "294100"
       branch: public
-      runnable: "true"
+      # DLLs-only build/reference image: tiny, just the managed assemblies on a
+      # minimal base. (Drop include-paths + set runnable:true if you ever want to
+      # run the game headless in CI.)
+      include-paths: RimWorldLinux_Data/Managed
+      runnable: "false"
       skip-if-unchanged: "true"
     secrets:
       steam-config-vdf: ${{ secrets.STEAM_CONFIG_VDF_B64 }}
