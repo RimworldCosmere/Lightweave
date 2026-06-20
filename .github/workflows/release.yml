@@ -17,10 +17,6 @@ permissions:
   id-token: write
   packages: read
 
-env:
-  MOD_NAME: Lightweave
-  BUNDLE_NAME: cosmere.lightweave
-
 jobs:
   validate-tag:
     runs-on: ubuntu-latest
@@ -39,10 +35,25 @@ jobs:
           fi
           echo "Tag format valid."
 
+  get-mods:
+    runs-on: ubuntu-latest
+    outputs:
+      mods: ${{ steps.set-mods.outputs.mods }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Discover mods
+        id: set-mods
+        run: |
+          mods=$(for d in */; do
+            [ -f "${d}About/About.xml" ] && basename "$d"
+          done | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          echo "mods=$mods" >> "$GITHUB_OUTPUT"
+          echo "Found mods: $mods"
+
   build-assetbundles:
     runs-on: ubuntu-latest
-    env:
-      BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -91,32 +102,35 @@ jobs:
         if: steps.assetbundle-cache.outputs.cache-hit != 'true'
         run: make build-assets-all-verbose
 
-      - name: Archive asset bundles
+      - name: Archive asset bundles per mod
         run: |
           shopt -s globstar nullglob
-          bundles=(**/AssetBundles)
-          if [ ${#bundles[@]} -gt 0 ]; then
-            zip -r "${MOD_NAME}-assetbundles.zip" "${bundles[@]}"
-          else
-            echo "no AssetBundles directories were produced" >&2
-          fi
+          for d in */AssetBundles; do
+            mod="${d%/AssetBundles}"
+            ( cd "$mod" && zip -r "../${mod}-assetbundles.zip" AssetBundles )
+            echo "archived ${mod}-assetbundles.zip"
+          done
 
       - name: Upload asset bundles artifact
         uses: actions/upload-artifact@v5
         with:
-          name: assetbundles
-          path: "${{ env.MOD_NAME }}-assetbundles.zip"
+          name: all-assetbundles
+          path: "*-assetbundles.zip"
           if-no-files-found: warn
 
   prepare:
-    needs: build-assetbundles
+    needs: [get-mods, build-assetbundles]
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        mod: ${{ fromJson(needs.get-mods.outputs.mods) }}
     env:
       BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
       RELEASE_TAG: ${{ github.event.release.tag_name }}
       REF_TYPE: ${{ github.ref_type }}
       REF_NAME: ${{ github.ref_name }}
-      TEMP_DIR: "/tmp/lightweave_upload"
+      MOD: ${{ matrix.mod }}
       STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
     steps:
       - name: Checkout
@@ -138,7 +152,7 @@ jobs:
           docker cp "$cid:/game/RimWorldLinux_Data" /mnt/games/RimWorld/RimWorldLinux_Data
           docker rm -f "$cid" >/dev/null
           test -f /mnt/games/RimWorld/RimWorldLinux_Data/Managed/Assembly-CSharp.dll
-          echo "Staged real RimWorld assemblies at /mnt/games/RimWorld (csproj line-87 condition picks these up; Krafs.Rimworld.Ref is then excluded)."
+          echo "Staged real RimWorld assemblies at /mnt/games/RimWorld (csproj condition picks these up; Krafs.Rimworld.Ref is then excluded)."
 
       - uses: actions/cache@v5
         with:
@@ -164,28 +178,22 @@ jobs:
         working-directory: Lightweave
         run: dotnet restore Lightweave.sln
 
-      - name: Set build configuration
-        working-directory: Lightweave
-        run: |
-          if [[ "$REF_TYPE" == "tag" ]]; then
-            echo "BUILD=Release" >> $GITHUB_ENV
-          else
-            echo "BUILD=Debug" >> $GITHUB_ENV
-          fi
-
       - name: Download asset bundles
         uses: actions/download-artifact@v5
         with:
-          name: assetbundles
+          name: all-assetbundles
           path: Lightweave
 
-      - name: Extract asset bundles
+      - name: Extract asset bundles for this mod
         working-directory: Lightweave
         run: |
-          if [ -f "${MOD_NAME}-assetbundles.zip" ]; then
-            unzip -o "${MOD_NAME}-assetbundles.zip"
-            rm "${MOD_NAME}-assetbundles.zip"
+          if [ -f "${MOD}-assetbundles.zip" ]; then
+            unzip -o "${MOD}-assetbundles.zip" -d "${MOD}/"
+            echo "extracted bundles into ${MOD}/"
+          else
+            echo "no asset bundles for ${MOD}"
           fi
+          rm -f ./*-assetbundles.zip
 
       - name: Build solution (tagged release)
         working-directory: Lightweave
@@ -217,32 +225,34 @@ jobs:
         working-directory: Lightweave
         run: dotnet build Lightweave.sln --configuration Debug --no-restore
 
-      - name: Verify Lightweave.dll exists
+      - name: Verify mod assemblies
         working-directory: Lightweave
         run: |
-          DLL_PATH="Assemblies/Lightweave.dll"
-          if [ ! -f "$DLL_PATH" ]; then
-            echo "Error: Lightweave.dll not found at $DLL_PATH"
-            ls -la Assemblies/ || echo "Assemblies directory does not exist"
-            exit 1
+          if [ -d "${MOD}/Source" ]; then
+            if ! ls "${MOD}"/Assemblies/*.dll >/dev/null 2>&1; then
+              echo "Error: no assemblies for ${MOD} at ${MOD}/Assemblies"
+              ls -la "${MOD}/Assemblies" || echo "Assemblies directory does not exist"
+              exit 1
+            fi
+            echo "Found assemblies for ${MOD}:"
+            ls -lh "${MOD}"/Assemblies/*.dll
+          else
+            echo "${MOD} has no Source/; skipping assembly check"
           fi
-          echo "Found Lightweave.dll at $DLL_PATH"
-          ls -lh "$DLL_PATH"
 
       - name: Prepare upload zip
         working-directory: Lightweave
         run: |
-          mkdir -p "$TEMP_DIR"
-          ZIP_PATH="${{ github.workspace }}/${MOD_NAME}-${BRANCH_NAME}.zip"
-          zip -r "$ZIP_PATH" . -x "*.git*" "tools/*" "scripts/*" "*.mjs" "package.json" "Makefile" "Lightweave.sln*" "PublishedFileIds.json" ".desloppify/*" ".claude/*"
+          ZIP_PATH="${{ github.workspace }}/${MOD}-${BRANCH_NAME}.zip"
+          ( cd "$MOD" && zip -r "$ZIP_PATH" . -x "*.git*" "*/obj/*" "*/bin/*" "Source/obj/*" "Source/bin/*" )
           echo "Generated zip artifact at $ZIP_PATH"
           ls -lh "$ZIP_PATH"
 
       - name: Upload zip artifact
         uses: actions/upload-artifact@v5
         with:
-          name: ${{ env.MOD_NAME }}-zip
-          path: ${{ github.workspace }}/${{ env.MOD_NAME }}-${{ env.BRANCH_NAME }}.zip
+          name: ${{ matrix.mod }}-zip
+          path: ${{ github.workspace }}/${{ matrix.mod }}-${{ env.BRANCH_NAME }}.zip
 
   semantic-release:
     needs: prepare
@@ -253,6 +263,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+      - name: Provide RimWorld assemblies from the game image
+        env:
+          GAME_IMAGE: ghcr.io/${{ github.repository_owner }}/rimworld-game:latest
+        run: |
+          set -euo pipefail
+          img="$(printf '%s' "$GAME_IMAGE" | tr '[:upper:]' '[:lower:]')"
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker pull -q "$img"
+          cid="$(docker create "$img")"
+          sudo mkdir -p /mnt/games/RimWorld
+          sudo chown "$(id -u):$(id -g)" /mnt/games/RimWorld
+          docker cp "$cid:/game/RimWorldLinux_Data" /mnt/games/RimWorld/RimWorldLinux_Data
+          docker rm -f "$cid" >/dev/null
+          test -f /mnt/games/RimWorld/RimWorldLinux_Data/Managed/Assembly-CSharp.dll
+          echo "Staged real RimWorld assemblies (dotnet pack compiles against these, matching the protected overrides; Krafs.Rimworld.Ref fallback is bypassed)."
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
@@ -289,11 +314,15 @@ jobs:
           path: ./zips
           merge-multiple: true
 
-      - name: Stage bundles + assemblies for steam upload
+      - name: Stage each mod for steam upload
         run: |
+          shopt -s nullglob
           for artifact in ./zips/*.zip; do
-            [ -f "$artifact" ] || continue
-            unzip -o "$artifact" 'AssetBundles/*' 'Assemblies/*'
+            mod="$(basename "$artifact")"
+            mod="${mod%-*.zip}"
+            mkdir -p "./$mod"
+            unzip -o "$artifact" -d "./$mod"
+            echo "staged ./$mod"
           done
 
       - name: Restore solution dependencies (for nuget pack)
