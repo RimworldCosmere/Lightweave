@@ -244,7 +244,7 @@ jobs:
         working-directory: Lightweave
         run: |
           ZIP_PATH="${{ github.workspace }}/${MOD}-${BRANCH_NAME}.zip"
-          ( cd "$MOD" && zip -r "$ZIP_PATH" . -x "*.git*" "*/obj/*" "*/bin/*" "Source/obj/*" "Source/bin/*" )
+          ( cd "$MOD" && zip -r "$ZIP_PATH" . -x "*.git*" "*/obj/*" "*/bin/*" "Source/obj/*" "Source/bin/*" "Assets/*" "Assets/" )
           echo "Generated zip artifact at $ZIP_PATH"
           ls -lh "$ZIP_PATH"
 
