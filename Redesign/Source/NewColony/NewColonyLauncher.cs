@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using HarmonyLib;
 using RimWorld;
 using RimWorld.Planet;
@@ -111,10 +112,16 @@ public static class NewColonyLauncher {
         generating = false;
     }
 
-    public static void Commit(WorldParams world, PlanetTile startingTile, Action onClose) {
+    public static void Commit(WorldParams world, PlanetTile startingTile, IdeologyParams ideology, bool permadeath, Action onClose) {
         if (Current.Game == null) {
             Messages.Message("CL_NewColony_Error_Incomplete".Translate(), MessageTypeDefOf.RejectInput, false);
             return;
+        }
+
+        // GameInitData.permadeath is consumed by Game.InitNewGame, which flips Info.permadeathMode
+        // and generates the unique save name. Setting it here mirrors vanilla Page_SelectStoryteller.
+        if (Current.Game.InitData != null) {
+            Current.Game.InitData.permadeath = permadeath;
         }
 
         committed = true;
@@ -126,6 +133,11 @@ public static class NewColonyLauncher {
         if (regen) {
             RunWorldGen(world);
         }
+
+        // Factions (including the player faction) exist once the world is generated, so the
+        // chosen ideoligion can be applied here. This replaces vanilla's Page_ChooseIdeoPreset,
+        // which FindEntryPage skips below.
+        ApplyIdeology(ideology);
 
         onClose();
 
@@ -142,6 +154,150 @@ public static class NewColonyLauncher {
             Find.WindowStack.Add(entry);
         }, string.Empty, false, null);
     }
+
+    // Replicates RimWorld.Page_ChooseIdeoPreset (PostOpen + DoNext) for the chosen mode.
+    // No-op when the Ideology DLC is inactive (the tab never appears in that case).
+    public static void ApplyIdeology(IdeologyParams ideology) {
+        if (!Verse.ModsConfig.IdeologyActive) {
+            return;
+        }
+        if (Current.Game == null || Find.World == null) {
+            return;
+        }
+
+        Faction player = Faction.OfPlayer;
+        if (player == null) {
+            return;
+        }
+
+        // Mirror Page_ChooseIdeoPreset.PostOpen: build a classic ideo and ensure every non-player
+        // faction lacking an ideoligion gets one, before applying the player's choice.
+        IdeoGenerationParms genParms = new IdeoGenerationParms(player.def);
+        if (!DefDatabase<CultureDef>.AllDefs.Where(x => player.def.allowedCultures.Contains(x)).TryRandomElement(out CultureDef culture)) {
+            culture = DefDatabase<CultureDef>.AllDefs.RandomElement();
+        }
+        Ideo classicIdeo = IdeoGenerator.GenerateClassicIdeo(culture, genParms, noExpansionIdeo: false);
+        Find.IdeoManager.classicMode = false;
+
+        foreach (Faction faction in Find.FactionManager.AllFactions) {
+            if (faction == player || faction.ideos == null || !faction.ideos.PrimaryIdeo.memes.NullOrEmpty()) {
+                continue;
+            }
+            if (faction.def.fixedIdeo) {
+                IdeoGenerationParms parms = new IdeoGenerationParms(faction.def, forceNoExpansionIdeo: false, null, null,
+                    name: faction.def.ideoName, styles: faction.def.styles, deities: faction.def.deityPresets,
+                    hidden: faction.def.hiddenIdeo, description: faction.def.ideoDescription, forcedMemes: faction.def.forcedMemes,
+                    classicExtra: false, forceNoWeaponPreference: false, forNewFluidIdeo: false, fixedIdeo: true,
+                    requiredPreceptsOnly: faction.def.requiredPreceptsOnly);
+                faction.ideos.ChooseOrGenerateIdeo(parms);
+            }
+            else {
+                faction.ideos.ChooseOrGenerateIdeo(new IdeoGenerationParms(faction.def));
+            }
+        }
+
+        Find.IdeoManager.classicMode = ideology.Mode == IdeoMode.Inactive;
+
+        switch (ideology.Mode) {
+            case IdeoMode.Inactive:
+                ApplyClassicIdeo(classicIdeo);
+                break;
+            case IdeoMode.Preset:
+                ApplyPresetIdeo(ideology, player);
+                break;
+            case IdeoMode.CustomFluid:
+            case IdeoMode.CustomFixed:
+                FinalizeCustomDraft(ideology.Mode, player);
+                break;
+        }
+
+        Find.IdeoManager.RemoveUnusedStartingIdeos();
+        Find.Scenario.PostIdeoChosen();
+    }
+
+    private static void ApplyClassicIdeo(Ideo classicIdeo) {
+        foreach (Faction faction in Find.FactionManager.AllFactions) {
+            if (faction.ideos != null) {
+                faction.ideos.RemoveAll();
+                faction.ideos.SetPrimary(classicIdeo);
+            }
+        }
+    }
+
+    private static void ApplyPresetIdeo(IdeologyParams ideology, Faction player) {
+        IdeoPresetDef? preset = NewColonyData.FindIdeoPreset(ideology.PresetDefName);
+        if (preset == null) {
+            return;
+        }
+
+        List<MemeDef> memes = preset.memes.ToList();
+        EnsureStructureMeme(memes, null, player);
+
+        Ideo ideo = IdeoGenerator.GenerateIdeo(new IdeoGenerationParms(player.def, forceNoExpansionIdeo: false,
+            null, null, memes, preset.classicPlus, forceNoWeaponPreference: true));
+        IdeoDraft.AssignDraft(ideo);
+    }
+
+
+    // The live editable draft is already the player's primary by the time we commit. If a commit-time
+    // world regen detached it from the (newly generated) player faction, re-attach the surviving draft
+    // to preserve the user's edits; only fall back to a fresh draft if it is truly gone.
+    private static void FinalizeCustomDraft(IdeoMode mode, Faction player) {
+        bool fluid = mode == IdeoMode.CustomFluid;
+
+        Ideo? current = player.ideos?.PrimaryIdeo;
+        if (current != null && current.initialPlayerIdeo) {
+            current.Fluid = fluid;
+            return;
+        }
+
+        Ideo? surviving = IdeoDraft.SurvivingDraft();
+        if (surviving != null) {
+            surviving.Fluid = fluid;
+            IdeoDraft.AssignDraft(surviving);
+            return;
+        }
+
+        IdeoDraft.EnsureForMode(mode, null);
+        Ideo? rebuilt = player.ideos?.PrimaryIdeo;
+        if (rebuilt != null) {
+            rebuilt.Fluid = fluid;
+        }
+    }
+
+    
+
+    
+
+    
+
+    
+
+    // Pins the structure-category meme: an explicit pick replaces any structure already in the
+    // list; otherwise a random allowed structure is added when none is present (mirrors DoPreset).
+    private static void EnsureStructureMeme(List<MemeDef> memes, string? structureDefName, Faction player) {
+        MemeDef? structure = structureDefName.NullOrEmpty()
+            ? null
+            : DefDatabase<MemeDef>.GetNamedSilentFail(structureDefName);
+
+        if (structure != null) {
+            memes.RemoveAll(x => x.category == MemeCategory.Structure);
+            memes.Add(structure);
+            return;
+        }
+
+        if (memes.Any(x => x.category == MemeCategory.Structure)) {
+            return;
+        }
+
+        if (DefDatabase<MemeDef>.AllDefsListForReading
+            .Where(m => m.category == MemeCategory.Structure && IdeoUtility.IsMemeAllowedFor(m, player.def))
+            .TryRandomElement(out MemeDef randomStructure)) {
+            memes.Add(randomStructure);
+        }
+    }
+
+    
 
     public static void Teardown() {
         provisionSig = 0;
@@ -270,6 +426,7 @@ public static class NewColonyLauncher {
         while (cursor != null) {
             bool skip = cursor is Page_SelectStoryteller
                 || cursor is Page_CreateWorldParams
+                || cursor is Page_ChooseIdeoPreset
                 || (skipStartingSite && cursor is Page_SelectStartingSite);
             if (!skip) {
                 cursor.prev = null;

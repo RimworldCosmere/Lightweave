@@ -140,7 +140,7 @@ public static class Chip {
             }
 
             Event e = Event.current;
-            if (e.type == EventType.MouseUp && e.button == 0 && rect.Contains(e.mousePosition)) {
+            if (e.type == EventType.MouseUp && e.button == 0 && rect.Contains(e.mousePosition) && LightweaveHitTracker.IsTopmost(rect)) {
                 onToggle?.Invoke(!on);
                 e.Use();
             }

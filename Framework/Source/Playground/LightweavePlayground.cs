@@ -31,7 +31,7 @@ public sealed class LightweavePlayground : LightweaveWindow {
             "surfaces",
             "CL_Playground_Category_Surfaces",
             "CL_Playground_Category_Surfaces_Desc",
-            new[] { "accordion", "card", "box" }
+            new[] { "accordion", "card", "box", "gallery-card", "add-tile" }
         ),
         new PlaygroundCategory(
             "inputs",
@@ -49,7 +49,7 @@ public sealed class LightweavePlayground : LightweaveWindow {
             "CL_Playground_Category_Feedback_Desc",
             new[] {
                 "spinner", "progressbar", "ringgauge", "alert", "vignette",
-                "window", "dialog", "popover", "drawer", "toast",
+                "window", "dialog", "modal", "popover", "drawer", "toast",
             }
         ),
         new PlaygroundCategory(
@@ -68,7 +68,7 @@ public sealed class LightweavePlayground : LightweaveWindow {
             "data",
             "CL_Playground_Category_Data",
             "CL_Playground_Category_Data_Desc",
-            new[] { "list", "table", "tree", "keyvalue", "chart", "divider", "chip", "avatar", "tooltip", "typography" }
+            new[] { "list", "table", "tree", "keyvalue", "chart", "divider", "chip", "count-tag", "avatar", "tooltip", "typography" }
         ),
         new PlaygroundCategory(
             "control",
@@ -104,6 +104,8 @@ public sealed class LightweavePlayground : LightweaveWindow {
         { "splitpane", "Lightweave/Layout/SplitPane.cs" },
         { "card", "Lightweave/Surfaces/Card.cs" },
         { "box", "Lightweave/Surfaces/Box.cs" },
+        { "gallery-card", "Lightweave/Surfaces/GalleryCard.cs" },
+        { "add-tile", "Lightweave/Surfaces/AddTile.cs" },
         { "vignette", "Lightweave/Feedback/Vignette.cs" },
         { "each", "Lightweave/Layout/Each.cs" },
         { "conditional", "Lightweave/Layout/Conditional.cs" },
@@ -131,6 +133,7 @@ public sealed class LightweavePlayground : LightweaveWindow {
         { "keybinding", "Lightweave/Input/KeyBindingField.cs" },
         { "option-row", "Lightweave/Input/OptionRow.cs" },
         { "chip", "Lightweave/Data/Chip.cs" },
+        { "count-tag", "Lightweave/Data/CountTag.cs" },
         { "spinner", "Lightweave/Feedback/Spinner.cs" },
         { "progressbar", "Lightweave/Feedback/ProgressBar.cs" },
         { "ringgauge", "Lightweave/Feedback/RingGauge.cs" },
@@ -149,6 +152,7 @@ public sealed class LightweavePlayground : LightweaveWindow {
         { "sidenav", "Lightweave/Playground/PlaygroundRail.cs" },
         { "window", "Lightweave/Runtime/LightweaveWindow.cs" },
         { "dialog", "Lightweave/Feedback/Dialog.cs" },
+        { "modal", "Lightweave/Feedback/Modal.cs" },
         { "popover", "Lightweave/Feedback/Popover.cs" },
         { "drawer", "Lightweave/Feedback/Drawer.cs" },
         { "toast", "Lightweave/Feedback/Toast.cs" },
@@ -347,7 +351,7 @@ public sealed class LightweavePlayground : LightweaveWindow {
             r => {
                 r.AddFlex(mainScroll);
                 if (RenderContext.Current.Breakpoint >= Breakpoint.Lg) {
-                    r.Add(tocNode, new Rem(15f).ToPixels());
+                    r.Add(tocNode, new Rem(17f).ToPixels());
                 }
             }
         );

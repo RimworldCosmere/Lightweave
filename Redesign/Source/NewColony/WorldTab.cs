@@ -151,6 +151,13 @@ public static class WorldTab {
             h.AddHug(OverlayStat("CL_NewColony_World_Stat_Tiles".Translate(), TileCountLabel()));
             h.AddHug(OverlayStat("CL_NewColony_World_Stat_Landing".Translate(), LandingLabel(pickedTile.Value)));
             h.AddFlex(Spacer.Flex());
+            h.AddHug(IconButton.Create(
+                Glyph.Create(Icons.Phosphor.MagnifyingGlass, style: new Style {
+                    TextColor = ThemeSlot.TextSecondary,
+                }),
+                () => Find.WindowStack.Add(new NewColonyWorldSearchDialog()),
+                tooltipKey: "SearchTheWorld",
+                hotKey: KeyCode.Z));
             h.AddHug(Button.Create(
                 "CL_NewColony_World_Seed_Randomize".Translate(),
                 () => {

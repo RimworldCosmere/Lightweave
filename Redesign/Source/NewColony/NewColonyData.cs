@@ -14,6 +14,9 @@ public static class NewColonyData {
     private static List<StorytellerDef>? storytellers;
     private static List<DifficultyDef>? difficulties;
     private static List<AnomalyPlaystyleDef>? anomalyPlaystyles;
+    private static List<IdeoPresetCategoryDef>? ideoPresetCategories;
+    private static Dictionary<IdeoPresetCategoryDef, List<IdeoPresetDef>>? ideoPresetsByCategory;
+    private static readonly List<IdeoPresetDef> EmptyPresets = [];
 
     public static List<Scenario> OfficialScenarios() {
         if (officialScenarios == null) {
@@ -145,6 +148,42 @@ public static class NewColonyData {
             }
         }
         return anomalyPlaystyles;
+    }
+
+    public static List<IdeoPresetCategoryDef> IdeoPresetCategories() {
+        if (ideoPresetCategories == null) {
+            ideoPresetCategories = new List<IdeoPresetCategoryDef>();
+            foreach (IdeoPresetCategoryDef def in DefDatabase<IdeoPresetCategoryDef>.AllDefs) {
+                ideoPresetCategories.Add(def);
+            }
+        }
+        return ideoPresetCategories;
+    }
+
+    public static List<IdeoPresetDef> IdeoPresetsInCategory(IdeoPresetCategoryDef category) {
+        if (ideoPresetsByCategory == null) {
+            ideoPresetsByCategory = new Dictionary<IdeoPresetCategoryDef, List<IdeoPresetDef>>();
+            foreach (IdeoPresetDef def in DefDatabase<IdeoPresetDef>.AllDefs) {
+                if (def.categoryDef == null) {
+                    continue;
+                }
+                if (!ideoPresetsByCategory.TryGetValue(def.categoryDef, out List<IdeoPresetDef> list)) {
+                    list = new List<IdeoPresetDef>();
+                    ideoPresetsByCategory[def.categoryDef] = list;
+                }
+                list.Add(def);
+            }
+        }
+        return ideoPresetsByCategory.TryGetValue(category, out List<IdeoPresetDef> presets)
+            ? presets
+            : EmptyPresets;
+    }
+
+    public static IdeoPresetDef? FindIdeoPreset(string? defName) {
+        if (defName.NullOrEmpty()) {
+            return null;
+        }
+        return DefDatabase<IdeoPresetDef>.GetNamedSilentFail(defName);
     }
 
     public static Scenario? FindScenario(string? name) {

@@ -4,26 +4,35 @@ using UnityEngine;
 namespace Cosmere.Lightweave.Runtime;
 
 internal static class HoverBlockRegistry {
+    // Double-buffered: writers register into `cur` (this frame), readers test against `prev`
+    // (last frame's registrations). An overlay (modal/popover) paints AFTER the base content it
+    // covers, so it registers its block region too late for same-frame base-content input checks
+    // (e.g. a scroll view behind the modal grabbing the wheel before the modal node has painted).
+    // Reading the previous frame closes that ordering gap: a persistent overlay registers every
+    // frame, so by its second frame `prev` reliably holds the block. The one-frame lag on
+    // open/close is invisible (the modal opens from a click, tooltips are dwell-delayed).
     private static int currentFrame = -1;
-    private static readonly List<Rect> rects = new List<Rect>();
+    private static List<Rect> prev = new List<Rect>();
+    private static List<Rect> cur = new List<Rect>();
 
     private static void EnsureFrame() {
         int frame = Time.frameCount;
         if (frame != currentFrame) {
             currentFrame = frame;
-            rects.Clear();
+            (prev, cur) = (cur, prev);
+            cur.Clear();
         }
     }
 
     public static void Register(Rect screenRect) {
         EnsureFrame();
-        rects.Add(screenRect);
+        cur.Add(screenRect);
     }
 
     public static bool IsBlocked(Vector2 screenPos) {
         EnsureFrame();
-        for (int i = 0; i < rects.Count; i++) {
-            if (rects[i].Contains(screenPos)) {
+        for (int i = 0; i < prev.Count; i++) {
+            if (prev[i].Contains(screenPos)) {
                 return true;
             }
         }

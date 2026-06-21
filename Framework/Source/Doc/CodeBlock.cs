@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Cosmere.Lightweave.Adapter;
 using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
@@ -9,6 +10,7 @@ using RimWorld;
 using UnityEngine;
 using Verse;
 using Verse.Sound;
+using Text = Cosmere.Lightweave.Typography.Typography.Text;
 
 namespace Cosmere.Lightweave.Doc;
 
@@ -289,7 +291,8 @@ public static partial class Doc {
             string tipKey = justCopied
                 ? "CL_Playground_Panel_CopyCode_Copied"
                 : "CL_Playground_Panel_CopyCode";
-            TooltipHandler.TipRegion(btnRect, (string)tipKey.Translate());
+            string tipText = (string)tipKey.Translate();
+            AsTooltip.Attach(btnRect, () => Text.Create(tipText, wrap: true, richText: true), key: tipText.GetHashCode());
             MouseoverSounds.DoRegion(btnRect, SoundDefOf.Mouseover_Standard);
         }
 

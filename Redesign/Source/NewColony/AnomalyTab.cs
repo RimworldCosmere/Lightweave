@@ -1,7 +1,11 @@
 using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Cosmere.Lightweave.Hooks;
 using Cosmere.Lightweave.Icons;
 using Cosmere.Lightweave.Layout;
+using Cosmere.Lightweave.Navigation;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Surfaces;
 using Cosmere.Lightweave.Tokens;
@@ -104,7 +108,8 @@ public static class AnomalyTab {
                     anomaly.Set(next);
                 },
                 0f, 1f, 0.01f,
-                key: "anomaly-threats-inactive"
+                key: "anomaly-threats-inactive",
+                tooltip: "Difficulty_AnomalyThreatsInactive_Info".Translate()
             ));
             s.Add(NewColonyControls.LabeledSlider(
                 "CL_NewColony_Anomaly_ThreatsActive".Translate() + " · " + NewColonyFormat.AnomalyIntensityLabel(anomaly.Value.ThreatsActive),
@@ -116,7 +121,10 @@ public static class AnomalyTab {
                     anomaly.Set(next);
                 },
                 0f, 1f, 0.01f,
-                key: "anomaly-threats-active"
+                key: "anomaly-threats-active",
+                tooltip: "Difficulty_AnomalyThreatsActive_Info".Translate(
+                    Mathf.Clamp01(anomaly.Value.ThreatsActive).ToStringPercent(),
+                    Mathf.Clamp01(anomaly.Value.ThreatsActive * 1.5f).ToStringPercent())
             ));
             s.Add(NewColonyControls.LabeledSlider(
                 "CL_NewColony_Anomaly_StudyEfficiency".Translate(),
@@ -128,17 +136,89 @@ public static class AnomalyTab {
                     anomaly.Set(next);
                 },
                 0.5f, 2f, 0.05f,
-                key: "anomaly-study-efficiency"
+                key: "anomaly-study-efficiency",
+                tooltip: "Difficulty_StudyEfficiency_Info".Translate()
             ));
-            s.Add(Button.Create(
-                "CL_NewColony_Anomaly_Reset".Translate(),
-                () => anomaly.Set(AnomalyParams.Default()),
-                Variant.Secondary,
-                leading: Glyph.Create(Icons.Phosphor.ArrowCounterClockwise, style: new Style {
-                    TextColor = ThemeSlot.TextSecondary,
-                })
-            ));
+            s.Add(BuildStandardPlaystylePicker(anomaly));
         });
+    }
+
+
+    private static LightweaveNode BuildStandardPlaystylePicker(
+        Hooks.Hooks.StateHandle<AnomalyParams> anomaly,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath] string file = ""
+    ) {
+        Hooks.Hooks.StateHandle<bool> open = Hooks.Hooks.UseState(false, line, file);
+        Hooks.Hooks.StateHandle<Rect> anchor = Hooks.Hooks.UseState(Rect.zero, line + 1, file);
+
+        LightweaveNode node = NodeBuilder.New("AnomalyPlaystylePicker", line, file);
+        node.ApplyStyling("anomaly-playstyle-picker", null, null, null);
+
+        LightweaveNode trigger = Button.Create(
+            "CL_NewColony_Anomaly_SetStandard".Translate(),
+            () => open.Set(!open.Value),
+            Variant.Secondary,
+            trailing: Glyph.Create(
+                open.Value ? Icons.Phosphor.CaretUp : Icons.Phosphor.CaretDown,
+                style: new Style {
+                    FontSize = new Rem(0.6875f),
+                    TextColor = ThemeSlot.TextSecondary,
+                }));
+
+        LightweaveNode menu = Menu.Create(
+            isOpen: open.Value,
+            anchorRect: anchor.Value,
+            items: BuildStandardPlaystyleItems(anomaly, () => open.Set(false)),
+            onDismiss: () => open.Set(false),
+            anchor: MenuAnchor.Left,
+            direction: MenuDirection.Up,
+            instanceKey: "anomaly-standard-playstyle-menu",
+            size: new Vector2(anchor.Value.width, -1f));
+
+        node.Children.Add(trigger);
+        node.Children.Add(menu);
+
+        node.MeasureWidth = () => trigger.MeasureWidth?.Invoke() ?? 0f;
+        node.Measure = availableWidth => trigger.Measure?.Invoke(availableWidth) ?? trigger.PreferredHeight ?? 0f;
+
+        node.Paint = (rect, _) => {
+            if (anchor.Value != rect) {
+                anchor.Set(rect);
+            }
+            trigger.MeasuredRect = rect;
+            menu.MeasuredRect = rect;
+            LightweaveRoot.PaintSubtree(trigger, rect);
+            LightweaveRoot.PaintSubtree(menu, rect);
+        };
+
+        return node;
+    }
+
+    private static IReadOnlyList<MenuEntry> BuildStandardPlaystyleItems(
+        Hooks.Hooks.StateHandle<AnomalyParams> anomaly,
+        Action onDismiss
+    ) {
+        string standardName = AnomalyPlaystyleDefOf.Standard.defName;
+        List<MenuEntry> items = [];
+        foreach (DifficultyDef def in DefDatabase<DifficultyDef>.AllDefs) {
+            if (def.isCustom) {
+                continue;
+            }
+            DifficultyDef captured = def;
+            items.Add(MenuEntry.Of(
+                def.LabelCap,
+                () => {
+                    AnomalyParams next = anomaly.Value;
+                    next.PlaystyleDefName = standardName;
+                    next.ThreatsInactive = captured.anomalyThreatsInactiveFraction;
+                    next.ThreatsActive = captured.anomalyThreatsActiveFraction;
+                    next.StudyEfficiency = Mathf.Clamp(captured.studyEfficiencyFactor, 0.5f, 2f);
+                    anomaly.Set(next);
+                    onDismiss();
+                }));
+        }
+        return items;
     }
 
     private static string Percent(float v) {

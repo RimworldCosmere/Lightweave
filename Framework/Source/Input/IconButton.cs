@@ -30,6 +30,7 @@ public static class IconButton {
         string? tooltipKey = null,
         TooltipSide tooltipSide = TooltipSide.Bottom,
         bool? playHoverSound = null,
+        KeyCode? hotKey = null,
         Style? style = null,
         string[]? classes = null,
         string? id = null,
@@ -98,6 +99,18 @@ public static class IconButton {
                 e.button == 0 &&
                 square.Contains(e.mousePosition) &&
                 LightweaveHitTracker.IsTopmost(square)) {
+                onClick.Invoke();
+                e.Use();
+            }
+
+            // Hotkey: fire onClick on the bound key, but only when no text field is focused
+            // (keyboardControl == 0) so typing the same letter into a field never triggers it.
+            if (!disabled &&
+                onClick != null &&
+                hotKey.HasValue &&
+                e.type == EventType.KeyDown &&
+                e.keyCode == hotKey.Value &&
+                GUIUtility.keyboardControl == 0) {
                 onClick.Invoke();
                 e.Use();
             }

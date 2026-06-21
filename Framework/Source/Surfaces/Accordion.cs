@@ -293,7 +293,8 @@ public static class Accordion {
                     cursorY = panelRect.yMax;
                 }
 
-                if (!item.Disabled && e.type == EventType.MouseUp && e.button == 0 && headerRect.Contains(e.mousePosition)) {
+                LightweaveHitTracker.Track(headerRect);
+                if (!item.Disabled && e.type == EventType.MouseUp && e.button == 0 && headerRect.Contains(e.mousePosition) && LightweaveHitTracker.IsTopmost(headerRect)) {
                     bool wasExpanded = expanded;
                     if (wasExpanded) {
                         item.OnClose?.Invoke();

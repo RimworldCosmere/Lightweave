@@ -48,6 +48,24 @@ public struct LightweaveScrollView : IDisposable {
 
     [ThreadStatic] private static float _pendingWheelDeltaY;
     [ThreadStatic] private static bool _pendingWheel;
+    [ThreadStatic] private static int _pendingWheelFrame;
+
+    // Captured once per frame at the top of LightweaveRoot.Render, before any scroll view is painted.
+    // Capturing here (rather than in each scroll view's ctor) is what lets a scroll painted during the
+    // overlay flush (modal/popover body) still receive the wheel: by flush time the live event's
+    // rawType is already Used, so a per-ctor rawType==ScrollWheel check would never fire for it. The
+    // delta is stashed; each scroll view's Dispose applies it if it's the topmost overflowing scroll
+    // under the cursor this frame. Cleared at the end of every Render so it never leaks across windows.
+    public static void CaptureWheel(float deltaY) {
+        _pendingWheelDeltaY = deltaY;
+        _pendingWheel = true;
+        _pendingWheelFrame = Time.frameCount;
+    }
+
+    public static void ClearWheel() {
+        _pendingWheel = false;
+        _pendingWheelDeltaY = 0f;
+    }
 
     public static float WidthFor(ScrollAreaVariant variant) {
         return variant switch {
@@ -116,18 +134,27 @@ public struct LightweaveScrollView : IDisposable {
         status.LastViewportHeight = outRect.height;
         status.Height = 0f;
 
-        Event scrollEvt = Event.current;
-        if (scrollEvt != null
-            && scrollEvt.rawType == EventType.ScrollWheel
-            && scrollEvt.type == EventType.ScrollWheel
-            && status.VerticalVisible
-            && outRect.Contains(scrollEvt.mousePosition)) {
-            _pendingWheelDeltaY = scrollEvt.delta.y;
-            _pendingWheel = true;
-            scrollEvt.Use();
+        // The scroll wheel is captured once per frame at the top of LightweaveRoot.Render (before any
+        // paint or overlay flush) via CaptureWheel(), which Use()s the event immediately so Unity's
+        // Widgets.BeginScrollView below never auto-scrolls. We do NOT consume here: a scroll painted
+        // inside an overlay (modal/popover) is constructed during the overlay flush, by which point the
+        // event's rawType is already Used - so a ctor-time rawType==ScrollWheel check could never fire
+        // for it. Dispose applies the stashed wheel to whichever scroll is topmost under the cursor.
+        Widgets.BeginScrollView(outRect, ref status.Position, rect, false);
+    }
+
+    // A scroll view sitting behind an open overlay (a modal scrim, a popover) must not consume the
+    // wheel - otherwise it Uses() the event before the overlay's own scroll view, painted later in
+    // the PendingOverlays pass, ever sees it (the classic "wheel scrolls the hidden page" bug). The
+    // overlay's own content paints at OverlayContentDepth > 0, so it always passes. Base content
+    // (depth 0) defers when the cursor is over a registered hover-block region.
+    private static bool WheelIsTopmost(Vector2 guiMousePos) {
+        RenderContext? ctx = RenderContext.CurrentOrNull;
+        if (ctx == null || ctx.OverlayContentDepth > 0) {
+            return true;
         }
 
-        Widgets.BeginScrollView(outRect, ref status.Position, rect, false);
+        return !HoverBlockRegistry.IsBlocked(GUIUtility.GUIToScreenPoint(guiMousePos));
     }
 
     public float Height => contentHeight;
@@ -140,7 +167,15 @@ public struct LightweaveScrollView : IDisposable {
     public void Dispose() {
         Widgets.EndScrollView();
 
-        if (_pendingWheel && status.VerticalVisible && outRect.Contains(Event.current.mousePosition)) {
+        // Gate on the stashed frame, NOT Event.current.rawType: CaptureWheel (at Render-top) already
+        // Use()d the event, flipping rawType to Used for the rest of this event, so an
+        // rawType==ScrollWheel check here would reject every scroll. _pendingWheelFrame scopes the apply to the
+        // event that stashed it; mousePosition is preserved across Use() so contains/topmost are live.
+        if (_pendingWheel
+            && _pendingWheelFrame == Time.frameCount
+            && status.VerticalVisible
+            && outRect.Contains(Event.current.mousePosition)
+            && WheelIsTopmost(Event.current.mousePosition)) {
             float scrollRange = Math.Max(0f, contentHeight - outRect.height);
             float delta = _pendingWheelDeltaY * 20f;
             float prevY = status.Position.y;

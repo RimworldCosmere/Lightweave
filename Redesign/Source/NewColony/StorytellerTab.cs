@@ -96,10 +96,10 @@ public static class StorytellerTab {
             child: child,
             selected: isSelected,
             onSelect: () => tellerDefName.Set(name),
+            padding: EdgeInsets.All(SpacingScale.None),
             style: new Style {
                 Width = Length.Stretch,
                 Height = Length.Stretch,
-                Padding = EdgeInsets.All(SpacingScale.None),
             }
         );
     }
@@ -173,7 +173,7 @@ public static class StorytellerTab {
             }, style: new Style { Width = Length.Stretch }));
             string lead = NewColonyFormat.LeadParagraph(def.description);
             if (!lead.NullOrEmpty()) {
-                c.Add(Text.Create(lead, wrap: true, style: new Style {
+                c.Add(Text.Create(lead, wrap: true, richText: true, style: new Style {
                     FontFamily = FontRole.Mono,
                     FontSize = new Rem(0.66f),
                     TextColor = ThemeSlot.TextMuted,
@@ -184,8 +184,34 @@ public static class StorytellerTab {
         return SelectableSurface.Create(
             child: child,
             selected: isSelected,
+            tooltipContent: def.description.NullOrEmpty() ? null : () => BuildDescriptionTooltip(def.description),
             onSelect: () => diffDefName.Set(name),
             style: new Style { Width = Length.Stretch }
         );
+    }
+
+
+    private static LightweaveNode BuildDescriptionTooltip(string? description) {
+        System.Collections.Generic.List<NewColonyThresholds.TipSegment> segments =
+            NewColonyThresholds.ParseTipSegments(description);
+
+        return Stack.Create(SpacingScale.Sm, t => {
+            foreach (NewColonyThresholds.TipSegment seg in segments) {
+                if (seg.IsTitle) {
+                    t.Add(Text.Create(seg.Text, wrap: true, richText: true, style: new Style {
+                        FontFamily = FontRole.BodyBold,
+                        FontSize = new Rem(0.9375f),
+                        TextColor = ThemeSlot.SurfaceAccent,
+                    }));
+                }
+                else {
+                    t.Add(Text.Create(seg.Text, wrap: true, richText: true, style: new Style {
+                        FontFamily = FontRole.Body,
+                        FontSize = new Rem(0.8125f),
+                        TextColor = ThemeSlot.TextSecondary,
+                    }));
+                }
+            }
+        });
     }
 }

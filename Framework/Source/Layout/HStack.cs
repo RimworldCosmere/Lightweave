@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using Cosmere.Lightweave.Doc;
+using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
@@ -43,6 +44,8 @@ public static class HStack {
         bool captureHits = false,
         [DocParam("Cross-axis (vertical) alignment of children within the row height. Stretch (default) gives every child the full row height; Start/Center/End size each measurable child to its natural height and pin it to the top/middle/bottom.")]
         FlexAlign align = FlexAlign.Stretch,
+        [DocParam("When set, paints a subtle wash in this theme slot over the row background while the pointer is anywhere over the row - a lightweight hover affordance for informational rows that are not full buttons. Null (default) paints nothing.", TypeOverride = "ThemeSlot?", DefaultOverride = "null")]
+        ThemeSlot? hoverBackground = null,
         [DocParam("Inline style override.", TypeOverride = "Style?", DefaultOverride = "null")]
         Style? style = null,
         [DocParam("Additional class names merged after the base 'hstack' class.", TypeOverride = "string[]?", DefaultOverride = "null")]
@@ -239,6 +242,19 @@ public static class HStack {
                 x += w + gapPx;
             }
         };
+
+        if (hoverBackground.HasValue) {
+            ThemeSlot hoverSlot = hoverBackground.Value;
+            node.Draw = _ => {
+                Event ev = Event.current;
+                if (ev == null || !node.MeasuredRect.Contains(ev.mousePosition)) {
+                    return;
+                }
+                Theme.Theme theme = RenderContext.Current.Theme;
+                RadiusSpec radius = node.GetResolvedStyle().Radius ?? RadiusSpec.None;
+                PaintBox.Draw(node.MeasuredRect, BackgroundSpec.Of(theme.GetColor(hoverSlot)), null, radius);
+            };
+        }
 
         return node;
     }

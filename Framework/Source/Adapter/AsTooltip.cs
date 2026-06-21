@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Cosmere.Lightweave.Data;
 using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
@@ -55,7 +56,7 @@ public static class AsTooltip {
     ///     Factory invoked each frame the pointer is over <paramref name="rect" /> (after the delay) to produce the
     ///     tooltip content node. The node is measured to size the tooltip to its content.
     /// </param>
-    /// <param name="maxSize">Upper bound on tooltip size; content wraps/clamps within it. Defaults to 18rem x 12rem.</param>
+    /// <param name="maxSize">Upper bound on tooltip size; content wraps/clamps within it. Defaults to 20rem x 24rem.</param>
     /// <param name="delay">Hover dwell time in seconds before the tooltip shows. Defaults to 0.45s.</param>
     /// <param name="key">
     ///     Stable identity used to track hover dwell across frames. Pass a content-derived key (e.g. an id hash) when the
@@ -66,7 +67,8 @@ public static class AsTooltip {
         Func<LightweaveNode> build,
         Vector2? maxSize = null,
         float delay = 0.45f,
-        int key = 0
+        int key = 0,
+        TooltipSide? side = null
     ) {
         RenderContext? ctx = RenderContext.CurrentOrNull;
         if (ctx == null) {
@@ -74,6 +76,16 @@ public static class AsTooltip {
         }
 
         if (!Mouse.IsOver(rect)) {
+            return;
+        }
+
+        // Suppress tooltips for content sitting behind an open overlay (a modal scrim, a popover).
+        // Overlays register a HoverBlockRegistry region; base content (OverlayContentDepth == 0) under
+        // that region must not raise a tooltip, mirroring LightweaveHitTracker.IsTopmost's gate. The
+        // overlay's own content paints at depth > 0, so its tooltips still fire.
+        Event? currentEvent = Event.current;
+        if (ctx.OverlayContentDepth == 0 && currentEvent != null
+            && HoverBlockRegistry.IsBlocked(GUIUtility.GUIToScreenPoint(currentEvent.mousePosition))) {
             return;
         }
 
@@ -93,22 +105,32 @@ public static class AsTooltip {
         }
 
         Vector2 mouseScreen = GUIUtility.GUIToScreenPoint(Event.current.mousePosition) + new Vector2(16f, 16f);
-        Vector2 max = maxSize ?? new Vector2(new Rem(18f).ToPixels(), new Rem(12f).ToPixels());
+        Vector2 max = maxSize ?? new Vector2(new Rem(20f).ToPixels(), new Rem(24f).ToPixels());
 
         ctx.PendingOverlays.Enqueue(() => {
-            float padX = SpacingScale.Sm.ToPixels();
-            float padY = SpacingScale.Xs.ToPixels();
+            float pad = new Rem(0.5f).ToPixels();
 
             LightweaveNode node = build();
             float naturalW = node.MeasureWidth?.Invoke() ?? max.x;
-            float innerW = Mathf.Clamp(naturalW, 0f, max.x - padX * 2f);
+            float innerW = Mathf.Clamp(naturalW, 0f, max.x - pad * 2f);
             float naturalH = node.Measure?.Invoke(innerW) ?? node.PreferredHeight ?? 0f;
-            float innerH = Mathf.Clamp(naturalH, 0f, max.y - padY * 2f);
+            float innerH = Mathf.Clamp(naturalH, 0f, max.y - pad * 2f);
 
-            float w = innerW + padX * 2f;
-            float h = innerH + padY * 2f;
+            float w = innerW + pad * 2f;
+            float h = innerH + pad * 2f;
 
-            Rect screenRect = new Rect(mouseScreen.x, mouseScreen.y, w, h);
+            Rect screenRect;
+            if (side is TooltipSide.Top or TooltipSide.TopStart or TooltipSide.TopEnd) {
+                // Anchor centered above the source rect (used by controls pinned to the screen
+                // bottom, where the default mouse-follow tooltip would clamp on top of the control).
+                Vector2 topCenter = GUIUtility.GUIToScreenPoint(new Vector2(rect.center.x, rect.y));
+                float gapPx = new Rem(0.375f).ToPixels();
+                screenRect = new Rect(topCenter.x - w * 0.5f, topCenter.y - h - gapPx, w, h);
+            }
+            else {
+                screenRect = new Rect(mouseScreen.x, mouseScreen.y, w, h);
+            }
+
             if (screenRect.xMax > Screen.width) {
                 screenRect.x = Screen.width - w;
             }
@@ -128,16 +150,19 @@ public static class AsTooltip {
             Vector2 local = GUIUtility.ScreenToGUIPoint(new Vector2(screenRect.x, screenRect.y));
             Rect tooltipRect = new Rect(local.x, local.y, w, h);
 
-            BackgroundSpec bg = BackgroundSpec.Of(ThemeSlot.SurfaceRaised);
-            BorderSpec border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderDefault);
-            RadiusSpec radius = RadiusSpec.All(RadiusScale.Sm);
-            PaintBox.Draw(tooltipRect, bg, border, radius);
+            PaintBox.DrawShadow(tooltipRect, ShadowSpec.Of(ThemeSlot.ShadowTooltip));
+            PaintBox.Draw(
+                tooltipRect,
+                BackgroundSpec.Of(ThemeSlot.SurfaceTooltip),
+                BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderTooltip),
+                RadiusSpec.All(RadiusScale.Sm)
+            );
 
             Rect inner = new Rect(
-                tooltipRect.x + padX,
-                tooltipRect.y + padY,
-                tooltipRect.width - padX * 2f,
-                tooltipRect.height - padY * 2f
+                tooltipRect.x + pad,
+                tooltipRect.y + pad,
+                tooltipRect.width - pad * 2f,
+                tooltipRect.height - pad * 2f
             );
             LightweaveRoot.PaintSubtree(node, inner);
         }

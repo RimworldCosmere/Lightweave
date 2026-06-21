@@ -160,7 +160,7 @@ public static class PlaygroundRail {
 
                 if (overRow) {
                     string tip = (string)cat.DescriptionKey.Translate();
-                    AsTooltip.Attach(rowRect, () => Text.Create(tip, wrap: true), key: cat.Id.GetHashCode());
+                    AsTooltip.Attach(rowRect, () => Text.Create(tip, wrap: true, richText: true), key: cat.Id.GetHashCode());
                 }
 
                 if (!expanded || sortedPerCat[i] == null) {
@@ -283,7 +283,7 @@ public static class PlaygroundRail {
         TextDraw.Draw(labelRect, labelText, role, new Rem(0.8125f), labelAnchor, textSlot);
 
         if (hovering) {
-            AsTooltip.Attach(rowRect, () => Text.Create(labelText, wrap: true), key: primId.GetHashCode());
+            AsTooltip.Attach(rowRect, () => Text.Create(labelText, wrap: true, richText: true), key: primId.GetHashCode());
         }
     }
 

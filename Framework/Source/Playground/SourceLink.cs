@@ -1,12 +1,14 @@
 using System;
 using System.IO;
 using System.Runtime.CompilerServices;
+using Cosmere.Lightweave.Adapter;
 using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
 using UnityEngine;
 using Verse;
+using Text = Cosmere.Lightweave.Typography.Typography.Text;
 
 namespace Cosmere.Lightweave.Playground;
 
@@ -141,7 +143,8 @@ public static class SourceLink {
                 Rect underline = new Rect(rect.x, underlineY, underlineWidth, 1f);
                 PaintBox.Fill(underline, theme.GetColor(slot));
 
-                TooltipHandler.TipRegion(rect, (string)tooltipKey.Translate());
+                string tooltipText = (string)tooltipKey.Translate();
+                AsTooltip.Attach(rect, () => Text.Create(tooltipText, wrap: true, richText: true), key: tooltipText.GetHashCode());
             }
 
             if (e.type == EventType.MouseUp && e.button == 0 && rect.Contains(e.mousePosition)) {

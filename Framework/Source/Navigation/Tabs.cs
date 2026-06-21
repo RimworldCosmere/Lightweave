@@ -173,7 +173,8 @@ public static class Tabs {
                     PaintBox.Draw(underlineRect, BackgroundSpec.Of(ThemeSlot.SurfaceAccent), null, null);
                 }
 
-                if (e.type == EventType.MouseUp && e.button == 0 && tabRect.Contains(e.mousePosition)) {
+                LightweaveHitTracker.Track(tabRect);
+                if (e.type == EventType.MouseUp && e.button == 0 && tabRect.Contains(e.mousePosition) && LightweaveHitTracker.IsTopmost(tabRect)) {
                     onChange?.Invoke(item);
                     e.Use();
                 }

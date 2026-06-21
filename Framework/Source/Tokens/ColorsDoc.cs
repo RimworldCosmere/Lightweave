@@ -51,6 +51,7 @@ public static class ColorsDoc {
         ("CL_Playground_colors_Group_Border", new[] {
             ThemeSlot.BorderDefault,
             ThemeSlot.BorderSubtle,
+            ThemeSlot.BorderFaint,
             ThemeSlot.BorderHover,
             ThemeSlot.BorderFocus,
             ThemeSlot.BorderOff,
@@ -317,6 +318,7 @@ public static class ColorsDoc {
                 children: row => {
                     row.AddFlex(BorderCell("CL_Playground_colors_Border_Default_Label", ThemeSlot.BorderDefault));
                     row.AddFlex(BorderCell("CL_Playground_colors_Border_Subtle_Label", ThemeSlot.BorderSubtle));
+                    row.AddFlex(BorderCell("CL_Playground_colors_Border_Faint_Label", ThemeSlot.BorderFaint));
                     row.AddFlex(BorderCell("CL_Playground_colors_Border_Focus_Label", ThemeSlot.BorderFocus));
                     row.AddFlex(BorderCell("CL_Playground_colors_Border_Hover_Label", ThemeSlot.BorderHover));
                     row.AddFlex(BorderCell("CL_Playground_colors_Border_Off_Label", ThemeSlot.BorderOff));

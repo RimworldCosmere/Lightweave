@@ -16,7 +16,9 @@ internal sealed class NewColonyWindow : LightweaveWindow {
     protected override RadiusSpec? CardRadius => RadiusSpec.All(RadiusScale.None);
     protected override EdgeInsets? CardPadding => EdgeInsets.All(new Rem(0f));
     protected override bool DrawAccentGradient => false;
-    protected override BackgroundSpec? CardBackground => BackgroundSpec.Of(ThemeSlot.WindowGlass);
+    // Opaque warm-dark base (not the translucent WindowGlass) so the main-menu splash behind the
+    // window does not bleed through the content area — the New Colony flow reads as its own surface.
+    protected override BackgroundSpec? CardBackground => BackgroundSpec.Of(ThemeSlot.SurfaceTranslucentDark);
 
     public override void DoWindowContents(Rect inRect) {
         NewColonyLauncher.PumpPendingGen();

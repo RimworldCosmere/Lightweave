@@ -49,7 +49,10 @@ public static class ContextMenu {
             LightweaveRoot.PaintSubtree(child, rect);
 
             Event e = Event.current;
-            if (e.type == EventType.MouseUp && e.button == 1 && rect.Contains(e.mousePosition)) {
+            RenderContext ctx = RenderContext.Current;
+            bool occludedByOverlay = ctx.OverlayContentDepth == 0
+                && HoverBlockRegistry.IsBlocked(GUIUtility.GUIToScreenPoint(e.mousePosition));
+            if (e.type == EventType.MouseUp && e.button == 1 && rect.Contains(e.mousePosition) && !occludedByOverlay) {
                 anchorPos.Set(e.mousePosition);
                 isOpen.Set(true);
                 e.Use();

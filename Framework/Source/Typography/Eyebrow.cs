@@ -114,8 +114,7 @@ public static class Eyebrow {
             Rem fontSize = s.FontSize ?? new Rem(0.75f);
             int pixelSize = Mathf.RoundToInt(fontSize.ToFontPx());
             float descenderPad = Mathf.Max(2f, pixelSize * 0.25f);
-            GUIContent gc = new GUIContent(upper);
-            return Mathf.Ceil(gs.CalcHeight(gc, float.MaxValue) + descenderPad);
+            return Mathf.Ceil(TextMeasureCache.Height(gs, upper, float.MaxValue) + descenderPad);
         };
 
         node.MeasureWidth = () => {

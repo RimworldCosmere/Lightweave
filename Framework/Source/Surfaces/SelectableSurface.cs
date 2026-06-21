@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using Cosmere.Lightweave.Adapter;
 using Cosmere.Lightweave.Doc;
 using Cosmere.Lightweave.Icons;
 using Cosmere.Lightweave.Input;
@@ -33,12 +34,20 @@ public static class SelectableSurface {
         Action? onSelect = null,
         bool disabled = false,
         bool? playHoverSound = null,
+        [DocParam("Optional hover tooltip. Shown as a Lightweave tooltip over the whole surface. Omit when all information is already visible in the row.", TypeOverride = "string?", DefaultOverride = "null")]
+        string? tooltip = null,
+        [DocParam("Optional rich tooltip content built as a Lightweave node, shown as a Lightweave tooltip. Takes precedence over the string tooltip; use for colored or multi-section tooltips (e.g. per-meme name + description). Dwell key derives from id when set.", TypeOverride = "Func<LightweaveNode>?", DefaultOverride = "null")]
+        Func<LightweaveNode>? tooltipContent = null,
         [DocParam("Visual treatment. Tile is a rounded card; ListRow is a square glass row with a leading accent bar and trailing caret when selected.")]
         SelectableSurfaceVariant variant = SelectableSurfaceVariant.Tile,
         [DocParam("Accent for the selected border, ListRow accent bar, and ListRow caret. Defaults to ThemeSlot.SurfaceAccent.")]
         ColorRef? accent = null,
         [DocParam("ListRow only: draw a trailing caret when selected. Set false for rows that carry their own leading indicator.")]
         bool trailingCaret = true,
+        [DocParam("When false, the surface frame (background + border) is not painted; only the child, the hover/press highlight, and the selected accent are drawn. Use for a bare clickable icon/emblem that should not read as a boxed tile.")]
+        bool chrome = true,
+        [DocParam("Inner padding between the surface frame and its child. Pass via this param, NOT Style.Padding - the render pipeline consumes Style.Padding generically, which would double-apply here and pull the frame inside the padding. Defaults to the variant's pad (TilePad / ListRowPad).", TypeOverride = "EdgeInsets?", DefaultOverride = "null")]
+        EdgeInsets? padding = null,
         Style? style = null,
         string[]? classes = null,
         string? id = null,
@@ -55,8 +64,7 @@ public static class SelectableSurface {
         EdgeInsets defaultPad = variant == SelectableSurfaceVariant.ListRow ? ListRowPad : TilePad;
 
         (float left, float top, float right, float bottom) ResolvePaddingPixels() {
-            Style s = node.GetResolvedStyle();
-            EdgeInsets pad = s.Padding ?? defaultPad;
+            EdgeInsets pad = padding ?? defaultPad;
             return pad.Resolve(RenderContext.Current.Direction);
         }
 
@@ -77,17 +85,34 @@ public static class SelectableSurface {
             node.MeasuredRect = rect;
 
             if (child != null) {
-                EdgeInsets pad = node.GetResolvedStyle().Padding ?? defaultPad;
+                EdgeInsets pad = padding ?? defaultPad;
                 child.MeasuredRect = pad.Shrink(rect, RenderContext.Current.Direction);
             }
 
             InteractionFeedback.Apply(rect, !disabled, playHoverSound ?? true);
 
+            if (tooltipContent != null) {
+                AsTooltip.Attach(rect, tooltipContent, key: id?.GetHashCode() ?? 0);
+            }
+            else if (!string.IsNullOrEmpty(tooltip)) {
+                string tip = tooltip!;
+                AsTooltip.Attach(rect, () => Text.Create(tip, wrap: true, richText: true), key: tip.GetHashCode());
+            }
+
+            // Manual MouseUp hit-test instead of Widgets.ButtonInvisible (-> GUI.Button), which
+            // consumes the event before the IsTopmost gate can reject it - a base row behind an open
+            // Modal would swallow the click that belongs to the modal's own controls. Only Use() when
+            // topmost, matching Button/IconButton. Rect is tracked for occlusion in node.Draw.
+            Event? ev = Event.current;
             if (!disabled
                 && onSelect != null
-                && Widgets.ButtonInvisible(rect, doMouseoverSound: false)
+                && ev != null
+                && ev.type == EventType.MouseUp
+                && ev.button == 0
+                && rect.Contains(ev.mousePosition)
                 && LightweaveHitTracker.IsTopmost(rect)) {
                 onSelect.Invoke();
+                ev.Use();
             }
         };
 
@@ -97,10 +122,10 @@ public static class SelectableSurface {
             InteractionState state = InteractionState.Resolve(rect, null, disabled);
 
             if (variant == SelectableSurfaceVariant.ListRow) {
-                DrawListRow(rect, theme, s, state, selected, accent, trailingCaret);
+                DrawListRow(rect, theme, s, state, selected, accent, trailingCaret, chrome);
             }
             else {
-                DrawTile(rect, theme, s, state, selected, accent);
+                DrawTile(rect, theme, s, state, selected, accent, chrome);
             }
         };
 
@@ -113,7 +138,8 @@ public static class SelectableSurface {
         Style s,
         InteractionState state,
         bool selected,
-        ColorRef? accent
+        ColorRef? accent,
+        bool chrome
     ) {
         ThemeSlot borderSlot = ResolveBorderSlot(state, selected);
         Rem borderWidth = selected ? SelectedBorderWidth : RestBorderWidth;
@@ -129,7 +155,9 @@ public static class SelectableSurface {
 
         RadiusSpec radius = s.Radius ?? RadiusSpec.All(RadiusScale.Md);
 
-        PaintBox.Draw(rect, background, border, radius);
+        if (chrome) {
+            PaintBox.Draw(rect, background, border, radius);
+        }
 
         if (!selected && !state.Disabled && (state.Hovered || state.Pressed)) {
             Color hover = theme.GetColor(state.Pressed ? ThemeSlot.ActiveTint : ThemeSlot.HoverTint);
@@ -144,7 +172,8 @@ public static class SelectableSurface {
         InteractionState state,
         bool selected,
         ColorRef? accent,
-        bool trailingCaret
+        bool trailingCaret,
+        bool chrome
     ) {
         RadiusSpec radius = s.Radius ?? RadiusSpec.None;
         Color accentColor = ResolveAccent(accent, theme);
@@ -156,7 +185,9 @@ public static class SelectableSurface {
         );
 
         BackgroundSpec background = s.Background ?? ListRowGlass;
-        PaintBox.Draw(rect, background, border, radius);
+        if (chrome) {
+            PaintBox.Draw(rect, background, border, radius);
+        }
 
         if (state.Disabled) {
             return;

@@ -60,7 +60,7 @@ public static partial class Typography {
                 }
 
                 GUIStyle gs = ResolveStyle();
-                return gs.CalcHeight(new GUIContent(resolved), availableWidth);
+                return TextMeasureCache.Height(gs, resolved, availableWidth);
             };
 
             node.MeasureWidth = () => {
@@ -70,7 +70,7 @@ public static partial class Typography {
                 }
 
                 GUIStyle gs = ResolveStyle();
-                return Mathf.Ceil(gs.CalcSize(new GUIContent(resolved)).x);
+                return Mathf.Ceil(TextMeasureCache.Size(gs, resolved).x);
             };
 
             node.Paint = (rect, _) => {

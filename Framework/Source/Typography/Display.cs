@@ -116,8 +116,7 @@ public static class Display {
             Rem fontSize = s.FontSize ?? new Rem(2f);
             int pixelSize = Mathf.RoundToInt(fontSize.ToFontPx());
             float descenderPad = Mathf.Max(2f, pixelSize * 0.25f);
-            GUIContent gc = new GUIContent(content);
-            return Mathf.Ceil(gs.CalcHeight(gc, float.MaxValue) + descenderPad);
+            return Mathf.Ceil(TextMeasureCache.Height(gs, content, float.MaxValue) + descenderPad);
         };
 
         node.Paint = (rect, _) => {

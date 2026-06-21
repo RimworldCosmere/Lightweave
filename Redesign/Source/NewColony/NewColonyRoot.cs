@@ -22,6 +22,7 @@ namespace Cosmere.Lightweave.Redesign.NewColony;
 public static class NewColonyRoot {
     public static LightweaveNode Build(Action onClose) {
         bool anomaly = Verse.ModsConfig.AnomalyActive;
+        bool ideology = Verse.ModsConfig.IdeologyActive;
 
         Hooks.Hooks.StateHandle<string> tab = Hooks.Hooks.UseState<string>("scenario");
         Hooks.Hooks.StateHandle<string?> scenarioName = Hooks.Hooks.UseState<string?>(DefaultScenarioName());
@@ -29,9 +30,11 @@ public static class NewColonyRoot {
         Hooks.Hooks.StateHandle<string?> diffDefName = Hooks.Hooks.UseState<string?>(DefaultDifficultyDefName());
         Hooks.Hooks.StateHandle<WorldParams> world = Hooks.Hooks.UseState<WorldParams>(WorldParams.Default());
         Hooks.Hooks.StateHandle<AnomalyParams> anomalyParams = Hooks.Hooks.UseState<AnomalyParams>(AnomalyParams.Default());
+        Hooks.Hooks.StateHandle<IdeologyParams> ideologyParams = Hooks.Hooks.UseState<IdeologyParams>(IdeologyParams.Default());
         Hooks.Hooks.StateHandle<int> pickedTile = Hooks.Hooks.UseState<int>(-1);
+        Hooks.Hooks.StateHandle<bool> permadeath = Hooks.Hooks.UseState<bool>(false);
 
-        List<string> order = TabOrder(anomaly);
+        List<string> order = TabOrder(anomaly, ideology);
         string activeTab = order.Contains(tab.Value) ? tab.Value : "scenario";
         bool onLastTab = activeTab == order[order.Count - 1];
 
@@ -40,7 +43,10 @@ public static class NewColonyRoot {
         Action close = onClose;
 
         Hooks.Hooks.UseEffect(() => {
-            if (activeTab == "world") {
+            // Ideology now follows world in the strip and needs a generated world too, so both
+            // tabs kick provision + world-gen. The draft-ideo creation lives in IdeologyTab's own
+            // effect (keyed on WorldReady) so it fires once async gen completes.
+            if (activeTab == "world" || activeTab == "ideology") {
                 NewColonyLauncher.PrepareProvision(scenarioName.Value, tellerDefName.Value, diffDefName.Value, anomalyParams.Value);
                 if (!NewColonyLauncher.WorldReady) {
                     NewColonyLauncher.GenerateWorld(world.Value);
@@ -51,9 +57,9 @@ public static class NewColonyRoot {
 
         return Stack.Create(SpacingScale.None, root => {
             root.Add(BuildHeadline(close));
-            root.Add(BuildTabs(activeTab, anomaly, scenarioName, tellerDefName, diffDefName, world, anomalyParams, tab));
-            root.AddFlex(BuildBody(activeTab, scenarioName, tellerDefName, diffDefName, world, anomalyParams, pickedTile));
-            root.Add(BuildCommit(activeTab, order, onLastTab, tab, close, scenarioName, tellerDefName, diffDefName, world, anomalyParams, pickedTile));
+            root.Add(BuildTabs(activeTab, order, scenarioName, tellerDefName, diffDefName, world, anomalyParams, ideologyParams, tab));
+            root.AddFlex(BuildBody(activeTab, scenarioName, tellerDefName, diffDefName, world, anomalyParams, ideologyParams, pickedTile));
+            root.Add(BuildCommit(activeTab, order, onLastTab, tab, close, scenarioName, tellerDefName, diffDefName, world, anomalyParams, ideologyParams, pickedTile, permadeath));
             if (NewColonyLauncher.Generating) {
                 root.Add(BuildDisabledScrim());
             }
@@ -102,29 +108,26 @@ public static class NewColonyRoot {
 
     private static LightweaveNode BuildTabs(
         string activeTab,
-        bool anomaly,
+        List<string> order,
         Hooks.Hooks.StateHandle<string?> scenarioName,
         Hooks.Hooks.StateHandle<string?> tellerDefName,
         Hooks.Hooks.StateHandle<string?> diffDefName,
         Hooks.Hooks.StateHandle<WorldParams> world,
         Hooks.Hooks.StateHandle<AnomalyParams> anomalyParams,
+        Hooks.Hooks.StateHandle<IdeologyParams> ideologyParams,
         Hooks.Hooks.StateHandle<string> tab
     ) {
-        List<TabItem> items = [
-            new TabItem("scenario", "CL_NewColony_Tab_Scenario".Translate(), number: 1,
-                subtitle: ScenarioSummary(scenarioName.Value)),
-            new TabItem("storyteller", "CL_NewColony_Tab_Storyteller".Translate(), number: 2,
-                subtitle: TellerName(tellerDefName.Value)),
-        ];
-        if (anomaly) {
-            items.Add(new TabItem("anomaly", "CL_NewColony_Tab_Anomaly".Translate(), number: 3,
-                subtitle: AnomalySummary(anomalyParams.Value)));
-            items.Add(new TabItem("world", "CL_NewColony_Tab_World".Translate(), number: 4,
-                subtitle: WorldSummary(world.Value)));
-        }
-        else {
-            items.Add(new TabItem("world", "CL_NewColony_Tab_World".Translate(), number: 3,
-                subtitle: WorldSummary(world.Value)));
+        List<TabItem> items = [];
+        for (int i = 0; i < order.Count; i++) {
+            string id = order[i];
+            string subtitle = id switch {
+                "storyteller" => TellerName(tellerDefName.Value),
+                "anomaly" => AnomalySummary(anomalyParams.Value),
+                "ideology" => IdeologySummary(ideologyParams.Value),
+                "world" => WorldSummary(world.Value),
+                _ => ScenarioSummary(scenarioName.Value),
+            };
+            items.Add(new TabItem(id, TabLabel(id), number: i + 1, subtitle: subtitle));
         }
 
         return Stack.Create(SpacingScale.None, s => s.Add(Tabs.Create(items, activeTab, (string id) => tab.Set(id), TabsVariant.Dossier)),
@@ -140,16 +143,18 @@ public static class NewColonyRoot {
         Hooks.Hooks.StateHandle<string?> diffDefName,
         Hooks.Hooks.StateHandle<WorldParams> world,
         Hooks.Hooks.StateHandle<AnomalyParams> anomalyParams,
+        Hooks.Hooks.StateHandle<IdeologyParams> ideologyParams,
         Hooks.Hooks.StateHandle<int> pickedTile
     ) {
         LightweaveNode content = activeTab switch {
             "storyteller" => StorytellerTab.Build(tellerDefName, diffDefName),
             "world" => WorldTab.Build(world, pickedTile),
             "anomaly" => AnomalyTab.Build(anomalyParams),
+            "ideology" => IdeologyTab.Build(ideologyParams),
             _ => ScenarioTab.Build(scenarioName),
         };
 
-        bool flush = activeTab == "world";
+        bool flush = activeTab == "world" || activeTab == "ideology";
         EdgeInsets padding = flush
             ? new EdgeInsets(new Rem(0f), new Rem(0f), new Rem(0f), new Rem(0f))
             : new EdgeInsets(new Rem(1.25f), new Rem(1.5f), new Rem(1.25f), new Rem(1.5f));
@@ -177,7 +182,9 @@ public static class NewColonyRoot {
         Hooks.Hooks.StateHandle<string?> diffDefName,
         Hooks.Hooks.StateHandle<WorldParams> world,
         Hooks.Hooks.StateHandle<AnomalyParams> anomalyParams,
-        Hooks.Hooks.StateHandle<int> pickedTile
+        Hooks.Hooks.StateHandle<IdeologyParams> ideologyParams,
+        Hooks.Hooks.StateHandle<int> pickedTile,
+        Hooks.Hooks.StateHandle<bool> permadeath
     ) {
         int index = order.IndexOf(activeTab);
 
@@ -189,6 +196,8 @@ public static class NewColonyRoot {
             ? () => NewColonyLauncher.Commit(
                 world.Value,
                 pickedTile.Value < 0 ? PlanetTile.Invalid : new PlanetTile(pickedTile.Value),
+                ideologyParams.Value,
+                permadeath.Value,
                 onClose)
             : () => tab.Set(order[index + 1]);
 
@@ -197,7 +206,7 @@ public static class NewColonyRoot {
             : TabLabel(order[index - 1]);
 
         string primaryLabel = onLastTab
-            ? "CL_NewColony_Generate".Translate()
+            ? "CL_NewColony_StartGame".Translate()
             : "CL_NewColony_Continue".Translate();
 
         LightweaveNode stats = HStack.Create(SpacingScale.Xl, row => {
@@ -221,6 +230,7 @@ public static class NewColonyRoot {
                 style: footerButtonStyle));
             h.AddHug(stats);
             h.AddFlex(Spacer.Flex());
+            h.AddHug(BuildSaveModeToggle(permadeath));
         });
 
         LightweaveNode actions = HStack.Create(SpacingScale.Md, a => {
@@ -253,6 +263,33 @@ public static class NewColonyRoot {
         });
     }
 
+    private static readonly bool[] SaveModeItems = [false, true];
+
+    // Reload-anytime (permadeath off) vs Commitment (permadeath on). Shown in the footer on every
+    // page so the choice is always visible; applied at Commit via GameInitData.permadeath.
+    private static LightweaveNode BuildSaveModeToggle(Hooks.Hooks.StateHandle<bool> permadeath) {
+        return Stack.Create(SpacingScale.Xxs, s => {
+            s.Add(Eyebrow.Create("CL_NewColony_SaveMode".Translate(), style: new Style {
+                FontFamily = FontRole.Mono,
+                FontSize = new Rem(0.625f),
+                LetterSpacing = Tracking.Of(0.2f),
+                TextColor = ThemeSlot.TextMuted,
+            }));
+            s.Add(Segmented.Create<bool>(
+                permadeath.Value,
+                SaveModeItems,
+                mode => mode
+                    ? (string)"CL_NewColony_SaveMode_Commitment".Translate()
+                    : (string)"CL_NewColony_SaveMode_Reload".Translate(),
+                permadeath.Set,
+                tooltipFn: mode => mode
+                    ? (string)"CL_NewColony_SaveMode_Commitment_Tip".Translate()
+                    : (string)"CL_NewColony_SaveMode_Reload_Tip".Translate(),
+                tooltipSide: Cosmere.Lightweave.Data.TooltipSide.Top,
+                labelSize: new Rem(0.72f)));
+        });
+    }
+
     private static LightweaveNode BuildStat(string key, string value) {
         return Stack.Create(SpacingScale.Xxs, s => {
             s.Add(Eyebrow.Create(key, style: new Style {
@@ -275,16 +312,22 @@ public static class NewColonyRoot {
             "storyteller" => (string)"CL_NewColony_Tab_Storyteller".Translate(),
             "world" => (string)"CL_NewColony_Tab_World".Translate(),
             "anomaly" => (string)"CL_NewColony_Tab_Anomaly".Translate(),
+            "ideology" => (string)"CL_NewColony_Tab_Ideology".Translate(),
             _ => (string)"CL_NewColony_Tab_Scenario".Translate(),
         };
     }
 
-    private static List<string> TabOrder(bool anomaly) {
+    private static List<string> TabOrder(bool anomaly, bool ideology) {
         List<string> order = ["scenario", "storyteller"];
         if (anomaly) {
             order.Add("anomaly");
         }
         order.Add("world");
+        // Ideology comes last so the world (and thus Find.IdeoManager + the player faction +
+        // generated faction ideoligions) exists by the time the editor runs.
+        if (ideology) {
+            order.Add("ideology");
+        }
         return order;
     }
 
@@ -334,5 +377,20 @@ public static class NewColonyRoot {
     private static string AnomalySummary(AnomalyParams anomaly) {
         AnomalyPlaystyleDef? def = DefDatabase<AnomalyPlaystyleDef>.GetNamedSilentFail(anomaly.PlaystyleDefName);
         return def != null ? def.LabelCap.ToString() : "CL_NewColony_None".Translate();
+    }
+
+    private static string IdeologySummary(IdeologyParams ideology) {
+        switch (ideology.Mode) {
+            case IdeoMode.Preset:
+                IdeoPresetDef? preset = NewColonyData.FindIdeoPreset(ideology.PresetDefName);
+                return preset != null
+                    ? preset.LabelCap.ToString()
+                    : (string)"CL_NewColony_None".Translate();
+            case IdeoMode.CustomFluid:
+            case IdeoMode.CustomFixed:
+                return (string)"CL_NewColony_Ideology_Custom".Translate();
+            default:
+                return (string)"CL_NewColony_Ideology_Inactive".Translate();
+        }
     }
 }

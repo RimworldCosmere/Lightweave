@@ -69,6 +69,80 @@ public static class NewColonyThresholds {
         return lead.Trim();
     }
 
+
+    // Some mods/defs wrap a tooltip section heading in a (*SectionTitle)...(/SectionTitle)
+    // pseudo-markup convention. RimWorld does not parse these tags (they render raw), so split the
+    // description into ordered segments - plain body text and section titles - which the caller
+    // renders with proper styling (accent heading vs muted body) instead of showing the raw tags.
+    public readonly struct TipSegment {
+        public readonly bool IsTitle;
+        public readonly string Text;
+
+        public TipSegment(bool isTitle, string text) {
+            IsTitle = isTitle;
+            Text = text;
+        }
+    }
+
+    private static readonly System.Text.RegularExpressions.Regex TipOpenTagRegex =
+        new System.Text.RegularExpressions.Regex(
+            @"\(\*[^)]*\)",
+            System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    private static readonly System.Text.RegularExpressions.Regex TipCloseTagRegex =
+        new System.Text.RegularExpressions.Regex(
+            @"\(/[^)]*\)",
+            System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    private static readonly System.Text.RegularExpressions.Regex TipAnyTagRegex =
+        new System.Text.RegularExpressions.Regex(
+            @"\(\*[^)]*\)|\(/[^)]*\)",
+            System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    public static System.Collections.Generic.List<TipSegment> ParseTipSegments(string? description) {
+        System.Collections.Generic.List<TipSegment> segments = new System.Collections.Generic.List<TipSegment>();
+        if (description is not { Length: > 0 }) {
+            return segments;
+        }
+
+        int cursor = 0;
+        while (cursor < description.Length) {
+            System.Text.RegularExpressions.Match open = TipOpenTagRegex.Match(description, cursor);
+            if (!open.Success) {
+                AddBodySegment(segments, description.Substring(cursor));
+                break;
+            }
+
+            if (open.Index > cursor) {
+                AddBodySegment(segments, description.Substring(cursor, open.Index - cursor));
+            }
+
+            int afterOpen = open.Index + open.Length;
+            System.Text.RegularExpressions.Match close = TipCloseTagRegex.Match(description, afterOpen);
+            if (!close.Success) {
+                // Orphan open tag: drop the tag, keep the remaining text as body.
+                AddBodySegment(segments, description.Substring(afterOpen));
+                break;
+            }
+
+            string title = description.Substring(afterOpen, close.Index - afterOpen).Trim();
+            if (title.Length > 0) {
+                segments.Add(new TipSegment(true, title));
+            }
+
+            cursor = close.Index + close.Length;
+        }
+
+        return segments;
+    }
+
+    private static void AddBodySegment(System.Collections.Generic.List<TipSegment> segments, string raw) {
+        string body = TipAnyTagRegex.Replace(raw, string.Empty).Trim();
+        if (body.Length > 0) {
+            segments.Add(new TipSegment(false, body));
+        }
+    }
+
     public static string TimeZoneLabel(int zone) {
         return zone >= 0 ? "GMT+" + zone : "GMT" + zone;
     }

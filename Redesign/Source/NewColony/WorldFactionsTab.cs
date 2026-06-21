@@ -11,6 +11,7 @@ using Cosmere.Lightweave.Types;
 using RimWorld;
 using UnityEngine;
 using Verse;
+using Avatar = Cosmere.Lightweave.Data.Avatar;
 using IconButton = Cosmere.Lightweave.Input.IconButton;
 using Glyph = Cosmere.Lightweave.Typography.Glyph;
 using Icon = Cosmere.Lightweave.Typography.Typography.Icon;
@@ -24,16 +25,28 @@ namespace Cosmere.Lightweave.Redesign.NewColony;
 
 public static class WorldFactionsTab {
     public static LightweaveNode Build(Hooks.Hooks.StateHandle<WorldParams> world) {
+        Hooks.Hooks.StateHandle<bool> editorOpen = Hooks.Hooks.UseState(false);
+        Hooks.Hooks.StateHandle<Ideo?> editFactionIdeo = Hooks.Hooks.UseState<Ideo?>(null);
+        Hooks.Hooks.StateHandle<IdeoSubPicker> sub = Hooks.Hooks.UseState(IdeoSubPicker.None);
+        Hooks.Hooks.StateHandle<int> rev = Hooks.Hooks.UseState(0);
+        Hooks.Hooks.StateHandle<SectionLock> locks = Hooks.Hooks.UseState(SectionLock.None);
+        Hooks.Hooks.StateHandle<IdeoEditorTab> tab = Hooks.Hooks.UseState(IdeoEditorTab.Memes);
+
         if (NewColonyLauncher.Generating || !NewColonyLauncher.WorldReady) {
             return BuildEmpty();
         }
 
+        Action<Ideo> openEdit = ideo => {
+            editFactionIdeo.Set(ideo);
+            editorOpen.Set(true);
+        };
+
         List<FactionDef> config = ConfigCopy(world.Value);
         List<Faction> live = DisplayFactions();
         Faction? player = Find.FactionManager.OfPlayer;
-        List<LightweaveNode> rows = BuildRosterRows(world, config, live, player);
+        List<LightweaveNode> rows = BuildRosterRows(world, config, live, player, openEdit);
 
-        return Stack.Create(SpacingScale.Md, outer => {
+        LightweaveNode content = Stack.Create(SpacingScale.Md, outer => {
             outer.Add(BuildHeader(rows.Count));
             outer.AddFlex(ScrollArea.Create(Stack.Create(SpacingScale.Sm, list => {
                 for (int i = 0; i < rows.Count; i++) {
@@ -44,6 +57,26 @@ public static class WorldFactionsTab {
             outer.Add(BuildAddPicker(world));
             outer.Add(BuildResetButton(world));
         }, style: new Style { Width = Length.Stretch, Height = Length.Stretch });
+
+        // No ideology editor when the DLC is off - the faction-ideo affordance is hidden too.
+        if (!Verse.ModsConfig.IdeologyActive) {
+            return content;
+        }
+
+        LightweaveNode overlay = IdeologyEditor.Build(editorOpen, sub, rev, locks, tab, editFactionIdeo.Value);
+
+        LightweaveNode root = NodeBuilder.New("WorldFactionsTabRoot", 0, nameof(WorldFactionsTab));
+        root.Children.Add(content);
+        root.Children.Add(overlay);
+        root.MeasureWidth = () => content.MeasureWidth?.Invoke() ?? 0f;
+        root.Measure = w => content.Measure?.Invoke(w) ?? content.PreferredHeight ?? 0f;
+        root.Paint = (rect, _) => {
+            content.MeasuredRect = rect;
+            LightweaveRoot.PaintSubtree(content, rect);
+            overlay.MeasuredRect = rect;
+            LightweaveRoot.PaintSubtree(overlay, rect);
+        };
+        return root;
     }
 
     // The roster reflects the pending faction config so add/remove shows immediately, before any
@@ -55,7 +88,8 @@ public static class WorldFactionsTab {
         Hooks.Hooks.StateHandle<WorldParams> world,
         List<FactionDef> config,
         List<Faction> live,
-        Faction? player
+        Faction? player,
+        Action<Ideo> openEdit
     ) {
         Dictionary<FactionDef, int> want = [];
         for (int i = 0; i < config.Count; i++) {
@@ -77,7 +111,7 @@ public static class WorldFactionsTab {
                 continue;
             }
             shown[d] = already + 1;
-            rows.Add(BuildRow(world, faction, player));
+            rows.Add(BuildRow(world, faction, player, openEdit));
         }
 
         Dictionary<FactionDef, int> seen = [];
@@ -134,13 +168,15 @@ public static class WorldFactionsTab {
     private static LightweaveNode BuildRow(
         Hooks.Hooks.StateHandle<WorldParams> world,
         Faction faction,
-        Faction? player
+        Faction? player,
+        Action<Ideo> openEdit
     ) {
         FactionDef def = faction.def;
         bool removable = CanRemove(def);
+        Ideo? ideo = faction.ideos?.PrimaryIdeo;
 
         LightweaveNode row = HStack.Create(SpacingScale.Sm, h => {
-            h.Add(BuildIconTile(faction), new Rem(2.5f).ToPixels());
+            h.Add(BuildIconTile(faction), new Rem(3f).ToPixels());
             h.AddFlex(BuildNameBlock(faction));
 
             if (player != null && faction != player) {
@@ -158,16 +194,23 @@ public static class WorldFactionsTab {
                     new Rem(3f).ToPixels());
             }
 
+            // The faction's primary ideoligion as a tinted, clickable emblem; opens the editor pointed
+            // at that live Ideo so the player can reshape it (this game only). Null when Ideology is off.
+            if (ideo != null) {
+                Ideo captured = ideo;
+                h.AddHug(BuildIdeoButton(captured, openEdit));
+            }
+
             h.AddHug(IconButton.Create(
                 Glyph.Create(Icons.Phosphor.Trash),
                 removable ? () => RemoveFaction(world, def) : null,
                 disabled: !removable,
                 tooltipKey: removable ? "CL_NewColony_World_Factions_Remove" : "FactionRemovalDisabled"));
-        }, style: new Style {
+        }, align: FlexAlign.Center, hoverBackground: ThemeSlot.HoverTint, style: new Style {
             Width = Length.Stretch,
             Padding = new EdgeInsets(new Rem(0.55f), new Rem(0.7f), new Rem(0.55f), new Rem(0.7f)),
-            Background = BackgroundSpec.Of(ThemeSlot.SurfaceRaised),
-            Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderSubtle),
+            Background = BackgroundSpec.Of(ThemeSlot.Glass1),
+            Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderFaint),
             Radius = RadiusSpec.All(RadiusScale.Md),
         });
 
@@ -188,7 +231,7 @@ public static class WorldFactionsTab {
     }
 
     private static LightweaveNode BuildIconTile(Faction faction) {
-        return FactionBadge(faction.def, faction.Color, new Rem(2.5f), new Rem(1.4f));
+        return FactionBadge(faction.def, faction.Color, new Rem(3f), new Rem(1.8f));
     }
 
     // Tinted faction-icon tile shared by the roster rows (40px) and the add-picker rows (30px).
@@ -205,6 +248,24 @@ public static class WorldFactionsTab {
                 Radius = RadiusSpec.All(RadiusScale.Sm),
                 TextColor = color,
             });
+    }
+
+    // Trailing clickable emblem for a faction's primary ideoligion: the ideo icon tinted by its own
+    // Ideo.Color (chrome:false so only the symbol shows, no SelectableSurface tile frame). Clicking
+    // opens the Ideology editor pointed at that live Ideo.
+    private static LightweaveNode BuildIdeoButton(Ideo ideo, Action<Ideo> openEdit) {
+        return SelectableSurface.Create(
+            child: Avatar.Create(
+                string.Empty,
+                size: new Rem(2.1f),
+                texture: ideo.Icon,
+                tintColor: ideo.Color,
+                iconScale: 0.82f,
+                chrome: false),
+            onSelect: () => openEdit(ideo),
+            variant: SelectableSurfaceVariant.Tile,
+            chrome: false,
+            tooltip: (string)"CL_NewColony_World_Factions_EditIdeo".Translate((ideo.name ?? string.Empty).Named("IDEO")));
     }
 
     private static LightweaveNode BuildNameBlock(Faction faction) {

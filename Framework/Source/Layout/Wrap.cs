@@ -32,6 +32,8 @@ public static class Wrap {
         Rem? lineHeight = null,
         [DocParam("Flow cells at each child's natural width instead of a uniform grid. Use for content-sized tags/chips that should wrap like text.", TypeOverride = "bool", DefaultOverride = "false")]
         bool flow = false,
+        [DocParam("In uniform (non-flow) mode, stretch cells to fill the row: column count is derived from minChildWidth, then each cell expands to an equal share so the right edge is flush, and row height follows each row's tallest child. This is the responsive auto-fit grid behaviour (CSS repeat(auto-fit, minmax(min, 1fr))). Ignored when flow is true.", TypeOverride = "bool", DefaultOverride = "false")]
+        bool stretch = false,
         [DocParam("Inline style override.", TypeOverride = "Style?", DefaultOverride = "null")]
         Style? style = null,
         [DocParam("Additional class names merged after the base 'wrap' class.", TypeOverride = "string[]?", DefaultOverride = "null")]
@@ -55,6 +57,20 @@ public static class Wrap {
                 }
             }
             return c;
+        }
+
+        System.Collections.Generic.List<LightweaveNode> CollectFlow() {
+            System.Collections.Generic.List<LightweaveNode> flow = new System.Collections.Generic.List<LightweaveNode>(kids.Count);
+            for (int i = 0; i < kids.Count; i++) {
+                if (kids[i].IsInFlow()) {
+                    flow.Add(kids[i]);
+                }
+            }
+            return flow;
+        }
+
+        int PerRow(float availableWidth, float gapPx, float minW) {
+            return Mathf.Max(1, Mathf.FloorToInt((availableWidth + gapPx) / (minW + gapPx)));
         }
 
         float CellWidth(LightweaveNode child, float minW) {
@@ -136,7 +152,30 @@ public static class Wrap {
                 return rows * rowH + Mathf.Max(0, rows - 1) * gapPx;
             }
 
-            int perRow = Mathf.Max(1, Mathf.FloorToInt((availableWidth + gapPx) / (minW + gapPx)));
+            int perRow = PerRow(availableWidth, gapPx, minW);
+
+            if (stretch) {
+                float cellW = (availableWidth - (perRow - 1) * gapPx) / perRow;
+                System.Collections.Generic.List<LightweaveNode> flow = CollectFlow();
+                int rows = (flow.Count + perRow - 1) / perRow;
+                float total = 0f;
+                for (int r = 0; r < rows; r++) {
+                    float rowMax = 0f;
+                    for (int c = 0; c < perRow; c++) {
+                        int idx = r * perRow + c;
+                        if (idx >= flow.Count) {
+                            break;
+                        }
+                        float h = flow[idx].Measure?.Invoke(cellW) ?? flow[idx].PreferredHeight ?? 0f;
+                        if (h > rowMax) {
+                            rowMax = h;
+                        }
+                    }
+                    total += rowMax;
+                }
+                return total + gapPx * Mathf.Max(0, rows - 1);
+            }
+
             int gridRows = (flowCount + perRow - 1) / perRow;
             return gridRows * rowH + Mathf.Max(0, gridRows - 1) * gapPx;
         };
@@ -144,6 +183,31 @@ public static class Wrap {
         node.Paint = (rect, paintChildren) => {
             float gapPx = gap.ToPixels();
             float minW = Mathf.Max(minChildWidth.ToPixels(), 1f);
+
+            if (stretch && !flow) {
+                int perRow = PerRow(rect.width, gapPx, minW);
+                float cellW = (rect.width - (perRow - 1) * gapPx) / perRow;
+                System.Collections.Generic.List<LightweaveNode> flowKids = CollectFlow();
+                float yy = rect.y;
+                for (int i = 0; i < flowKids.Count;) {
+                    float rowMax = 0f;
+                    for (int c = 0; c < perRow && i + c < flowKids.Count; c++) {
+                        float h = flowKids[i + c].Measure?.Invoke(cellW) ?? flowKids[i + c].PreferredHeight ?? 0f;
+                        if (h > rowMax) {
+                            rowMax = h;
+                        }
+                    }
+                    float xx = rect.x;
+                    for (int c = 0; c < perRow && i < flowKids.Count; c++, i++) {
+                        flowKids[i].MeasuredRect = new Rect(xx, yy, cellW, rowMax);
+                        xx += cellW + gapPx;
+                    }
+                    yy += rowMax + gapPx;
+                }
+                paintChildren();
+                return;
+            }
+
             float rowH = RowHeight(minW);
             float x = rect.x;
             float y = rect.y;
@@ -231,6 +295,24 @@ public static class Wrap {
                     k.Add(Data.Chip.Create("Flak vest", upper: false, bold: false));
                 },
                 flow: true
+            )
+        );
+    }
+
+    [DocVariant("CL_Playground_Layout_Wrap_Stretch", Order = 3)]
+    public static DocSample DocsStretch() {
+        return new DocSample(() =>
+            Wrap.Create(
+                SpacingScale.Xs,
+                new Rem(8f),
+                k => {
+                    k.Add(SampleChip("alpha"));
+                    k.Add(SampleChip("beta"));
+                    k.Add(SampleChip("gamma"));
+                    k.Add(SampleChip("delta"));
+                    k.Add(SampleChip("epsilon"));
+                },
+                stretch: true
             )
         );
     }

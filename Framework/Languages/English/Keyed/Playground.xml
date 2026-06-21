@@ -496,9 +496,32 @@
     <CL_Playground_avatar_What>Fixed-size rounded portrait tile. Centers either short initials or a Phosphor icon glyph inside a themed square with border and background.</CL_Playground_avatar_What>
     <CL_Playground_avatar_When>Use for pawn pickers, profile chips, member rows - any spot where a person or entity needs a small visual anchor. Reports its own measured size so it never overlaps siblings.</CL_Playground_avatar_When>
 
+    <CL_Playground_count-tag_Title>CountTag</CL_Playground_count-tag_Title>
+    <CL_Playground_count-tag_What>Boxed monospace count or label badge: square corners, hairline border, mono text, muted or accent tone.</CL_Playground_count-tag_What>
+    <CL_Playground_count-tag_When>Use for section counts on a tab strip, the "Impact 3 / 10" complexity pill, or an always-on "LOCKED" marker. Reach for Chip when you need a dot, divider-count, or interactive toggle.</CL_Playground_count-tag_When>
+    <CL_Playground_CountTag_Muted>Muted</CL_Playground_CountTag_Muted>
+    <CL_Playground_CountTag_Accent>Accent</CL_Playground_CountTag_Accent>
+    <CL_Playground_CountTag_Locked>Locked marker</CL_Playground_CountTag_Locked>
+
+    <CL_Playground_gallery-card_Title>GalleryCard</CL_Playground_gallery-card_Title>
+    <CL_Playground_gallery-card_What>Gallery item card: leading icon badge, title plus wrapping description, optional trailing remove-x, square corners. Washes accent when selected, brightens its border on hover.</CL_Playground_gallery-card_What>
+    <CL_Playground_gallery-card_When>The reusable unit of a 3-up gallery grid (a meme, a precept, a style). Pair with AddTile for the trailing add cell. For a bare list row with a leading accent bar use SelectableSurface.</CL_Playground_gallery-card_When>
+    <CL_Playground_GalleryCard_Default>Default</CL_Playground_GalleryCard_Default>
+    <CL_Playground_GalleryCard_Selected>Selected</CL_Playground_GalleryCard_Selected>
+
+    <CL_Playground_add-tile_Title>AddTile</CL_Playground_add-tile_Title>
+    <CL_Playground_add-tile_What>Full-cell dashed "add" tile: square corners, accent dashed border, centered plus glyph over an uppercase mono label. Fills its grid cell and washes accent-soft on hover.</CL_Playground_add-tile_What>
+    <CL_Playground_add-tile_When>The trailing cell of a gallery grid where the user adds another item. For an inline dashed pill use the smaller add-chip pattern; for a ghost text button use Button with the ghost variant.</CL_Playground_add-tile_When>
+    <CL_Playground_AddTile_Default>Default</CL_Playground_AddTile_Default>
+    <CL_Playground_AddTile_Disabled>Disabled</CL_Playground_AddTile_Disabled>
+
     <CL_Playground_segmented_Title>Segmented</CL_Playground_segmented_Title>
     <CL_Playground_segmented_What>Pill group of peer choices, one active at a time. Like Radio for a toolbar.</CL_Playground_segmented_What>
     <CL_Playground_segmented_When>Use for two to five short labels that share a surface. Tabs are for whole views.</CL_Playground_segmented_When>
+    <CL_Playground_Navigation_Segmented_DisplayTabs>Display label + boxed count</CL_Playground_Navigation_Segmented_DisplayTabs>
+    <CL_Playground_Navigation_Segmented_Memes>Memes</CL_Playground_Navigation_Segmented_Memes>
+    <CL_Playground_Navigation_Segmented_Precepts>Precepts</CL_Playground_Navigation_Segmented_Precepts>
+    <CL_Playground_Navigation_Segmented_Rituals>Rituals</CL_Playground_Navigation_Segmented_Rituals>
     <CL_Playground_breadcrumbs_Title>Breadcrumbs</CL_Playground_breadcrumbs_Title>
     <CL_Playground_breadcrumbs_What>Path of labels joined by chevrons. Truncates middle segments when space runs out.</CL_Playground_breadcrumbs_What>
     <CL_Playground_breadcrumbs_When>Use in deep hierarchies where the player needs a jump back to an ancestor.</CL_Playground_breadcrumbs_When>
@@ -527,6 +550,9 @@
     <CL_Playground_popover_Title>Popover</CL_Playground_popover_Title>
     <CL_Playground_popover_What>Floating panel anchored to a trigger rect. Dismisses on outside click.</CL_Playground_popover_What>
     <CL_Playground_popover_When>Use for light-weight menus and short pickers. Dialog is right for heavier interactions.</CL_Playground_popover_When>
+    <CL_Playground_modal_Title>Modal</CL_Playground_modal_Title>
+    <CL_Playground_modal_What>Centered scrim-backed panel floating over the surface. Dismisses on scrim click or Escape.</CL_Playground_modal_What>
+    <CL_Playground_modal_When>Use to host a focused task (an editor, a picker, a confirm) over the page. Drawer anchors to an edge; Modal centers.</CL_Playground_modal_When>
     <CL_Playground_drawer_Title>Drawer</CL_Playground_drawer_Title>
     <CL_Playground_drawer_What>Panel that slides in from an edge of the screen. Left, right, top, or bottom.</CL_Playground_drawer_What>
     <CL_Playground_drawer_When>Use for secondary views that should not interrupt the main surface. Dialog blocks, Drawer defers.</CL_Playground_drawer_When>
@@ -584,6 +610,8 @@
 
     <!-- Task D2b: variant and state labels -->
     <CL_Playground_Layout_Wrap_Badges>Badges</CL_Playground_Layout_Wrap_Badges>
+    <CL_Playground_Layout_Wrap_Flow>Flow</CL_Playground_Layout_Wrap_Flow>
+    <CL_Playground_Layout_Wrap_Stretch>Stretch grid</CL_Playground_Layout_Wrap_Stretch>
     <CL_Playground_Label_Default>Default</CL_Playground_Label_Default>
     <CL_Playground_Label_FullBleed>Full bleed + counts</CL_Playground_Label_FullBleed>
     <CL_Playground_Label_Virtualized>Virtualized</CL_Playground_Label_Virtualized>
@@ -607,6 +635,7 @@
     <CL_Playground_Label_Primary>Primary</CL_Playground_Label_Primary>
     <CL_Playground_Label_Accent>Accent</CL_Playground_Label_Accent>
     <CL_Playground_Label_Icon>Icon</CL_Playground_Label_Icon>
+    <CL_Playground_Avatar_Chromeless>Chromeless</CL_Playground_Avatar_Chromeless>
     <CL_Playground_Label_Secondary>Secondary</CL_Playground_Label_Secondary>
     <CL_Playground_Label_Ghost>Ghost</CL_Playground_Label_Ghost>
     <CL_Playground_Label_Danger>Danger</CL_Playground_Label_Danger>
@@ -647,7 +676,6 @@
     <CL_Playground_Label_Filter>Filter</CL_Playground_Label_Filter>
     <CL_Playground_Label_Status>Status</CL_Playground_Label_Status>
     <CL_Playground_Label_Content>Content pills</CL_Playground_Label_Content>
-    <CL_Playground_Label_Accent>DLC accent</CL_Playground_Label_Accent>
     <CL_Playground_Label_WithHeaderAndSearch>With header and search</CL_Playground_Label_WithHeaderAndSearch>
     <CL_Playground_Label_Confirm>Confirm</CL_Playground_Label_Confirm>
     <CL_Playground_Label_Cancel>Cancel</CL_Playground_Label_Cancel>
@@ -988,6 +1016,7 @@
     <CL_Playground_colors_Text_Metadata_Sample>METADATA LABEL</CL_Playground_colors_Text_Metadata_Sample>
     <CL_Playground_colors_Border_Default_Label>BorderDefault</CL_Playground_colors_Border_Default_Label>
     <CL_Playground_colors_Border_Subtle_Label>BorderSubtle</CL_Playground_colors_Border_Subtle_Label>
+    <CL_Playground_colors_Border_Faint_Label>BorderFaint</CL_Playground_colors_Border_Faint_Label>
     <CL_Playground_colors_Border_Focus_Label>BorderFocus</CL_Playground_colors_Border_Focus_Label>
     <CL_Playground_colors_Border_Hover_Label>BorderHover</CL_Playground_colors_Border_Hover_Label>
     <CL_Playground_colors_Border_Off_Label>BorderOff</CL_Playground_colors_Border_Off_Label>
@@ -1029,4 +1058,9 @@
     <CL_Playground_fonts_Metadata_Caption>Read as: small caps label, normal body value</CL_Playground_fonts_Metadata_Caption>
     <CL_Playground_fonts_Code_Sample>theme.GetFont(FontRole.Body)</CL_Playground_fonts_Code_Sample>
     <CL_Playground_fonts_Code_Comment>// resolve from the active theme</CL_Playground_fonts_Code_Comment>
+
+    <CL_Playground_Modal_TriggerOpen>Open modal</CL_Playground_Modal_TriggerOpen>
+    <CL_Playground_Modal_ContentTitle>Centered modal</CL_Playground_Modal_ContentTitle>
+    <CL_Playground_Modal_ContentBody>A scrim-backed panel centered over the surface. Click the scrim or press Escape to dismiss.</CL_Playground_Modal_ContentBody>
+    <CL_Playground_Modal_Close>Close</CL_Playground_Modal_Close>
 </LanguageData>

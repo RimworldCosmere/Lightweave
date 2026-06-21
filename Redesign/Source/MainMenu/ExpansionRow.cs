@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using Cosmere.Lightweave.Adapter;
 using Cosmere.Lightweave.Feedback;
+using LwText = Cosmere.Lightweave.Typography.Typography.Text;
 using Cosmere.Lightweave.Input;
 using Cosmere.Lightweave.Layout;
 using Cosmere.Lightweave.Rendering;
@@ -125,7 +127,10 @@ public static class ExpansionRow {
                 PaintBox.Draw(rect, null, BorderSpec.All(new Rem(0.0625f), borderColor), RadiusSpec.All(RadiusScale.Pill));
             }
 
-            TooltipHandler.TipRegion(rect, tooltip);
+            if (!string.IsNullOrEmpty(tooltip)) {
+                string tooltipText = tooltip;
+                AsTooltip.Attach(rect, () => LwText.Create(tooltipText, wrap: true, richText: true), key: tooltipText.GetHashCode());
+            }
             InteractionFeedback.Apply(rect, true, true);
 
             Event e = Event.current;

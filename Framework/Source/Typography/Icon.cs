@@ -39,8 +39,14 @@ public static partial class Typography {
             LightweaveNode node = NodeBuilder.New("Icon", line, file);
             node.ApplyStyling("icon", style, classes, id);
             float pxSize = (size ?? new Rem(1.5f)).ToPixels();
-            node.PreferredHeight = pxSize;
-            node.MeasureWidth = () => pxSize;
+            // A fixed Width/Height style (e.g. a faction badge tile larger than its glyph) drives the
+            // measured box so parents like HStack center the whole tile, not just the inner glyph.
+            // Falls back to the glyph size when no fixed dimension is set (the common case).
+            Style boxStyle = node.GetResolvedStyle();
+            float boxHeight = boxStyle.Height is { Mode: Length.Kind.Rem } fixedH ? fixedH.ToPixels(0f, 0f) : pxSize;
+            float boxWidth = boxStyle.Width is { Mode: Length.Kind.Rem } fixedW ? fixedW.ToPixels(0f, 0f) : pxSize;
+            node.PreferredHeight = boxHeight;
+            node.MeasureWidth = () => boxWidth;
             node.Paint = (rect, _) => {
                 Theme.Theme theme = RenderContext.Current.Theme;
                 Style s = node.GetResolvedStyle();

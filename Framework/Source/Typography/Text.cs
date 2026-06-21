@@ -66,10 +66,9 @@ public static partial class Typography {
                 }
 
                 GUIStyle gs = ResolveGuiStyle();
-                GUIContent guiContent = new GUIContent(content);
                 float h = wrap
-                    ? gs.CalcHeight(guiContent, availableWidth)
-                    : gs.CalcHeight(guiContent, float.MaxValue);
+                    ? TextMeasureCache.Height(gs, content, availableWidth)
+                    : TextMeasureCache.Height(gs, content, float.MaxValue);
                 Style s = node.GetResolvedStyle();
                 Rem fontSize = s.FontSize ?? new Rem(1f);
                 int pixelSize = Mathf.RoundToInt(fontSize.ToFontPx());
@@ -103,7 +102,7 @@ public static partial class Typography {
 
                 GUIStyle gs = ResolveGuiStyle();
                 if (!UseTracking()) {
-                    return Mathf.Ceil(gs.CalcSize(new GUIContent(content)).x);
+                    return Mathf.Ceil(TextMeasureCache.Size(gs, content).x);
                 }
 
                 int letterSpacing = ResolveLetterSpacingPx();
@@ -113,7 +112,7 @@ public static partial class Typography {
 
             float MeasureRun(string text, GUIStyle gs, bool tracking, int letterSpacing) {
                 if (!tracking) {
-                    return gs.CalcSize(new GUIContent(text)).x;
+                    return TextMeasureCache.Size(gs, text).x;
                 }
                 return TrackedTextGlyphCache.GetOrCreate(gs.font, gs.fontSize, gs.fontStyle, letterSpacing, text).TotalWidth;
             }

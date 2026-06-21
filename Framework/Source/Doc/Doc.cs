@@ -46,16 +46,36 @@ public static partial class Doc {
 
         float titleSizePx = new Rem(0.75f).ToFontPx();
         float titleHeightPx = new Rem(1.5f).ToPixels();
-        float entryHeightPx = new Rem(1.5f).ToPixels();
+        float minEntryHeightPx = new Rem(1.5f).ToPixels();
         float entryFontPx = new Rem(0.8125f).ToFontPx();
-        float gapBetween = new Rem(0.125f).ToPixels();
+        float gapBetween = new Rem(0.35f).ToPixels();
         float indentPerLevel = new Rem(0.75f).ToPixels();
         float titleToList = new Rem(0.5f).ToPixels();
+        const float labelLeftPad = 8f;
 
-        node.Measure = _ => {
-            int n = entries.Count;
+        float LabelWidth(float totalWidth, TocEntry entry) {
+            float indent = Mathf.Max(0, entry.Level - 2) * indentPerLevel;
+            return Mathf.Max(1f, totalWidth - indent - labelLeftPad);
+        }
+
+        GUIStyle EntryStyle(Font font) {
+            GUIStyle style = GuiStyleCache.GetOrCreate(font, Mathf.RoundToInt(entryFontPx), FontStyle.Normal);
+            style.wordWrap = true;
+            return style;
+        }
+
+        node.Measure = availableWidth => {
+            Theme.Theme theme = RenderContext.Current.Theme;
+            GUIStyle entryStyle = EntryStyle(theme.GetFont(FontRole.Body));
             float total = titleHeightPx + titleToList;
-            total += n * entryHeightPx + Mathf.Max(0, n - 1) * gapBetween;
+            for (int i = 0; i < entries.Count; i++) {
+                float wrapped = TextMeasureCache.Height(entryStyle, entries[i].Label, LabelWidth(availableWidth, entries[i]));
+                total += Mathf.Max(minEntryHeightPx, wrapped);
+                if (i < entries.Count - 1) {
+                    total += gapBetween;
+                }
+            }
+
             return total;
         };
 
@@ -89,21 +109,25 @@ public static partial class Doc {
             }
 
             float y = rect.y + titleHeightPx + titleToList;
-            GUIStyle entryStyle = GuiStyleCache.GetOrCreate(font, Mathf.RoundToInt(entryFontPx), FontStyle.Normal);
-            entryStyle.alignment = TextAnchor.MiddleLeft;
-            entryStyle.clipping = TextClipping.Clip;
+            GUIStyle entryStyle = EntryStyle(font);
+            entryStyle.alignment = TextAnchor.UpperLeft;
 
             for (int i = 0; i < entries.Count; i++) {
                 TocEntry entry = entries[i];
                 float indent = Mathf.Max(0, entry.Level - 2) * indentPerLevel;
-                Rect rowRect = new Rect(rect.x, y, rect.width, entryHeightPx);
-                Rect labelRect = new Rect(rect.x + indent + 8f, y, rect.width - indent - 8f, entryHeightPx);
+                float labelWidth = LabelWidth(rect.width, entry);
+                float wrapped = TextMeasureCache.Height(entryStyle, entry.Label, labelWidth);
+                float rowH = Mathf.Max(minEntryHeightPx, wrapped);
+
+                Rect rowRect = new Rect(rect.x, y, rect.width, rowH);
+                float textY = y + (rowH - wrapped) * 0.5f;
+                Rect labelRect = new Rect(rect.x + indent + labelLeftPad, textY, labelWidth, wrapped);
 
                 bool isActive = entry.AnchorId == active;
                 bool hovering = rowRect.Contains(e.mousePosition);
 
                 if (isActive) {
-                    Rect bar = new Rect(rect.x, y, 2f, entryHeightPx);
+                    Rect bar = new Rect(rect.x, y, 2f, rowH);
                     GUI.color = theme.GetColor(ThemeSlot.SurfaceAccent);
                     GUI.DrawTexture(bar, Texture2D.whiteTexture);
                 }
@@ -125,7 +149,7 @@ public static partial class Doc {
                     e.Use();
                 }
 
-                y += entryHeightPx + gapBetween;
+                y += rowH + gapBetween;
             }
 
             GUI.color = saved;

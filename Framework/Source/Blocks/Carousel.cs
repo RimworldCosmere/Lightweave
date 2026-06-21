@@ -237,6 +237,8 @@ public static class Carousel {
 
                 Cosmere.Lightweave.Input.InteractionFeedback.Apply(leftZone, !dimLeft, soundEnabled);
                 Cosmere.Lightweave.Input.InteractionFeedback.Apply(rightZone, !dimRight, soundEnabled);
+                LightweaveHitTracker.Track(leftZone);
+                LightweaveHitTracker.Track(rightZone);
 
                 int Step(int from, int direction) {
                     if (loop) {
@@ -249,14 +251,14 @@ public static class Carousel {
 
                 Event e = Event.current;
                 if (e.type == EventType.MouseUp && e.button == 0) {
-                    if (leftZone.Contains(e.mousePosition)) {
+                    if (leftZone.Contains(e.mousePosition) && LightweaveHitTracker.IsTopmost(leftZone)) {
                         int next = rtl ? Step(clamped, 1) : Step(clamped, -1);
                         if (next != clamped) {
                             onIndexChange?.Invoke(next);
                             e.Use();
                         }
                     }
-                    else if (rightZone.Contains(e.mousePosition)) {
+                    else if (rightZone.Contains(e.mousePosition) && LightweaveHitTracker.IsTopmost(rightZone)) {
                         int next = rtl ? Step(clamped, -1) : Step(clamped, 1);
                         if (next != clamped) {
                             onIndexChange?.Invoke(next);
@@ -296,7 +298,8 @@ public static class Carousel {
                     PaintBox.Fill(dot, col);
 
                     Cosmere.Lightweave.Input.InteractionFeedback.Apply(hitRect, !isLead, soundEnabled);
-                    if (e.type == EventType.MouseUp && e.button == 0 && hitRect.Contains(e.mousePosition)) {
+                    LightweaveHitTracker.Track(hitRect);
+                    if (e.type == EventType.MouseUp && e.button == 0 && hitRect.Contains(e.mousePosition) && LightweaveHitTracker.IsTopmost(hitRect)) {
                         int next = Mathf.Clamp(logical, 0, maxIndex);
                         if (next != clamped) {
                             onIndexChange?.Invoke(next);

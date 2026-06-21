@@ -54,7 +54,7 @@ public static class Glyph {
             }
 
             GUIStyle gs = ResolveGuiStyle();
-            return Mathf.Ceil(gs.CalcSize(new GUIContent(glyph)).x);
+            return Mathf.Ceil(TextMeasureCache.Size(gs, glyph).x);
         };
 
         node.Measure = _ => {
@@ -63,7 +63,7 @@ public static class Glyph {
             }
 
             GUIStyle gs = ResolveGuiStyle();
-            return Mathf.Ceil(gs.CalcSize(new GUIContent(glyph)).y);
+            return Mathf.Ceil(TextMeasureCache.Size(gs, glyph).y);
         };
 
         node.Paint = (rect, _) => {

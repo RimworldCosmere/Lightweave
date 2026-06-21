@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using Cosmere.Lightweave.Adapter;
 using Cosmere.Lightweave.Doc;
 using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Runtime;
@@ -10,6 +11,7 @@ using UnityEngine;
 using Verse;
 using Verse.Sound;
 using static Cosmere.Lightweave.Hooks.Hooks;
+using Text = Cosmere.Lightweave.Typography.Typography.Text;
 
 namespace Cosmere.Lightweave.Input;
 
@@ -116,7 +118,8 @@ public static class Checkbox {
             }
 
             if (!string.IsNullOrEmpty(tooltipKey)) {
-                TooltipHandler.TipRegion(hitRect, (string)tooltipKey.Translate());
+                string tooltipText = (string)tooltipKey.Translate();
+                AsTooltip.Attach(hitRect, () => Text.Create(tooltipText, wrap: true, richText: true), key: tooltipText.GetHashCode());
             }
 
             DrawBox(boxRect, value, effectiveDisabled, hovered, indeterminate, focused);

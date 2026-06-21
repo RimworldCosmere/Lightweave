@@ -63,7 +63,7 @@ public static class HotkeyBadge {
 
         node.MeasureWidth = () => {
             GUIStyle gs = ResolveLabelStyle();
-            float labelWidth = string.IsNullOrEmpty(label) ? 0f : gs.CalcSize(new GUIContent(label)).x;
+            float labelWidth = string.IsNullOrEmpty(label) ? 0f : TextMeasureCache.Size(gs, label).x;
             return Mathf.Max(minWidthPx, labelWidth + horizontalPadPx * 2f);
         };
 

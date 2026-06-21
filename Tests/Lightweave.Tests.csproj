@@ -33,6 +33,10 @@
         <Compile Include="..\Redesign\Source\Publish\PublishEligibility.cs" Link="Linked\PublishEligibility.cs"/>
         <Compile Include="..\Framework\Source\Data\TriState.cs" Link="Linked\TriState.cs"/>
         <Compile Include="..\Redesign\Source\NewColony\NewColonyThresholds.cs" Link="Linked\NewColonyThresholds.cs"/>
+        <Compile Include="..\Redesign\Source\NewColony\IdeologyDecisions.cs" Link="Linked\IdeologyDecisions.cs"/>
+        <Compile Include="..\Redesign\Source\NewColony\IdeologyParams.cs" Link="Linked\IdeologyParams.cs"/>
+        <Compile Include="..\Redesign\Source\NewColony\IdeoComplexity.cs" Link="Linked\IdeoComplexity.cs"/>
+        <Compile Include="..\Redesign\Source\NewColony\IdeoPreceptRules.cs" Link="Linked\IdeoPreceptRules.cs"/>
         <Compile Include="..\Redesign\Source\NewColony\FactionRelationsLayout.cs" Link="Linked\FactionRelationsLayout.cs"/>
         <Compile Include="..\Framework\Source\Runtime\HookKey.cs" Link="Linked\HookKey.cs"/>
         <Compile Include="..\Framework\Source\Runtime\HookSlot.cs" Link="Linked\HookSlot.cs"/>

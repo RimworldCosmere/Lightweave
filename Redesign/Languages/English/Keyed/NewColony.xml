@@ -16,8 +16,14 @@
   <CL_NewColony_Back_MainMenu>Main menu</CL_NewColony_Back_MainMenu>
   <CL_NewColony_Back_Previous>Back</CL_NewColony_Back_Previous>
   <CL_NewColony_Continue>Continue</CL_NewColony_Continue>
-  <CL_NewColony_Generate>Generate World</CL_NewColony_Generate>
+  <CL_NewColony_StartGame>Start Game</CL_NewColony_StartGame>
   <CL_NewColony_BrowseWorkshop>Browse Workshop</CL_NewColony_BrowseWorkshop>
+
+  <CL_NewColony_SaveMode>Save mode</CL_NewColony_SaveMode>
+  <CL_NewColony_SaveMode_Reload>Reload anytime</CL_NewColony_SaveMode_Reload>
+  <CL_NewColony_SaveMode_Commitment>Commitment</CL_NewColony_SaveMode_Commitment>
+  <CL_NewColony_SaveMode_Reload_Tip>Save and load freely. After a setback you can reload an earlier save and try again.</CL_NewColony_SaveMode_Reload_Tip>
+  <CL_NewColony_SaveMode_Commitment_Tip>Permadeath. The colony keeps a single autosave you cannot roll back, so every loss is permanent.</CL_NewColony_SaveMode_Commitment_Tip>
 
   <CL_NewColony_Stat_Scenario>Scenario</CL_NewColony_Stat_Scenario>
   <CL_NewColony_Stat_Storyteller>Storyteller</CL_NewColony_Stat_Storyteller>
@@ -81,6 +87,7 @@
   <CL_NewColony_World_Factions_Add>Add faction</CL_NewColony_World_Factions_Add>
   <CL_NewColony_World_Factions_Reset>Reset factions</CL_NewColony_World_Factions_Reset>
   <CL_NewColony_World_Factions_Remove>Remove faction</CL_NewColony_World_Factions_Remove>
+  <CL_NewColony_World_Factions_EditIdeo>Edit {IDEO}</CL_NewColony_World_Factions_EditIdeo>
   <CL_NewColony_World_Factions_Ally>Ally</CL_NewColony_World_Factions_Ally>
   <CL_NewColony_World_Factions_Neutral>Neutral</CL_NewColony_World_Factions_Neutral>
   <CL_NewColony_World_Factions_Hostile>Hostile</CL_NewColony_World_Factions_Hostile>
@@ -94,6 +101,10 @@
   <CL_NewColony_World_Site_Terrain>Terrain</CL_NewColony_World_Site_Terrain>
   <CL_NewColony_World_Site_Elevation>Elevation</CL_NewColony_World_Site_Elevation>
   <CL_NewColony_World_Site_Stone>Stone</CL_NewColony_World_Site_Stone>
+  <CL_NewColony_World_Site_River>River</CL_NewColony_World_Site_River>
+  <CL_NewColony_World_Site_Movement>Movement difficulty</CL_NewColony_World_Site_Movement>
+  <CL_NewColony_World_Site_Graze>Animals can graze now</CL_NewColony_World_Site_Graze>
+  <CL_NewColony_World_Site_NearbyPollution>Nearby pollution</CL_NewColony_World_Site_NearbyPollution>
   <CL_NewColony_World_Site_Growing>Growing period</CL_NewColony_World_Site_Growing>
   <CL_NewColony_World_Site_AvgTemp>Avg temperature</CL_NewColony_World_Site_AvgTemp>
   <CL_NewColony_World_Site_Rainfall>Rainfall</CL_NewColony_World_Site_Rainfall>
@@ -109,7 +120,7 @@
   <CL_NewColony_Anomaly_ThreatsInactive>Anomaly threats (inactive)</CL_NewColony_Anomaly_ThreatsInactive>
   <CL_NewColony_Anomaly_ThreatsActive>Anomaly threats (active)</CL_NewColony_Anomaly_ThreatsActive>
   <CL_NewColony_Anomaly_StudyEfficiency>Study efficiency</CL_NewColony_Anomaly_StudyEfficiency>
-  <CL_NewColony_Anomaly_Reset>Set to standard playstyle</CL_NewColony_Anomaly_Reset>
+  <CL_NewColony_Anomaly_SetStandard>Set to standard playstyle</CL_NewColony_Anomaly_SetStandard>
 
   <CL_NewColony_Anomaly_Intensity_Rare>Rare</CL_NewColony_Anomaly_Intensity_Rare>
   <CL_NewColony_Anomaly_Intensity_Light>Light</CL_NewColony_Anomaly_Intensity_Light>
@@ -151,5 +162,127 @@
   <CL_NewColony_Landmark_6>Abundant</CL_NewColony_Landmark_6>
 
   <CL_NewColony_Error_Incomplete>Pick a scenario, storyteller and difficulty before generating.</CL_NewColony_Error_Incomplete>
+
+  <CL_NewColony_Tab_Ideology>Ideology</CL_NewColony_Tab_Ideology>
+  <CL_NewColony_Ideology_Inactive>Inactive</CL_NewColony_Ideology_Inactive>
+  <CL_NewColony_Ideology_Custom>Custom ideoligion</CL_NewColony_Ideology_Custom>
+  <CL_NewColony_Ideology_Classic>Classic</CL_NewColony_Ideology_Classic>
+  <CL_NewColony_Ideology_BeliefHeading>Belief</CL_NewColony_Ideology_BeliefHeading>
+  <CL_NewColony_Ideology_BeliefCaption>What should your starting colonists believe? These beliefs shape gameplay and visuals - and you can recruit others to your creed, or take on theirs.</CL_NewColony_Ideology_BeliefCaption>
+  <CL_NewColony_Ideology_CustomHeading>Custom ideoligions</CL_NewColony_Ideology_CustomHeading>
+  <CL_NewColony_Ideology_SelectedHeading>Selected ideology</CL_NewColony_Ideology_SelectedHeading>
+  <CL_NewColony_Ideology_Mode_InactiveName>Ideology system inactive</CL_NewColony_Ideology_Mode_InactiveName>
+  <CL_NewColony_Ideology_Mode_InactiveSub>Classic play, no ideoligions. All expansion content stays active.</CL_NewColony_Ideology_Mode_InactiveSub>
+  <CL_NewColony_Ideology_Mode_FluidName>Create custom (fluid)</CL_NewColony_Ideology_Mode_FluidName>
+  <CL_NewColony_Ideology_Mode_FluidSub>Begin simple and develop it over time.</CL_NewColony_Ideology_Mode_FluidSub>
+  <CL_NewColony_Ideology_Mode_FixedName>Create custom (fixed)</CL_NewColony_Ideology_Mode_FixedName>
+  <CL_NewColony_Ideology_Mode_FixedSub>Control every detail. This can take a while.</CL_NewColony_Ideology_Mode_FixedSub>
+
+  <CL_NewColony_Ideology_Editor_Open>Customize ideoligion</CL_NewColony_Ideology_Editor_Open>
+  <CL_NewColony_Ideology_Editor_Eyebrow>IDEOLIGION EDITOR</CL_NewColony_Ideology_Editor_Eyebrow>
+  <CL_NewColony_Ideology_Editor_Title>Customize ideoligion</CL_NewColony_Ideology_Editor_Title>
+  <CL_NewColony_Ideology_Editor_Subtitle>Click any element to edit it. Faction ideoligions are shown for reference.</CL_NewColony_Ideology_Editor_Subtitle>
+  <CL_NewColony_Ideology_Editor_EditEyebrow>EDIT IDEOLIGION</CL_NewColony_Ideology_Editor_EditEyebrow>
+  <CL_NewColony_Ideology_Editor_EditTitle>Edit · {IDEO}</CL_NewColony_Ideology_Editor_EditTitle>
+  <CL_NewColony_Ideology_Editor_EditSubtitle>Reshape this faction's belief. Your changes apply to this game only.</CL_NewColony_Ideology_Editor_EditSubtitle>
+  <CL_NewColony_Ideology_Wizard_Eyebrow>CREATE CUSTOM IDEOLIGION</CL_NewColony_Ideology_Wizard_Eyebrow>
+  <CL_NewColony_Ideology_Wizard_Step1_Title>Choose a structure</CL_NewColony_Ideology_Wizard_Step1_Title>
+  <CL_NewColony_Ideology_Wizard_Step1_Sub>The backbone of your ideoligion. It shapes which beliefs and precepts are available.</CL_NewColony_Ideology_Wizard_Step1_Sub>
+  <CL_NewColony_Ideology_Wizard_Step2_Title>Choose a starting belief</CL_NewColony_Ideology_Wizard_Step2_Title>
+  <CL_NewColony_Ideology_Wizard_Step2_Sub>Pick one meme to begin with. You can add more later.</CL_NewColony_Ideology_Wizard_Step2_Sub>
+  <CL_NewColony_Ideology_Wizard_Step3_Title>Customize</CL_NewColony_Ideology_Wizard_Step3_Title>
+  <CL_NewColony_Ideology_Wizard_Step3_Sub>Refine memes, precepts, styles, and identity. Click any element to edit it.</CL_NewColony_Ideology_Wizard_Step3_Sub>
+  <CL_NewColony_Ideology_Wizard_StepLabel_Structure>Structure</CL_NewColony_Ideology_Wizard_StepLabel_Structure>
+  <CL_NewColony_Ideology_Wizard_StepLabel_Belief>Starting meme</CL_NewColony_Ideology_Wizard_StepLabel_Belief>
+  <CL_NewColony_Ideology_Wizard_StepLabel_Customize>Customize</CL_NewColony_Ideology_Wizard_StepLabel_Customize>
+  <CL_NewColony_Ideology_Wizard_StepHint_Structure>Pick the symbolic frame</CL_NewColony_Ideology_Wizard_StepHint_Structure>
+  <CL_NewColony_Ideology_Wizard_StepHint_Belief>Choose the core idea</CL_NewColony_Ideology_Wizard_StepHint_Belief>
+  <CL_NewColony_Ideology_Wizard_StepHint_Customize>Refine every detail</CL_NewColony_Ideology_Wizard_StepHint_Customize>
+  <CL_NewColony_Ideology_Wizard_Back>Back</CL_NewColony_Ideology_Wizard_Back>
+  <CL_NewColony_Ideology_Wizard_Cancel>Cancel</CL_NewColony_Ideology_Wizard_Cancel>
+  <CL_NewColony_Ideology_Wizard_Next>Next</CL_NewColony_Ideology_Wizard_Next>
+  <CL_NewColony_Ideology_Wizard_Create>Create ideoligion</CL_NewColony_Ideology_Wizard_Create>
+  <CL_NewColony_Ideology_Wizard_Randomize>Randomize</CL_NewColony_Ideology_Wizard_Randomize>
+  <CL_NewColony_Ideology_Wizard_MemeTier_Low>Impact: Low</CL_NewColony_Ideology_Wizard_MemeTier_Low>
+  <CL_NewColony_Ideology_Wizard_MemeTier_Medium>Impact: Medium</CL_NewColony_Ideology_Wizard_MemeTier_Medium>
+  <CL_NewColony_Ideology_Wizard_MemeTier_High>Impact: High</CL_NewColony_Ideology_Wizard_MemeTier_High>
+  <CL_NewColony_Ideology_Wizard_Complexity>Complexity</CL_NewColony_Ideology_Wizard_Complexity>
+  <CL_NewColony_Ideology_Editor_Back>Back</CL_NewColony_Ideology_Editor_Back>
+  <CL_NewColony_Ideology_Editor_RandomizeAll>Randomize all</CL_NewColony_Ideology_Editor_RandomizeAll>
+  <CL_NewColony_Ideology_Editor_Done>Done</CL_NewColony_Ideology_Editor_Done>
+  <CL_NewColony_Ideology_Editor_OverallImpact>Overall impact · {0}</CL_NewColony_Ideology_Editor_OverallImpact>
+  <CL_NewColony_Ideology_Editor_OverallImpactLabel>Overall impact</CL_NewColony_Ideology_Editor_OverallImpactLabel>
+  <CL_NewColony_Ideology_Editor_Impact_Low>Low</CL_NewColony_Ideology_Editor_Impact_Low>
+  <CL_NewColony_Ideology_Editor_Impact_Medium>Medium</CL_NewColony_Ideology_Editor_Impact_Medium>
+  <CL_NewColony_Ideology_Editor_Impact_High>High</CL_NewColony_Ideology_Editor_Impact_High>
+  <CL_NewColony_Ideology_Editor_RailCustom>Custom ideoligion</CL_NewColony_Ideology_Editor_RailCustom>
+  <CL_NewColony_Ideology_Editor_RailFactions>Faction ideoligions</CL_NewColony_Ideology_Editor_RailFactions>
+  <CL_NewColony_Ideology_Editor_Faction_Caption>No other faction ideoligions exist yet.</CL_NewColony_Ideology_Editor_Faction_Caption>
+  <CL_NewColony_Ideology_Editor_Section_Styles>Styles</CL_NewColony_Ideology_Editor_Section_Styles>
+  <CL_NewColony_Ideology_Editor_Add>Add</CL_NewColony_Ideology_Editor_Add>
+  <CL_NewColony_Ideology_Editor_Load>Load</CL_NewColony_Ideology_Editor_Load>
+  <CL_NewColony_Ideology_Editor_Save>Save</CL_NewColony_Ideology_Editor_Save>
+  <CL_NewColony_Ideology_Editor_RandomizeSection>Randomize this section</CL_NewColony_Ideology_Editor_RandomizeSection>
+  <CL_NewColony_Ideology_Editor_AddMeme>Add meme</CL_NewColony_Ideology_Editor_AddMeme>
+  <CL_NewColony_Ideology_Editor_AddStyle>Add</CL_NewColony_Ideology_Editor_AddStyle>
+  <CL_NewColony_Ideology_Editor_AddPrecept>Add precept</CL_NewColony_Ideology_Editor_AddPrecept>
+  <CL_NewColony_Ideology_Editor_Remove>Remove</CL_NewColony_Ideology_Editor_Remove>
+  <CL_NewColony_Ideology_Editor_Section_Memes>Memes</CL_NewColony_Ideology_Editor_Section_Memes>
+  <CL_NewColony_Ideology_Editor_Section_Precepts>Precepts</CL_NewColony_Ideology_Editor_Section_Precepts>
+  <CL_NewColony_Ideology_Editor_Section_Narrative>Narrative</CL_NewColony_Ideology_Editor_Section_Narrative>
+  <CL_NewColony_Ideology_Editor_RandomizeSymbols>Symbols</CL_NewColony_Ideology_Editor_RandomizeSymbols>
+  <CL_NewColony_Ideology_Editor_SectionLockOn>Locked - kept when you Randomize all</CL_NewColony_Ideology_Editor_SectionLockOn>
+  <CL_NewColony_Ideology_Editor_SectionLockOff>Lock this section so Randomize all keeps it</CL_NewColony_Ideology_Editor_SectionLockOff>
+  <CL_NewColony_Ideology_Editor_Empty>(none)</CL_NewColony_Ideology_Editor_Empty>
+  <CL_NewColony_Ideology_Editor_Unnamed>New ideoligion</CL_NewColony_Ideology_Editor_Unnamed>
+  <CL_NewColony_Ideology_Editor_NoStructure>No structure chosen</CL_NewColony_Ideology_Editor_NoStructure>
+  <CL_NewColony_Ideology_Editor_Picker_Add>ADD</CL_NewColony_Ideology_Editor_Picker_Add>
+  <CL_NewColony_Ideology_Editor_Picker_Close>Close</CL_NewColony_Ideology_Editor_Picker_Close>
+  <CL_NewColony_Ideology_Editor_Picker_Structure_Title>Choose structure</CL_NewColony_Ideology_Editor_Picker_Structure_Title>
+  <CL_NewColony_Ideology_Editor_Picker_Structure_Subtitle>The structure meme is the backbone of the belief and shapes which other memes fit.</CL_NewColony_Ideology_Editor_Picker_Structure_Subtitle>
+  <CL_NewColony_Ideology_Editor_Picker_Meme_Title>Add a meme</CL_NewColony_Ideology_Editor_Picker_Meme_Title>
+  <CL_NewColony_Ideology_Editor_Picker_Meme_Subtitle>Memes define what your colonists believe. Heavier sets raise the ideoligion's overall impact.</CL_NewColony_Ideology_Editor_Picker_Meme_Subtitle>
+  <CL_NewColony_Ideology_Editor_Picker_Style_Title>Add a style</CL_NewColony_Ideology_Editor_Picker_Style_Title>
+  <CL_NewColony_Ideology_Editor_Picker_Style_Subtitle>Styles theme your colony's apparel, art, and buildings.</CL_NewColony_Ideology_Editor_Picker_Style_Subtitle>
+  <CL_NewColony_Ideology_Editor_Picker_Precept_Title>Add a precept</CL_NewColony_Ideology_Editor_Picker_Precept_Title>
+  <CL_NewColony_Ideology_Editor_Picker_Precept_Subtitle>Precepts are specific rules and rituals. Only those compatible with the current memes are shown.</CL_NewColony_Ideology_Editor_Picker_Precept_Subtitle>
+
+  <CL_NewColony_Ideology_Editor_Section_Rituals>Rituals</CL_NewColony_Ideology_Editor_Section_Rituals>
+  <CL_NewColony_Ideology_Editor_Section_Roles>Roles</CL_NewColony_Ideology_Editor_Section_Roles>
+  <CL_NewColony_Ideology_Editor_Section_Relics>Relics</CL_NewColony_Ideology_Editor_Section_Relics>
+  <CL_NewColony_Ideology_Editor_Section_Buildings>Buildings</CL_NewColony_Ideology_Editor_Section_Buildings>
+  <CL_NewColony_Ideology_Editor_Section_Animals>Animals</CL_NewColony_Ideology_Editor_Section_Animals>
+  <CL_NewColony_Ideology_Editor_Section_Deities>Deities</CL_NewColony_Ideology_Editor_Section_Deities>
+  <CL_NewColony_Ideology_Editor_Section_Structure>Structure</CL_NewColony_Ideology_Editor_Section_Structure>
+  <CL_NewColony_Ideology_Editor_EditSymbols>Edit symbols</CL_NewColony_Ideology_Editor_EditSymbols>
+  <CL_NewColony_Ideology_Editor_Deities_Empty>None - venerates spirits</CL_NewColony_Ideology_Editor_Deities_Empty>
+  <CL_NewColony_Ideology_Editor_NarrativeLocked>Locked</CL_NewColony_Ideology_Editor_NarrativeLocked>
+  <CL_NewColony_Ideology_Editor_LockHint>{COUNT} locked - skipped</CL_NewColony_Ideology_Editor_LockHint>
+  <CL_NewColony_Ideology_Editor_MemesImpact>Impact {SCORE} / {MAX}</CL_NewColony_Ideology_Editor_MemesImpact>
+  <CL_NewColony_Ideology_Editor_WellDesc_Memes>Memes are the core beliefs that shape the ideoligion - more memes mean more complexity and impact.</CL_NewColony_Ideology_Editor_WellDesc_Memes>
+  <CL_NewColony_Ideology_Editor_WellDesc_Precepts>Precepts are the specific rules and values colonists live by. Only those compatible with the current memes are shown.</CL_NewColony_Ideology_Editor_WellDesc_Precepts>
+  <CL_NewColony_Ideology_Editor_WellDesc_Rituals>Rituals are ceremonies the colony performs together for mood and meaning.</CL_NewColony_Ideology_Editor_WellDesc_Rituals>
+  <CL_NewColony_Ideology_Editor_WellDesc_Roles>Roles are special positions colonists can hold, each with its own duties and abilities.</CL_NewColony_Ideology_Editor_WellDesc_Roles>
+  <CL_NewColony_Ideology_Editor_WellDesc_Relics>Relics are venerated objects the colony seeks out and protects.</CL_NewColony_Ideology_Editor_WellDesc_Relics>
+  <CL_NewColony_Ideology_Editor_WellDesc_Buildings>Buildings the ideoligion expects - shrines, altars, and other ritual structures.</CL_NewColony_Ideology_Editor_WellDesc_Buildings>
+  <CL_NewColony_Ideology_Editor_WellDesc_Animals>Animals the ideoligion reveres or reviles.</CL_NewColony_Ideology_Editor_WellDesc_Animals>
+  <CL_NewColony_Ideology_Editor_AddRitual>Add ritual</CL_NewColony_Ideology_Editor_AddRitual>
+  <CL_NewColony_Ideology_Editor_AddRole>Add role</CL_NewColony_Ideology_Editor_AddRole>
+  <CL_NewColony_Ideology_Editor_AddRelic>Add relic</CL_NewColony_Ideology_Editor_AddRelic>
+  <CL_NewColony_Ideology_Editor_AddBuilding>Add building</CL_NewColony_Ideology_Editor_AddBuilding>
+  <CL_NewColony_Ideology_Editor_AddAnimal>Add animal</CL_NewColony_Ideology_Editor_AddAnimal>
+  <CL_NewColony_Ideology_Editor_Deities_Regenerate>Reroll deities</CL_NewColony_Ideology_Editor_Deities_Regenerate>
+  <CL_NewColony_Ideology_Editor_Picker_Ritual_Title>Add a ritual</CL_NewColony_Ideology_Editor_Picker_Ritual_Title>
+  <CL_NewColony_Ideology_Editor_Picker_Ritual_Subtitle>Rituals are ceremonies your colonists hold. Only those compatible with the current memes are shown.</CL_NewColony_Ideology_Editor_Picker_Ritual_Subtitle>
+  <CL_NewColony_Ideology_Editor_Picker_Role_Title>Add a role</CL_NewColony_Ideology_Editor_Picker_Role_Title>
+  <CL_NewColony_Ideology_Editor_Picker_Role_Subtitle>Roles grant a colonist special duties and abilities tied to the belief.</CL_NewColony_Ideology_Editor_Picker_Role_Subtitle>
+  <CL_NewColony_Ideology_Editor_Picker_Relic_Title>Add a relic</CL_NewColony_Ideology_Editor_Picker_Relic_Title>
+  <CL_NewColony_Ideology_Editor_Picker_Relic_Subtitle>Relics are venerated objects worth questing for. The specific item is rolled when added.</CL_NewColony_Ideology_Editor_Picker_Relic_Subtitle>
+  <CL_NewColony_Ideology_Editor_Picker_Building_Title>Add a building</CL_NewColony_Ideology_Editor_Picker_Building_Title>
+  <CL_NewColony_Ideology_Editor_Picker_Building_Subtitle>Required or venerated buildings the belief expects in your colony.</CL_NewColony_Ideology_Editor_Picker_Building_Subtitle>
+  <CL_NewColony_Ideology_Editor_Picker_Animal_Title>Add an animal</CL_NewColony_Ideology_Editor_Picker_Animal_Title>
+  <CL_NewColony_Ideology_Editor_Picker_Animal_Subtitle>Venerated animals your colonists revere. The specific animal is rolled when added.</CL_NewColony_Ideology_Editor_Picker_Animal_Subtitle>
+
+  <CL_NewColony_Ideology_PreparingWorld>Preparing the world...</CL_NewColony_Ideology_PreparingWorld>
 
 </LanguageData>

@@ -50,6 +50,18 @@ public static class LightweaveRoot {
         ctx.Breakpoint = Breakpoints.For(inRect.width);
         ctx.PointerPos = Event.current?.mousePosition ?? Vector2.zero;
         RenderContext.Push(ctx);
+
+        // Capture the scroll wheel once, before any paint or overlay flush, and Use() it immediately so
+        // Unity's Widgets.BeginScrollView calls never auto-scroll. Each LightweaveScrollView.Dispose this
+        // frame applies the stashed delta if it is the topmost overflowing scroll under the cursor. This
+        // is the only point at which the event is guaranteed still live for scrolls painted during the
+        // overlay flush (modal/popover bodies), whose ctors run after the event has already gone Used.
+        Event? wheelEvt = Event.current;
+        if (wheelEvt != null && wheelEvt.rawType == EventType.ScrollWheel && inRect.Contains(wheelEvt.mousePosition)) {
+            LightweaveScrollView.CaptureWheel(wheelEvt.delta.y);
+            wheelEvt.Use();
+        }
+
         bool didBuild = false;
         bool painted = false;
         try {
@@ -130,6 +142,8 @@ public static class LightweaveRoot {
             if (painted) {
                 LightweaveHitTracker.Commit(rootId);
             }
+            // Clear the captured wheel so it never leaks into the next window's Render this same frame.
+            LightweaveScrollView.ClearWheel();
             RenderContext.Clear();
             if (DiagnosticsEnabled) {
                 Cryptiklemur.RimObs.Api.Obs.Metrics.Observe(LightweaveTelemetry.RenderTotalTicks, System.Diagnostics.Stopwatch.GetTimestamp() - renderStart);
@@ -194,7 +208,13 @@ public static class LightweaveRoot {
         Style style = default;
         bool hasStyle = node.Style.HasValue || (node.Classes != null && node.Classes.Length > 0) || node.Id != null;
         if (hasStyle && rc != null) {
-            style = rc.Theme.ResolveStyle(node);
+            // Route through the per-node cache, not Theme.ResolveStyle directly: resolved style depends
+            // only on (Classes, Style, theme epoch), none of which change across the many MouseDrag walks
+            // a globe/slider drag triggers. The build cache reuses the same node instances during a drag,
+            // so this caches the heaviest per-node op (class merge + string.Join) instead of re-running it
+            // ~500x/sec. A real state change (slider value) bumps the hook version, rebuilds fresh nodes,
+            // and resolves once - so live label updates are unaffected.
+            style = node.GetResolvedStyle();
         }
 
         if (style.Visible == false) {

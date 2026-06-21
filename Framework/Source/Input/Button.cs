@@ -86,11 +86,16 @@ public static class Button {
             return labelWidth + iconAllowance + padXPx * 2f;
         };
 
+        // Leading/trailing glyphs inherit the button's resting foreground so icons match the label
+        // ink (e.g. dark ink on a gold Primary CTA) instead of falling back to white TextPrimary.
+        ThemeSlot iconInk = VariantPalette.Foreground(variant, default, ghost);
         if (leading != null) {
+            ApplyIconInk(leading, iconInk);
             node.Children.Add(leading);
         }
 
         if (trailing != null) {
+            ApplyIconInk(trailing, iconInk);
             node.Children.Add(trailing);
         }
 
@@ -151,6 +156,13 @@ public static class Button {
             InteractionState state = InteractionState.Resolve(rect, null, disabled);
 
             ThemeSlot fgSlot = VariantPalette.Foreground(variant, state, ghost);
+            // Disabled primary keeps its dark accent ink on the desaturated-gold fill (mock keeps the
+            // accent button shape, just grayscale+dimmed) rather than the generic muted text the shared
+            // disabled path returns, which would vanish into the tan fill.
+            bool disabledPrimary = variant == Variant.Primary && !ghost && disabled;
+            if (disabledPrimary) {
+                fgSlot = ThemeSlot.TextOnAccent;
+            }
             ThemeSlot? borderSlot = VariantPalette.Border(variant, state, ghost);
             RadiusSpec radius = RadiusSpec.All(RadiusScale.Sm);
             BorderSpec? border = borderSlot.HasValue
@@ -180,12 +192,31 @@ public static class Button {
                     else if (variant == Variant.Primary && !ghost && !state.Pressed && !disabled) {
                         Color accent = theme.GetColor(bgSlot.Value);
                         Color.RGBToHSV(accent, out float hue, out float sat, out float val);
+                        Color top;
+                        Color bottom;
                         if (state.Hovered) {
-                            val = Mathf.Clamp01(val * 1.18f);
-                            sat = Mathf.Clamp01(sat * 0.9f);
+                            // Hover: top brightens toward warm-white (mock color-mix(accent 82%, #fff5e0)),
+                            // bottom rises to the base accent. No darkened bottom, no overlay wash on top.
+                            top = Color.HSVToRGB(hue, Mathf.Clamp01(sat * 0.9f), Mathf.Clamp01(val * 1.18f));
+                            bottom = accent;
                         }
-                        Color top = Color.HSVToRGB(hue, sat, val);
-                        Color bottom = Color.HSVToRGB(hue, sat, val * 0.78f);
+                        else {
+                            // Idle: base accent at top, accent-2 (darker) at bottom.
+                            top = accent;
+                            bottom = Color.HSVToRGB(hue, sat, val * 0.78f);
+                        }
+                        top.a = accent.a;
+                        bottom.a = accent.a;
+                        bg = new BackgroundSpec.Gradient(GradientTextureCache.Vertical(top, bottom));
+                    }
+                    else if (disabledPrimary) {
+                        // Mock .nc-btn-primary:disabled = the accent gradient under
+                        // filter: grayscale(0.65) brightness(0.62). Reproduce both stops so the disabled
+                        // CTA still reads as the gold button, just muted, not a flat neutral surface.
+                        Color accent = theme.GetColor(ThemeSlot.SurfaceAccent);
+                        Color.RGBToHSV(accent, out float hue, out float sat, out float val);
+                        Color top = DesatDim(accent);
+                        Color bottom = DesatDim(Color.HSVToRGB(hue, sat, val * 0.78f));
                         top.a = accent.a;
                         bottom.a = accent.a;
                         bg = new BackgroundSpec.Gradient(GradientTextureCache.Vertical(top, bottom));
@@ -205,7 +236,11 @@ public static class Button {
                 }
 
                 float overlay = VariantPalette.OverlayAlpha(state);
-                if (overlay > 0f) {
+                // Primary owns its hover via the brightened gold gradient above; the dark overlay wash
+                // would muddy it. Skip the wash for a primary hover (keep it on press, where the dark
+                // film reads as the active/darker state, matching the mock's flat accent-2 :active).
+                bool primaryHoverSkip = variant == Variant.Primary && !ghost && state.Hovered && !state.Pressed && !disabled;
+                if (overlay > 0f && !primaryHoverSkip) {
                     Color overlayColor = InteractionFeedback.OverlayColor(theme, state, overlay);
                     PaintBox.Draw(rect, BackgroundSpec.Of(overlayColor), null, radius);
                 }
@@ -269,6 +304,15 @@ public static class Button {
                 }
             }
 
+            if (leading == null && trailing == null && body == null) {
+                // No-icon label: MiddleCenter mis-centers vertically in a tall rect (renders ~16px high),
+                // while the iconed branches use MiddleLeft on a tightly-sized, horizontally-centered
+                // labelRect and sit correctly. Mirror that path so a plain label shares the same baseline.
+                float labelStart = Mathf.Max(rect.x + padXPx, rect.x + (rect.width - labelWidth) * 0.5f);
+                labelRect = new Rect(labelStart, labelRect.y, labelWidth, labelRect.height);
+                gstyle.alignment = TextAnchor.MiddleLeft;
+            }
+
             if (body != null) {
                 body.MeasuredRect = rect;
                 LightweaveRoot.PaintSubtree(body, rect);
@@ -292,12 +336,49 @@ public static class Button {
 
             InteractionFeedback.Apply(rect, !disabled, playHoverSound ?? true);
 
-            if (!disabled && onClick != null && Widgets.ButtonInvisible(rect, doMouseoverSound: false) && LightweaveHitTracker.IsTopmost(rect)) {
+            // Manual MouseUp hit-test instead of Widgets.ButtonInvisible (-> GUI.Button), which
+            // consumes the event via Unity's control system BEFORE an IsTopmost gate can reject it.
+            // When this button sits behind an open Modal it is non-topmost (HoverBlockRegistry), and
+            // a GUI.Button would still swallow the MouseUp - starving the modal's own controls, painted
+            // later in the deferred overlay flush, of a live event (the editor close/Done "won't click"
+            // bug). Only Use() the event when topmost, matching IconButton/Checkbox/Switch. The rect is
+            // already tracked for occlusion via InteractionState.Resolve above.
+            Event? e = Event.current;
+            if (!disabled
+                && onClick != null
+                && e != null
+                && e.type == EventType.MouseUp
+                && e.button == 0
+                && rect.Contains(e.mousePosition)
+                && LightweaveHitTracker.IsTopmost(rect)) {
                 onClick.Invoke();
+                e.Use();
             }
         };
 
         return node;
+    }
+
+    // A glyph child carries its own TextColor; only override when the caller left it unset so an
+    // explicit icon color (e.g. a danger glyph) still wins. Reassigning Style invalidates the node's
+    // resolved-style cache, but this runs once per build (not per paint), so there is no churn.
+    private static void ApplyIconInk(LightweaveNode icon, ThemeSlot ink) {
+        if (icon.Style is { TextColor: not null }) {
+            return;
+        }
+
+        icon.Style = (icon.Style ?? new Style()) with { TextColor = ink };
+    }
+
+
+    // CSS-equivalent filter: grayscale(0.65) brightness(0.62) for the disabled primary fill. Color is a
+    // value type, so no GC pressure in the Paint path.
+    private static Color DesatDim(Color c) {
+        float lum = 0.299f * c.r + 0.587f * c.g + 0.114f * c.b;
+        float r = Mathf.Lerp(c.r, lum, 0.65f) * 0.62f;
+        float g = Mathf.Lerp(c.g, lum, 0.65f) * 0.62f;
+        float b = Mathf.Lerp(c.b, lum, 0.65f) * 0.62f;
+        return new Color(r, g, b, c.a);
     }
 
     [DocVariant("CL_Playground_Label_Primary")]

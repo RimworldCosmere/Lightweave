@@ -235,7 +235,8 @@ public static class Tree {
             Cosmere.Lightweave.Input.InteractionFeedback.Apply(rowRect, true, soundEnabled);
         }
 
-        if (e.type == EventType.MouseUp && e.button == 0 && rowRect.Contains(e.mousePosition)) {
+        LightweaveHitTracker.Track(rowRect);
+        if (e.type == EventType.MouseUp && e.button == 0 && rowRect.Contains(e.mousePosition) && LightweaveHitTracker.IsTopmost(rowRect)) {
             if (hasChildren) {
                 HashSet<TreeNode> next = new HashSet<TreeNode>(expanded, ReferenceComparer.Instance);
                 if (!next.Add(treeNode)) {

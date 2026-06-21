@@ -34,10 +34,21 @@ public static class WorldSiteTab {
 
         return ScrollArea.Create(Stack.Create(SpacingScale.Md, s => {
             s.Add(BuildHeader(ws, longLat));
+            if (!ws.PrimaryBiome.description.NullOrEmpty()) {
+                s.Add(Text.Create(ws.PrimaryBiome.description, wrap: true, style: new Style {
+                    Width = Length.Stretch,
+                    FontFamily = FontRole.Body,
+                    FontSize = new Rem(13f / 16f),
+                    TextColor = ThemeSlot.TextSecondary,
+                }));
+            }
             s.Add(Divider.Horizontal());
             s.Add(BuildGrid(ws, tile, longLat));
             s.Add(BuildRandomButton(pickedTile));
-        }, style: new Style { Width = Length.Stretch }),
+        }, style: new Style {
+            Width = Length.Stretch,
+            Padding = new EdgeInsets(new Rem(1.25f), new Rem(1.5f), new Rem(1.25f), new Rem(1.5f)),
+        }),
             style: new Style { Width = Length.Stretch, Height = Length.Stretch });
     }
 
@@ -84,19 +95,38 @@ public static class WorldSiteTab {
     }
 
     private static LightweaveNode BuildGrid(Tile ws, PlanetTile tile, Vector2 longLat) {
-        return Stack.Create(SpacingScale.Xs, s => {
-            s.Add(SiteRow("CL_NewColony_World_Site_Terrain".Translate(), ws.hilliness.GetLabelCap()));
-            s.Add(SiteRow("CL_NewColony_World_Site_Elevation".Translate(), ws.elevation.ToString("F0") + "m"));
-            s.Add(SiteRow("CL_NewColony_World_Site_Stone".Translate(), StoneTypes(tile)));
-            s.Add(SiteRow("CL_NewColony_World_Site_Growing".Translate(), Zone_Growing.GrowingQuadrumsDescription(tile, null)));
-            s.Add(SiteRow("CL_NewColony_World_Site_AvgTemp".Translate(), GenTemperature.GetAverageTemperatureLabel(tile)));
-            s.Add(SiteRow("CL_NewColony_World_Site_Rainfall".Translate(), ws.rainfall.ToString("F0") + "mm"));
-            s.Add(SiteRow("CL_NewColony_World_Site_Forageability".Translate(), ws.PrimaryBiome.forageability.ToStringPercent()));
-            s.Add(SiteRow("CL_NewColony_World_Site_Disease".Translate(), DiseaseRate(ws)));
+        return Stack.Create(SpacingScale.Md, outer => {
+            outer.Add(Stack.Create(SpacingScale.Xs, geo => {
+                geo.Add(SiteRow("CL_NewColony_World_Site_Terrain".Translate(), ws.hilliness.GetLabelCap()));
+                string? river = RiverLabel(ws);
+                if (river != null) {
+                    geo.Add(SiteRow("CL_NewColony_World_Site_River".Translate(), river));
+                }
+                string? movement = MovementLabel(tile);
+                if (movement != null) {
+                    geo.Add(SiteRow("CL_NewColony_World_Site_Movement".Translate(), movement));
+                }
+                geo.Add(SiteRow("CL_NewColony_World_Site_Elevation".Translate(), ws.elevation.ToString("F0") + "m"));
+                geo.Add(SiteRow("CL_NewColony_World_Site_Stone".Translate(), StoneTypes(tile)));
+            }, style: new Style { Width = Length.Stretch }));
+
+            outer.Add(Stack.Create(SpacingScale.Xs, clim => {
+                clim.Add(SiteRow("CL_NewColony_World_Site_AvgTemp".Translate(), GenTemperature.GetAverageTemperatureLabel(tile)));
+                clim.Add(SiteRow("CL_NewColony_World_Site_Growing".Translate(), Zone_Growing.GrowingQuadrumsDescription(tile, null)));
+                clim.Add(SiteRow("CL_NewColony_World_Site_Rainfall".Translate(), ws.rainfall.ToString("F0") + "mm"));
+                clim.Add(SiteRow("CL_NewColony_World_Site_Forageability".Translate(), Forageability(ws)));
+                clim.Add(SiteRow("CL_NewColony_World_Site_Graze".Translate(), GrazeLabel(tile)));
+                clim.Add(SiteRow("CL_NewColony_World_Site_Disease".Translate(), DiseaseRate(ws)));
+            }, style: new Style { Width = Length.Stretch }));
+
             if (Verse.ModsConfig.BiotechActive) {
-                s.Add(SiteRow("CL_NewColony_World_Site_Pollution".Translate(), ws.pollution.ToStringPercent()));
+                outer.Add(Stack.Create(SpacingScale.Xs, pol => {
+                    pol.Add(SiteRow("CL_NewColony_World_Site_Pollution".Translate(), ws.pollution.ToStringPercent()));
+                    pol.Add(SiteRow("CL_NewColony_World_Site_NearbyPollution".Translate(), NearbyPollution(tile)));
+                }, style: new Style { Width = Length.Stretch }));
             }
-            s.Add(SiteRow("CL_NewColony_World_Site_TimeZone".Translate(), TimeZoneLabel(longLat.x)));
+
+            outer.Add(SiteRow("CL_NewColony_World_Site_TimeZone".Translate(), TimeZoneLabel(longLat.x)));
         }, style: new Style { Width = Length.Stretch });
     }
 
@@ -145,5 +175,39 @@ public static class WorldSiteTab {
 
     private static string TimeZoneLabel(float longitude) {
         return NewColonyThresholds.TimeZoneLabel(GenDate.TimeZoneAt(longitude));
+    }
+
+    private static string? RiverLabel(Tile ws) {
+        if (ws is SurfaceTile st && st.Rivers != null && st.Rivers.Count > 0) {
+            return st.Rivers.MaxBy(r => r.river.degradeThreshold).river.LabelCap;
+        }
+        return null;
+    }
+
+    private static string? MovementLabel(PlanetTile tile) {
+        if (Find.World.Impassable(tile)) {
+            return null;
+        }
+        float difficulty = WorldPathGrid.CalculatedMovementDifficultyAt(tile, false, null, null)
+            * Find.WorldGrid.GetRoadMovementDifficultyMultiplier(tile, PlanetTile.Invalid, null);
+        return difficulty.ToString("0.#");
+    }
+
+    private static string Forageability(Tile ws) {
+        BiomeDef biome = ws.PrimaryBiome;
+        if (biome.foragedFood != null && biome.forageability > 0f) {
+            return biome.forageability.ToStringPercent() + " (" + biome.foragedFood.label + ")";
+        }
+        return "0%";
+    }
+
+    private static string GrazeLabel(PlanetTile tile) {
+        return VirtualPlantsUtility.EnvironmentAllowsEatingVirtualPlantsNowAt(tile)
+            ? (string)"Yes".Translate()
+            : (string)"No".Translate();
+    }
+
+    private static string NearbyPollution(PlanetTile tile) {
+        return WorldPollutionUtility.CalculateNearbyPollutionScore(tile).ToStringByStyle(ToStringStyle.FloatTwo);
     }
 }

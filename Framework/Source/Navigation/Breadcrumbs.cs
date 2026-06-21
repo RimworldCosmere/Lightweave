@@ -261,6 +261,7 @@ public static class Breadcrumbs {
         }
 
         if (interactive) {
+            LightweaveHitTracker.Track(labelRect);
             Cosmere.Lightweave.Input.InteractionFeedback.Apply(labelRect, true, soundEnabled);
         }
 
@@ -277,7 +278,7 @@ public static class Breadcrumbs {
 
         TextDraw.DrawWithStyle(labelRect, text, style, color);
 
-        if (interactive && e.type == EventType.MouseUp && e.button == 0 && labelRect.Contains(e.mousePosition)) {
+        if (interactive && e.type == EventType.MouseUp && e.button == 0 && labelRect.Contains(e.mousePosition) && LightweaveHitTracker.IsTopmost(labelRect)) {
             onNavigate?.Invoke(index);
             e.Use();
         }

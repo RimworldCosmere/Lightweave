@@ -16,7 +16,8 @@ public static class NewColonyControls {
         float min,
         float max,
         float step,
-        string key
+        string key,
+        string? tooltip = null
     ) {
         // The value readout is drawn by the Slider itself in its header row (label left, value
         // right) above the track. The Slider reads the live drag draft every frame in Paint, so the
@@ -33,6 +34,7 @@ public static class NewColonyControls {
             format: format,
             label: label,
             live: true,
+            tooltip: tooltip,
             style: new Style { Width = Length.Stretch },
             // Every LabeledSlider routes through this one Slider.Create call site, so without a
             // per-instance discriminator two sliders built from this helper would share hook

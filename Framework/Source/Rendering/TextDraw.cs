@@ -65,6 +65,55 @@ public static class TextDraw {
         GUI.color = saved;
     }
 
+    // Optically centers a short string in a rect using the font's actual glyph ink bounds, not the
+    // line box. Unity's MiddleCenter centers the line box, so cap-height digits/initials (no descender)
+    // sit a hair low; this resolves the first glyph's CharacterInfo to center the ink vertically and
+    // centers the whole measured string horizontally. Use for badge digits, initials, and centered
+    // glyphs where MiddleCenter looks off. Same math as the Glyph primitive.
+    public static void DrawCentered(
+        Rect rect,
+        string text,
+        FontRole role,
+        Rem fontSize,
+        Color color,
+        FontStyle fontStyle = FontStyle.Normal,
+        Font? fontOverride = null
+    ) {
+        if (string.IsNullOrEmpty(text)) {
+            return;
+        }
+
+        Theme.Theme theme = RenderContext.Current.Theme;
+        int pixelSize = Mathf.RoundToInt(fontSize.ToFontPx());
+        GUIStyle style = fontOverride != null
+            ? GuiStyleCache.GetOrCreate(fontOverride, pixelSize, fontStyle)
+            : GuiStyleCache.GetOrCreate(theme, role, pixelSize, fontStyle);
+        style.alignment = TextAnchor.UpperLeft;
+        style.clipping = TextClipping.Overflow;
+        style.wordWrap = false;
+
+        Vector2 textSize = style.CalcSize(new GUIContent(text));
+        float drawX = rect.x + (rect.width - textSize.x) / 2f;
+        float drawY = rect.y + (rect.height - textSize.y) / 2f;
+
+        Font? font = style.font;
+        if (font != null) {
+            font.RequestCharactersInTexture(text, pixelSize, fontStyle);
+            if (font.GetCharacterInfo(text[0], out CharacterInfo ci, pixelSize, fontStyle)) {
+                float ascentPx = font.fontSize > 0
+                    ? (float)font.ascent * pixelSize / font.fontSize
+                    : textSize.y * 0.85f;
+                float visualCenterFromTop = ascentPx - (ci.maxY + ci.minY) / 2f;
+                drawY = rect.y + rect.height / 2f - visualCenterFromTop;
+            }
+        }
+
+        Color saved = GUI.color;
+        GUI.color = color;
+        GUI.Label(RectSnap.SnapText(new Rect(drawX, drawY, textSize.x, textSize.y)), text, style);
+        GUI.color = saved;
+    }
+
 
     public static void DrawTracked(
         Rect rect,

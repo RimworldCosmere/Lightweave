@@ -48,6 +48,10 @@ public static class Slider {
         Variant variant = default,
         [DocParam("Optional accent slot override recoloring the filled track + thumb + glow. Defaults to the variant accent (gold).")]
         ThemeSlot? accent = null,
+        [DocParam("Optional hover tooltip text (rich text supported). Attached over the whole slider rect.")]
+        string? tooltip = null,
+        [DocParam("Side to anchor the tooltip; null = mouse-follow.")]
+        Cosmere.Lightweave.Data.TooltipSide? tooltipSide = null,
         Style? style = null,
         string[]? classes = null,
         string? id = null,
@@ -79,6 +83,14 @@ public static class Slider {
             Theme.Theme theme = RenderContext.Current.Theme;
             Direction dir = RenderContext.Current.Direction;
             bool rtl = dir == Direction.Rtl;
+
+            if (!string.IsNullOrEmpty(tooltip)) {
+                Cosmere.Lightweave.Adapter.AsTooltip.Attach(
+                    rect,
+                    () => Cosmere.Lightweave.Typography.Typography.Text.Create(tooltip!, wrap: true, richText: true),
+                    key: tooltip!.GetHashCode(),
+                    side: tooltipSide);
+            }
 
             RenderContext rc = RenderContext.Current;
             bool effectiveDisabled = disabled || rc.ForceDisabled;
