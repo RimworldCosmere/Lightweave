@@ -12,15 +12,10 @@ public static class FontLoader {
 
     static FontLoader() {
         (string assetName, Action<Font?> setter)[] fonts = [
-            ("Arimo-Regular", f => LightweaveFonts.ArimoRegular = f),
-            ("Arimo-Bold", f => LightweaveFonts.ArimoBold = f),
-            ("Arimo-Italic", f => LightweaveFonts.ArimoItalic = f),
-            ("Carlito-Regular", f => LightweaveFonts.CarlitoRegular = f),
-            ("Carlito-Bold", f => LightweaveFonts.CarlitoBold = f),
-            ("Carlito-Italic", f => LightweaveFonts.CarlitoItalic = f),
+            ("OpenSans-Regular", f => LightweaveFonts.OpenSansRegular = f),
+            ("OpenSans-Bold", f => LightweaveFonts.OpenSansBold = f),
             ("Cinzel", f => LightweaveFonts.Cinzel = f),
             ("IMFellEnglish-Regular", f => LightweaveFonts.IMFellEnglishRegular = f),
-            ("IMFellEnglish-Italic", f => LightweaveFonts.IMFellEnglishItalic = f),
             ("IMFellEnglishSC", f => LightweaveFonts.IMFellEnglishSC = f),
             ("JetBrainsMono", f => LightweaveFonts.JetBrainsMono = f),
             ("JetBrainsMono-Bold", f => LightweaveFonts.JetBrainsMonoBold = f),

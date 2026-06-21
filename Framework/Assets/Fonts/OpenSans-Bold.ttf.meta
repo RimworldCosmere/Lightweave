@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 19e8ec07d6c94288eb4254019f867f8d
+guid: 5549414f232246e3aad60af809fef851
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
@@ -9,7 +9,7 @@ TrueTypeFontImporter:
   characterPadding: 1
   includeFontData: 1
   fontNames:
-  - Carlito
+  - Open Sans
   fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 0

@@ -137,10 +137,10 @@ public static class ThemeRegistry {
     }
 
     private static FontSet RequireFonts() {
-        Font? body = LightweaveFonts.CarlitoRegular ?? LightweaveFonts.ArimoRegular;
-        Font? bodyBold = LightweaveFonts.CarlitoBold ?? LightweaveFonts.ArimoBold;
-        Font? heading = LightweaveFonts.CarlitoBold ?? LightweaveFonts.ArimoBold;
-        Font? display = LightweaveFonts.IMFellEnglishSC ?? LightweaveFonts.Cinzel ?? LightweaveFonts.CarlitoBold;
+        Font? body = LightweaveFonts.OpenSansRegular;
+        Font? bodyBold = LightweaveFonts.OpenSansBold;
+        Font? heading = LightweaveFonts.OpenSansBold;
+        Font? display = LightweaveFonts.IMFellEnglishSC ?? LightweaveFonts.Cinzel;
         Font? mono = LightweaveFonts.JetBrainsMono;
         Font? monoBold = LightweaveFonts.JetBrainsMonoBold ?? LightweaveFonts.JetBrainsMono;
         if (body == null || bodyBold == null || heading == null || display == null || mono == null || monoBold == null) {

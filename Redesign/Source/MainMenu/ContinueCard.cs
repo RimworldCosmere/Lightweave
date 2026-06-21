@@ -288,7 +288,7 @@ public static class ContinueCard {
             PaintBox.Fill(leftStroke, inset);
 
             if (Event.current.type == EventType.Repaint) {
-                Font? font = LightweaveFonts.CarlitoBold ?? LightweaveFonts.CarlitoRegular;
+                Font? font = LightweaveFonts.OpenSansBold ?? LightweaveFonts.OpenSansRegular;
                 Rem fontSizeRem = new Rem(1.25f);
 
                 Style resolved = node.GetResolvedStyle();
