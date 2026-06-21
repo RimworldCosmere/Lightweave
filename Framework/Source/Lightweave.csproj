@@ -78,18 +78,22 @@
             <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
 
-        <Reference Include="..\..\RimWorldWin64_Data\Managed\*.dll" Condition="Exists('..\..\RimWorldWin64_Data\Managed')">
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="C:\Program Files (x86)\Steam\steamapps\common\RimWorld\RimWorldWin64_Data\Managed\*.dll" Condition="Exists('C:\Program Files (x86)\Steam\steamapps\common\RimWorld\RimWorldWin64_Data\Managed')">
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="/mnt/games/RimWorld/RimWorldLinux_Data/Managed/*.dll" Condition="Exists('/mnt/games/RimWorld/RimWorldLinux_Data/Managed')">
-            <Private>False</Private>
-        </Reference>
     </ItemGroup>
 
-    <ItemGroup Condition="'@(Reference->WithMetadataValue('Identity', 'Assembly-CSharp')->Metadata('HintPath')->Exists())' == ''">
+    <PropertyGroup>
+        <RealRimWorldManaged Condition="'$(RealRimWorldManaged)' == '' And Exists('..\..\RimWorldWin64_Data\Managed')">..\..\RimWorldWin64_Data\Managed</RealRimWorldManaged>
+        <RealRimWorldManaged Condition="'$(RealRimWorldManaged)' == '' And Exists('C:\Program Files (x86)\Steam\steamapps\common\RimWorld\RimWorldWin64_Data\Managed')">C:\Program Files (x86)\Steam\steamapps\common\RimWorld\RimWorldWin64_Data\Managed</RealRimWorldManaged>
+        <RealRimWorldManaged Condition="'$(RealRimWorldManaged)' == '' And Exists('/mnt/games/RimWorld/RimWorldLinux_Data/Managed')">/mnt/games/RimWorld/RimWorldLinux_Data/Managed</RealRimWorldManaged>
+    </PropertyGroup>
+
+    <ItemGroup>
         <PackageReference Include="Krafs.Rimworld.Ref" Version="1.6.*"/>
     </ItemGroup>
+
+    <Target Name="UseRealAssemblyCSharp" AfterTargets="ResolveAssemblyReferences" Condition="'$(RealRimWorldManaged)' != ''">
+        <ItemGroup>
+            <ReferencePath Remove="@(ReferencePath)" Condition="'%(FileName)' == 'Assembly-CSharp' Or '%(FileName)' == 'Assembly-CSharp_publicised'"/>
+            <ReferencePath Include="$(RealRimWorldManaged)\Assembly-CSharp.dll"/>
+        </ItemGroup>
+    </Target>
 </Project>
