@@ -2,6 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using Cosmere.Lightweave.Hooks;
 using static Cosmere.Lightweave.Hooks.Hooks;
+using Cosmere.Lightweave.Data;
 using Cosmere.Lightweave.Navigation;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Types;
@@ -85,42 +86,32 @@ public static class MoreButton {
                 icon: BuildIcon("★"),
                 subtitle: (string)"CL_MainMenu_More_Sub_Credits".Translate()
             ),
-            MenuEntry.Of(
-                (string)"CL_MainMenu_SteamWorkshop".Translate(),
-                () => Run(OpenSteamWorkshop, onDismiss),
-                icon: BuildIcon("⛁"),
-                subtitle: (string)"CL_MainMenu_More_Sub_SteamWorkshop".Translate()
-            ),
-            MenuEntry.Of(
-                (string)"CL_MainMenu_OfficialDiscord".Translate(),
-                () => Run(OpenOfficialDiscord, onDismiss),
-                icon: BuildIcon("◈"),
-                subtitle: (string)"CL_MainMenu_More_Sub_OfficialDiscord".Translate()
-            ),
-            MenuEntry.Of(
-                (string)"CL_MainMenu_WikiTutorials".Translate(),
-                () => Run(OpenWiki, onDismiss),
-                icon: BuildIcon("?"),
-                subtitle: (string)"CL_MainMenu_More_Sub_WikiTutorials".Translate()
-            ),
-            MenuEntry.Of(
-                (string)"CL_MainMenu_BugReport".Translate(),
-                () => Run(OpenBugReport, onDismiss),
-                icon: BuildIcon("▲"),
-                subtitle: (string)"CL_MainMenu_More_Sub_BugReport".Translate()
-            ),
-            MenuEntry.Divider(),
-            MenuEntry.Of(
-                (string)"CL_MainMenu_EulaLicenses".Translate(),
-                () => Run(OpenEula, onDismiss),
-                icon: BuildIcon("§")
-            ),
-            MenuEntry.Of(
-                (string)"CL_MainMenu_PrivacyPolicy".Translate(),
-                () => Run(OpenPrivacy, onDismiss),
-                icon: BuildIcon("§")
-            ),
         };
+
+        IReadOnlyList<HarvestedLink> links = MainMenuLinkHarvester.GetLinks();
+        if (links.Count > 0) {
+            items.Add(MenuEntry.Divider());
+            for (int i = 0; i < links.Count; i++) {
+                HarvestedLink link = links[i];
+                items.Add(MenuEntry.Of(
+                    link.Label,
+                    () => Run(link.OnClick, onDismiss),
+                    icon: LinkIcon(link)
+                ));
+            }
+        }
+
+        items.Add(MenuEntry.Divider());
+        items.Add(MenuEntry.Of(
+            (string)"CL_MainMenu_EulaLicenses".Translate(),
+            () => Run(OpenEula, onDismiss),
+            icon: BuildIcon("§")
+        ));
+        items.Add(MenuEntry.Of(
+            (string)"CL_MainMenu_PrivacyPolicy".Translate(),
+            () => Run(OpenPrivacy, onDismiss),
+            icon: BuildIcon("§")
+        ));
 
         if (Prefs.DevMode) {
             items.Add(MenuEntry.Divider());
@@ -155,6 +146,18 @@ public static class MoreButton {
         return GlyphIcon.Create(glyph);
     }
 
+    private static LightweaveNode LinkIcon(HarvestedLink link) {
+        if (link.Icon != null) {
+            return Image.Create(
+                link.Icon,
+                ImageFit.Contain,
+                style: new Style { Width = Length.Rem(1f), Height = Length.Rem(1f) }
+            );
+        }
+
+        return GlyphIcon.Create("⧉");
+    }
+
     private static void OpenPlayground() {
         if (Find.WindowStack.IsOpen<Playground.LightweavePlayground>()) {
             return;
@@ -165,22 +168,6 @@ public static class MoreButton {
     private static void Run(Action action, Action onDismiss) {
         action?.Invoke();
         onDismiss?.Invoke();
-    }
-
-    private static void OpenSteamWorkshop() {
-        Application.OpenURL("https://steamcommunity.com/app/294100/workshop/");
-    }
-
-    private static void OpenOfficialDiscord() {
-        Application.OpenURL("https://discord.gg/rimworld");
-    }
-
-    private static void OpenWiki() {
-        Application.OpenURL("https://rimworldwiki.com/");
-    }
-
-    private static void OpenBugReport() {
-        Application.OpenURL("https://ludeon.com/forums/index.php?board=8.0");
     }
 
     private static void OpenEula() {
