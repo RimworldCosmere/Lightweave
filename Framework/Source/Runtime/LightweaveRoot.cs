@@ -34,7 +34,7 @@ public static class LightweaveRoot {
         long renderStart = DiagnosticsEnabled ? System.Diagnostics.Stopwatch.GetTimestamp() : 0L;
         if (DiagnosticsEnabled) {
             EventType evt = Event.current?.type ?? EventType.Used;
-            Cryptiklemur.RimObs.Api.Obs.Metrics.Add(LightweaveTelemetry.RenderCalls, 1L, "event", evt.ToString());
+            LightweaveTelemetry.RenderCall(evt.ToString());
         }
 
         if (!stores.TryGetValue(rootId, out HookStore store)) {
@@ -78,7 +78,7 @@ public static class LightweaveRoot {
                     && (!animating || cached.FrameCount == frame)) {
                     root = cached.Root;
                     if (DiagnosticsEnabled) {
-                        Cryptiklemur.RimObs.Api.Obs.Metrics.Add(LightweaveTelemetry.RenderBuildHits, 1L);
+                        LightweaveTelemetry.BuildHit();
                     }
                 }
                 else {
@@ -104,11 +104,11 @@ public static class LightweaveRoot {
                         Root = root,
                     };
                     if (DiagnosticsEnabled) {
-                        Cryptiklemur.RimObs.Api.Obs.Metrics.Add(LightweaveTelemetry.RenderBuildMisses, 1L, "reason", missReason);
+                        LightweaveTelemetry.BuildMiss(missReason);
                     }
                 }
                 if (DiagnosticsEnabled) {
-                    Cryptiklemur.RimObs.Api.Obs.Metrics.Observe(LightweaveTelemetry.RenderBuildTicks, System.Diagnostics.Stopwatch.GetTimestamp() - buildStart);
+                    LightweaveTelemetry.ObserveBuild(System.Diagnostics.Stopwatch.GetTimestamp() - buildStart);
                 }
                 root.MeasuredRect = inRect;
                 root.ContentRect = inRect;
@@ -118,7 +118,7 @@ public static class LightweaveRoot {
                     long paintStart = DiagnosticsEnabled ? System.Diagnostics.Stopwatch.GetTimestamp() : 0L;
                     Paint(root);
                     if (DiagnosticsEnabled) {
-                        Cryptiklemur.RimObs.Api.Obs.Metrics.Observe(LightweaveTelemetry.RenderPaintTicks, System.Diagnostics.Stopwatch.GetTimestamp() - paintStart);
+                        LightweaveTelemetry.ObservePaint(System.Diagnostics.Stopwatch.GetTimestamp() - paintStart);
                     }
                     afterContent?.Invoke();
                     ctx.FlushHotkeys();
@@ -146,7 +146,7 @@ public static class LightweaveRoot {
             LightweaveScrollView.ClearWheel();
             RenderContext.Clear();
             if (DiagnosticsEnabled) {
-                Cryptiklemur.RimObs.Api.Obs.Metrics.Observe(LightweaveTelemetry.RenderTotalTicks, System.Diagnostics.Stopwatch.GetTimestamp() - renderStart);
+                LightweaveTelemetry.ObserveTotal(System.Diagnostics.Stopwatch.GetTimestamp() - renderStart);
             }
         }
     }

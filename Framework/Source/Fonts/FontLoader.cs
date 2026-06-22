@@ -1,6 +1,5 @@
 using System;
 using Cosmere.Lightweave.Runtime;
-using Cryptiklemur.RimObs.Api;
 using UnityEngine;
 using Verse;
 
@@ -52,12 +51,7 @@ public static class FontLoader {
                 LightweaveLog.Warning($"font {entry.assetName}: not in asset bundle and no dynamic OS match.");
             }
 
-            Obs.Metrics.Set(
-                LightweaveTelemetry.FontsLoaded,
-                font != null ? 1L : 0L,
-                ("name", entry.assetName),
-                ("source", source)
-            );
+            LightweaveTelemetry.FontsLoaded(font != null ? 1L : 0L, entry.assetName, source);
         }
 
         string osDetail = osFallbackNames.Count == 0 ? string.Empty : " [" + string.Join(", ", osFallbackNames) + "]";
