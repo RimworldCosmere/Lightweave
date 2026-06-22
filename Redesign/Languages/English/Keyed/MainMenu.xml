@@ -33,9 +33,9 @@
     <CL_MainMenu_Stat_SavedLine>saved {WHEN}</CL_MainMenu_Stat_SavedLine>
     <CL_MainMenu_Stat_Permadeath>permadeath</CL_MainMenu_Stat_Permadeath>
 
-    <CL_MainMenu_Welcome>Welcome to the Rim</CL_MainMenu_Welcome>
-    <CL_MainMenu_Welcome_Eyebrow>NEW HERE</CL_MainMenu_Welcome_Eyebrow>
-    <CL_MainMenu_Welcome_Hint>Start a new colony to begin. Saved games will appear here once you make some.</CL_MainMenu_Welcome_Hint>
+    <CL_MainMenu_Welcome>Begin your story</CL_MainMenu_Welcome>
+    <CL_MainMenu_Welcome_Eyebrow>First landing · No saved colonies</CL_MainMenu_Welcome_Eyebrow>
+    <CL_MainMenu_Welcome_Hint>Generate a world, pick a scenario, and drop your first colonists. The storyteller takes it from there.</CL_MainMenu_Welcome_Hint>
 
     <CL_MainMenu_Meta_Version>Version</CL_MainMenu_Meta_Version>
     <CL_MainMenu_Meta_Build>Build</CL_MainMenu_Meta_Build>

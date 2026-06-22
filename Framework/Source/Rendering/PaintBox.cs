@@ -54,6 +54,46 @@ public static class PaintBox {
         GUI.color = saved;
     }
 
+    private static Texture2D? diagonalHatchTex;
+
+    private static Texture2D DiagonalHatchTexture() {
+        if (diagonalHatchTex != null) {
+            return diagonalHatchTex;
+        }
+
+        const int size = 24;
+        const int band = 12;
+        Texture2D tex = new Texture2D(size, size, TextureFormat.ARGB32, false) {
+            wrapMode = TextureWrapMode.Repeat,
+            filterMode = FilterMode.Bilinear,
+        };
+        Color on = Color.white;
+        Color off = new Color(1f, 1f, 1f, 0f);
+        for (int y = 0; y < size; y++) {
+            for (int x = 0; x < size; x++) {
+                int d = (((x + y) % size) + size) % size;
+                tex.SetPixel(x, y, d < band ? on : off);
+            }
+        }
+
+        tex.Apply();
+        diagonalHatchTex = tex;
+        return tex;
+    }
+
+    public static void HatchDiagonal(Rect rect, Color color, float tilePx) {
+        if (rect.width <= 0f || rect.height <= 0f || tilePx <= 0f) {
+            return;
+        }
+
+        Texture2D tex = DiagonalHatchTexture();
+        Color saved = GUI.color;
+        GUI.color = color;
+        Rect texCoords = new Rect(0f, 0f, rect.width / tilePx, rect.height / tilePx);
+        GUI.DrawTextureWithTexCoords(rect, tex, texCoords);
+        GUI.color = saved;
+    }
+
     public static void FillSolid(Rect rect, Color color) {
         Widgets.DrawBoxSolid(RectSnap.Snap(rect), color);
     }

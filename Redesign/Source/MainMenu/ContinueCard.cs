@@ -34,7 +34,7 @@ public static class ContinueCard {
                 h.Add(BuildContinueButton(save), new Rem(15.5f).ToPixels());
             })),
             style: new Style {
-                Background = BackgroundSpec.Blur(ThemeSlot.Glass3),
+                Background = BackgroundSpec.Blur(ThemeSlot.Glass3, 6f),
                 Border = BorderSpec.All(new Rem(0.0625f), ThemeSlot.BorderSubtle),
                 Radius = RadiusSpec.All(RadiusScale.Lg),
             }
@@ -289,7 +289,7 @@ public static class ContinueCard {
 
             if (Event.current.type == EventType.Repaint) {
                 Font? font = LightweaveFonts.OpenSansBold ?? LightweaveFonts.OpenSansRegular;
-                Rem fontSizeRem = new Rem(1.25f);
+                Rem fontSizeRem = new Rem(0.9375f);
 
                 Style resolved = node.GetResolvedStyle();
                 float letterSpacing = resolved.LetterSpacing.HasValue
@@ -325,22 +325,174 @@ public static class ContinueCard {
 
     private static LightweaveNode BuildWelcome() {
         return Box.Create(
-            children: c => c.Add(Stack.Create(SpacingScale.Xs, s => {
-                s.Add(Eyebrow.Create("CL_MainMenu_Welcome_Eyebrow".Translate()));
-                s.Add(Display.Create("CL_MainMenu_Welcome".Translate(), style: new Style { TextAlign = TextAlign.Start }, level: 3));
-                s.Add(Text.Create(
-                    "CL_MainMenu_Welcome_Hint".Translate(),
-                    wrap: true,
-                    style: new Style { TextColor = ThemeSlot.TextSecondary }
-                ));
+            children: c => c.Add(HStack.Create(SpacingScale.None, h => {
+                h.AddFlex(BuildWelcomeContent());
+                h.Add(BuildNewColonyButton(), new Rem(15.5f).ToPixels());
             })),
             style: new Style {
-                Padding = EdgeInsets.All(SpacingScale.Md),
-                Background = BackgroundSpec.Of(ThemeSlot.SurfaceRaised),
+                Background = BackgroundSpec.Blur(ThemeSlot.Glass3, 6f),
                 Border = BorderSpec.All(new Rem(0.0625f), ThemeSlot.BorderSubtle),
-                Radius = RadiusSpec.All(RadiusScale.Md),
+                Radius = RadiusSpec.All(RadiusScale.Lg),
             }
         );
+    }
+
+    private static LightweaveNode BuildWelcomeContent() {
+        return Box.Create(
+            children: c => c.Add(HStack.Create(SpacingScale.Md, h => {
+                h.Add(BuildWelcomeThumb(), new Rem(6.6f).ToPixels());
+                h.AddFlex(Stack.Create(SpacingScale.None, s => {
+                    s.Add(BuildWelcomeEyebrow());
+                    s.Add(Display.Create(
+                        "CL_MainMenu_Welcome".Translate(),
+                        style: new Style { TextAlign = TextAlign.Start },
+                        level: 3
+                    ));
+                    s.Add(Spacer.Fixed(new Rem(0.5f)));
+                    s.Add(Text.Create(
+                        "CL_MainMenu_Welcome_Hint".Translate(),
+                        wrap: true,
+                        style: new Style {
+                            TextColor = ThemeSlot.TextSecondary,
+                            FontFamily = FontRole.Mono,
+                            FontSize = new Rem(0.78f),
+                        }
+                    ));
+                }));
+            })),
+            style: new Style {
+                Padding = new EdgeInsets(Top: new Rem(0.75f), Bottom: new Rem(0.75f), Left: new Rem(1.5f), Right: new Rem(1.5f)),
+            }
+        );
+    }
+
+    private static LightweaveNode BuildWelcomeThumb() {
+        LightweaveNode node = NodeBuilder.New("ContinueCard:WelcomeThumb");
+        node.Style = new Style { Width = Length.Stretch, Height = Length.Stretch };
+        node.MeasureWidth = () => new Rem(6.6f).ToPixels();
+        node.Paint = (rect, _) => {
+            Theme.Theme theme = RenderContext.Current.Theme;
+            float margin = new Rem(0.45f).ToPixels();
+            float side = Mathf.Min(rect.width, rect.height) - margin * 2f;
+            if (side <= 0f) {
+                return;
+            }
+
+            float sx = rect.x + (rect.width - side) * 0.5f;
+            float sy = rect.y + (rect.height - side) * 0.5f;
+            Rect square = new Rect(sx, sy, side, side);
+
+            PaintBox.Fill(square, new Color(0.063f, 0.051f, 0.039f, 0.72f));
+            PaintBox.HatchDiagonal(square, new Color(0.769f, 0.667f, 0.510f, 0.05f), new Rem(0.75f).ToPixels());
+            DrawDashedBorder(square, new Color(0.769f, 0.667f, 0.510f, 0.32f), 1f, 3f, 3f);
+            if (Event.current.type == EventType.Repaint) {
+                Rect glyphRect = new Rect(square.x, square.y + square.height * 0.04f, square.width, square.height);
+                TextDraw.Draw(
+                    glyphRect,
+                    "✦",
+                    FontRole.Display,
+                    new Rem(1.875f),
+                    TextAnchor.MiddleCenter,
+                    theme.GetColor(ThemeSlot.SurfaceAccent)
+                );
+            }
+        };
+        return node;
+    }
+
+    private static void DrawDashedBorder(Rect rect, Color color, float thickness, float dash, float gap) {
+        float step = dash + gap;
+        for (float x = rect.x; x < rect.xMax; x += step) {
+            float w = Mathf.Min(dash, rect.xMax - x);
+            PaintBox.Fill(new Rect(x, rect.y, w, thickness), color);
+            PaintBox.Fill(new Rect(x, rect.yMax - thickness, w, thickness), color);
+        }
+
+        for (float y = rect.y; y < rect.yMax; y += step) {
+            float h = Mathf.Min(dash, rect.yMax - y);
+            PaintBox.Fill(new Rect(rect.x, y, thickness, h), color);
+            PaintBox.Fill(new Rect(rect.xMax - thickness, y, thickness, h), color);
+        }
+    }
+
+    private static LightweaveNode BuildWelcomeEyebrow() {
+        LightweaveNode node = NodeBuilder.New("ContinueCard:WelcomeEyebrow");
+        node.PreferredHeight = new Rem(0.95f).ToPixels();
+        node.Paint = (rect, _) => {
+            Rem fontSize = new Rem(0.6875f);
+            int px = Mathf.RoundToInt(fontSize.ToFontPx());
+            string upper = ((string)"CL_MainMenu_Welcome_Eyebrow".Translate()).ToUpperInvariant();
+            float tracking = Mathf.Max(0, Mathf.RoundToInt(px * 0.18f));
+            TextDraw.DrawTracked(rect, upper, FontRole.Mono, fontSize, TextAnchor.LowerLeft, ThemeSlot.SurfaceAccent, tracking);
+        };
+        return node;
+    }
+
+    private static LightweaveNode BuildNewColonyButton() {
+        LightweaveNode node = NodeBuilder.New("ContinueCard:NewColonyButton");
+        node.Style = new Style {
+            Width = Length.Stretch,
+            Height = Length.Stretch,
+            LetterSpacing = Tracking.Widest,
+        };
+        node.Paint = (rect, _) => {
+            Theme.Theme theme = RenderContext.Current.Theme;
+            InteractionState state = InteractionState.Resolve(rect, null, false);
+
+            Color top = theme.GetColor(ThemeSlot.SurfaceAccent);
+            Color.RGBToHSV(top, out float hue, out float sat, out float val);
+            Color bottom = Color.HSVToRGB(hue, sat, val * 0.78f);
+            bottom.a = top.a;
+
+            BackgroundSpec.Gradient bg = new BackgroundSpec.Gradient(GradientTextureCache.Vertical(top, bottom));
+            RadiusSpec radius = RadiusSpec.Right(RadiusScale.Lg);
+            PaintBox.Draw(rect, bg, null, radius);
+
+            float overlay = VariantPalette.OverlayAlpha(state);
+            if (overlay > 0f) {
+                Color overlayColor = InteractionFeedback.OverlayColor(theme, state, overlay);
+                PaintBox.Draw(rect, BackgroundSpec.Of(overlayColor), null, radius);
+            }
+
+            Color inset = theme.GetColor(ThemeSlot.BorderDefault);
+            inset.a = 0.4f;
+            Rect leftStroke = new Rect(rect.x, rect.y, 1f, rect.height);
+            PaintBox.Fill(leftStroke, inset);
+
+            if (Event.current.type == EventType.Repaint) {
+                Font? font = LightweaveFonts.OpenSansBold ?? LightweaveFonts.OpenSansRegular;
+                Rem fontSizeRem = new Rem(0.9375f);
+
+                Style resolved = node.GetResolvedStyle();
+                float letterSpacing = resolved.LetterSpacing.HasValue
+                    ? Mathf.Max(0, Mathf.RoundToInt(resolved.LetterSpacing.Value.ToPixels(fontSizeRem.ToFontPx())))
+                    : 0f;
+
+                Color inkColor = theme.GetColor(ThemeSlot.TextOnAccent);
+                string text = "✦  " + ((string)"CL_MainMenu_NewColony".Translate()).ToUpperInvariant();
+
+                TextDraw.DrawTracked(
+                    rect,
+                    text,
+                    FontRole.BodyBold,
+                    fontSizeRem,
+                    TextAnchor.MiddleCenter,
+                    inkColor,
+                    letterSpacing,
+                    FontStyle.Normal,
+                    font
+                );
+            }
+
+            InteractionFeedback.Apply(rect, true, true);
+
+            Event e = Event.current;
+            if (e.type == EventType.MouseUp && e.button == 0 && rect.Contains(e.mousePosition)) {
+                MainMenuActions.NewColony();
+                e.Use();
+            }
+        };
+        return node;
     }
 
 

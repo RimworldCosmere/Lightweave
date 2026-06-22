@@ -92,7 +92,7 @@ public static class DockTile {
         }
 
         string upper = (label ?? string.Empty).ToUpperInvariant();
-        Rem fontSize = new Rem(0.875f);
+        Rem fontSize = new Rem(0.8f);
         int pixelSize = Mathf.RoundToInt(fontSize.ToFontPx());
         float labelH = LabelLineHeight.ToPixels();
         float hintH = HintLineHeight.ToPixels();

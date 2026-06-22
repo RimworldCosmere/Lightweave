@@ -308,7 +308,7 @@ public static class Button {
                 // No-icon label: MiddleCenter mis-centers vertically in a tall rect (renders ~16px high),
                 // while the iconed branches use MiddleLeft on a tightly-sized, horizontally-centered
                 // labelRect and sit correctly. Mirror that path so a plain label shares the same baseline.
-                float labelStart = Mathf.Max(rect.x + padXPx, rect.x + (rect.width - labelWidth) * 0.5f);
+                float labelStart = rect.x + (rect.width - labelWidth) * 0.5f;
                 labelRect = new Rect(labelStart, labelRect.y, labelWidth, labelRect.height);
                 gstyle.alignment = TextAnchor.MiddleLeft;
             }
