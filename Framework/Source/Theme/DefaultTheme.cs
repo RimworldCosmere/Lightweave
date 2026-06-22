@@ -50,7 +50,7 @@ public static class DefaultTheme {
             [ThemeSlot.DividerFaint] = new Color(0.769f, 0.667f, 0.510f, 0.16f),
             [ThemeSlot.Glass1] = new Color(0.059f, 0.047f, 0.031f, 0.55f),
             [ThemeSlot.Glass2] = new Color(0.059f, 0.047f, 0.031f, 0.78f),
-            [ThemeSlot.Glass3] = new Color(0.059f, 0.047f, 0.031f, 0.92f),
+            [ThemeSlot.Glass3] = new Color(0.059f, 0.047f, 0.031f, 0.60f),
             [ThemeSlot.WindowGlass] = new Color(0.059f, 0.047f, 0.031f, 0.92f),
             [ThemeSlot.DlcRoyalty] = new Color(0.831f, 0.659f, 0.341f),
             [ThemeSlot.DlcIdeology] = new Color(0.788f, 0.478f, 0.357f),
