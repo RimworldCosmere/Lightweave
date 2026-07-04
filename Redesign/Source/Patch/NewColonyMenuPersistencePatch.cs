@@ -1,5 +1,5 @@
+using Concord;
 using Cosmere.Lightweave.Redesign.NewColony;
-using HarmonyLib;
 using Verse;
 
 namespace Cosmere.Lightweave.Redesign.Patch;
@@ -13,14 +13,15 @@ namespace Cosmere.Lightweave.Redesign.Patch;
 // main-menu draw, while wantedMode stays None so the WorldCamera never auto-renders the
 // planet full-screen behind the window — the globe lives only in the preview's RenderTexture.
 // On close, NewColonyLauncher clears OwnsWorld and the normal menu loop resumes.
-[HarmonyPatch(typeof(UIRoot_Entry), "ShouldDoMainMenu", MethodType.Getter)]
-public static class NewColonyMenuPersistencePatch {
-    public static bool Prefix(ref bool __result) {
+[Patch]
+public abstract class NewColonyMenuPersistencePatch : UIRoot_Entry {
+    [Inject(At.Head, "get_ShouldDoMainMenu")]
+    public void Prefix(ControlHandle<bool> ch) {
         if (!NewColonyLauncher.OwnsWorld) {
-            return true;
+            return;
         }
 
-        __result = false;
-        return false;
+        ch.ReturnValue = false;
+        ch.Cancel();
     }
 }

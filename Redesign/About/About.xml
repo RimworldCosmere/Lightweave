@@ -12,6 +12,10 @@
     <packageId>Cosmere.Lightweave.Redesign</packageId>
     <modDependencies>
         <li>
+            <packageId>concordlib.concord</packageId>
+            <displayName>Concord</displayName>
+        </li>
+        <li>
             <packageId>Cosmere.Lightweave</packageId>
             <displayName>Lightweave</displayName>
             <downloadUrl>https://github.com/RimworldCosmere/Lightweave/releases/latest</downloadUrl>
@@ -26,6 +30,7 @@
         <li>Cosmere.Lightweave</li>
     </forceLoadAfter>
     <loadAfter>
+        <li>concordlib.concord</li>
         <li>cryptiklemur.rimlogging</li>
     </loadAfter>
 </ModMetaData>

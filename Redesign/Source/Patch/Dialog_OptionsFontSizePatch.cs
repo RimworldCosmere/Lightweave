@@ -1,19 +1,20 @@
+using Concord;
 using Cosmere.Lightweave.Redesign.Settings;
 using System.Collections.Generic;
 using Cosmere.Lightweave.Fonts;
 using Cosmere.Lightweave.Settings;
-using HarmonyLib;
 using RimWorld;
 using UnityEngine;
 using Verse;
 
 namespace Cosmere.Lightweave.Redesign.Patch;
 
-[HarmonyPatch(typeof(Dialog_Options), "DoUIOptions")]
-public static class Dialog_OptionsFontSizePatch {
+[Patch]
+public abstract class Dialog_OptionsFontSizePatch : Dialog_Options {
     private static readonly int[] Presets = { 85, 100, 115, 125 };
 
-    public static void Prefix(Listing_Standard listing) {
+    [Inject(At.Head, "DoUIOptions")]
+    public void Prefix(Listing_Standard listing) {
         LightweaveRedesignSettings? redesign = LightweaveRedesignMod.Settings;
         if (redesign != null && redesign.RedesignMainMenu) {
             return;
@@ -49,6 +50,3 @@ public static class Dialog_OptionsFontSizePatch {
         Find.WindowStack.Add(new FloatMenu(options));
     }
 }
-
-
-

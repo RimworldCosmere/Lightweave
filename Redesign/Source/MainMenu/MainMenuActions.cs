@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using Cosmere.Lightweave.Redesign.NewColony;
 using Cosmere.Lightweave.Runtime;
 using RimWorld;
@@ -10,6 +11,9 @@ using Verse.Sound;
 namespace Cosmere.Lightweave.Redesign.MainMenu;
 
 public static class MainMenuActions {
+    private static readonly MethodInfo? InitLearnToPlayMethod =
+        typeof(RimWorld.MainMenuDrawer).GetMethod("InitLearnToPlay", BindingFlags.NonPublic | BindingFlags.Static);
+
     public static void NewColony() {
         Find.WindowStack.Add(new NewColonyWindow());
     }
@@ -19,7 +23,7 @@ public static class MainMenuActions {
     }
 
     public static void Tutorial() {
-        InvokeStaticIfFound("Verse.MainMenuDrawer", "InitLearnToPlay");
+        InitLearnToPlayMethod?.Invoke(null, null);
     }
 
     public static void OpenOptions() {
@@ -65,12 +69,5 @@ public static class MainMenuActions {
         }
     }
 
-    private static void InvokeStaticIfFound(string typeName, string methodName) {
-        Type? t = GenTypes.GetTypeInAnyAssembly(typeName);
-        if (t == null) {
-            return;
-        }
-        System.Reflection.MethodInfo? m = HarmonyLib.AccessTools.Method(t, methodName);
-        m?.Invoke(null, null);
-    }
+
 }

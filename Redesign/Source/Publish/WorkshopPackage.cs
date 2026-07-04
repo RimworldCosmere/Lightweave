@@ -1,7 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using HarmonyLib;
 using Steamworks;
 using Verse;
 using Verse.Steam;
@@ -12,13 +12,14 @@ namespace Cosmere.Lightweave.Redesign.Publish;
 /// A <see cref="WorkshopUploadable"/> that uploads only the included subset of a mod's files,
 /// applying the sidecar's Title/Preview/Tags overrides. Mirrors PublisherPlus' mechanism: stage
 /// the included files into a temp dir, point Steam at it, and drive vanilla
-/// <c>Verse.Steam.Workshop.Upload</c> by reflection. The real <see cref="ModMetaData"/> is the
+/// <c>Verse.Steam.Workshop.Upload</c> directly. The real <see cref="ModMetaData"/> is the
 /// <c>PublishedFileId</c> owner, so <see cref="SetPublishedFileId"/> writes back to the mod root,
 /// never the temp copy.
 /// </summary>
 public sealed class WorkshopPackage : WorkshopUploadable {
+
     private static readonly MethodInfo? UploadMethod =
-        AccessTools.Method(typeof(Workshop), "Upload", [typeof(WorkshopUploadable)]);
+        typeof(Verse.Steam.Workshop).GetMethod("Upload", BindingFlags.NonPublic | BindingFlags.Static, null, new[] { typeof(WorkshopUploadable) }, null);
 
     private readonly ModMetaData mod;
     private readonly PublishSidecar sidecar;
@@ -30,7 +31,7 @@ public sealed class WorkshopPackage : WorkshopUploadable {
         this.sidecar = sidecar;
     }
 
-    /// <summary>True when the upload entry point could be reflected; false disables publishing.</summary>
+    /// <summary>True when the upload mechanism is available (via reflection on vanilla Workshop.Upload).</summary>
     public static bool MechanismAvailable => UploadMethod != null;
 
     public List<string> ResolveIncludedFiles() {
@@ -107,6 +108,6 @@ public sealed class WorkshopPackage : WorkshopUploadable {
 
     /// <summary>Invokes vanilla <c>Workshop.Upload</c> for this package via reflection.</summary>
     public void Submit() {
-        UploadMethod!.Invoke(null, [this]);
+        UploadMethod?.Invoke(null, new object[] { this });
     }
 }

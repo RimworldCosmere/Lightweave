@@ -1,42 +1,45 @@
+using Concord;
 using Cosmere.Lightweave.Redesign.Settings;
 using Cosmere.Lightweave.Redesign.ModsConfig;
-using Cosmere.Lightweave.Settings;
-using HarmonyLib;
 using RimWorld;
 using Verse;
 
 namespace Cosmere.Lightweave.Redesign.Patch;
 
-[HarmonyPatch(typeof(Page_ModsConfig), nameof(Page_ModsConfig.OnCloseRequest))]
-public static class Page_ModsConfigCloseRequestPatch {
-    public static bool Prefix(Page_ModsConfig __instance, ref bool __result) {
+[Patch]
+public abstract class Page_ModsConfigCloseRequestPatch : Page_ModsConfig {
+    [Inject(At.Head, nameof(OnCloseRequest))]
+    public void Prefix(ControlHandle<bool> ch) {
         LightweaveRedesignSettings? settings = LightweaveRedesignMod.Settings;
         if (settings == null || !settings.RedesignMainMenu) {
-            return true;
+            return;
         }
 
-        if (ModsConfigState.GetSaveChanges(__instance) || ModsConfigState.GetDiscardChanges(__instance)) {
-            __result = true;
-            return false;
+        Page_ModsConfig self = this;
+        if (ModsConfigState.GetSaveChanges(self) || ModsConfigState.GetDiscardChanges(self)) {
+            ch.ReturnValue = true;
+            ch.Cancel();
+            return;
         }
 
-        if (!ModsConfigState.HasUnsavedChanges(__instance)) {
-            ModsConfigState.SetDiscardChanges(__instance, true);
-            __result = true;
-            return false;
+        if (!ModsConfigState.HasUnsavedChanges(self)) {
+            ModsConfigState.SetDiscardChanges(self, true);
+            ch.ReturnValue = true;
+            ch.Cancel();
+            return;
         }
 
         Find.WindowStack.Add(new Dialog_ModsConfigConfirmClose(
             onSave: () => {
-                ModsConfigState.SetSaveChanges(__instance, true);
-                __instance.Close();
+                ModsConfigState.SetSaveChanges(self, true);
+                self.Close();
             },
             onDiscard: () => {
-                ModsConfigState.SetDiscardChanges(__instance, true);
-                __instance.Close();
+                ModsConfigState.SetDiscardChanges(self, true);
+                self.Close();
             }
         ));
-        __result = false;
-        return false;
+        ch.ReturnValue = false;
+        ch.Cancel();
     }
 }

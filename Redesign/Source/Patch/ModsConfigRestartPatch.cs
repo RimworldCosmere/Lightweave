@@ -1,19 +1,19 @@
+using Concord;
 using Cosmere.Lightweave.Redesign.Settings;
 using Cosmere.Lightweave.Redesign.ModsConfig;
-using Cosmere.Lightweave.Settings;
-using HarmonyLib;
 using Verse;
 
 namespace Cosmere.Lightweave.Redesign.Patch;
 
-[HarmonyPatch(typeof(Verse.ModsConfig), nameof(Verse.ModsConfig.RestartFromChangedMods))]
+[Patch(typeof(Verse.ModsConfig))]
 public static class ModsConfigRestartPatch {
-    public static bool Prefix() {
+    [Inject(At.Head, nameof(Verse.ModsConfig.RestartFromChangedMods))]
+    public static Control Prefix() {
         LightweaveRedesignSettings? settings = LightweaveRedesignMod.Settings;
         if (settings == null || !settings.RedesignMainMenu) {
-            return true;
+            return Control.Continue;
         }
         Find.WindowStack.Add(new Dialog_ModsConfigRestart());
-        return false;
+        return Control.Cancel;
     }
 }

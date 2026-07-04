@@ -12,12 +12,17 @@
     <packageId>Cosmere.Lightweave</packageId>
     <modDependencies>
         <li>
+            <packageId>concordlib.concord</packageId>
+            <displayName>Concord</displayName>
+        </li>
+        <li>
             <packageId>cryptiklemur.rimlogging</packageId>
             <displayName>RimLogging</displayName>
             <downloadUrl>https://github.com/cryptiklemur/rimworld-logging-framework</downloadUrl>
         </li>
     </modDependencies>
     <loadAfter>
+        <li>concordlib.concord</li>
         <li>cryptiklemur.rimlogging</li>
         <li>CryptikLemur.RimObs</li>
     </loadAfter>

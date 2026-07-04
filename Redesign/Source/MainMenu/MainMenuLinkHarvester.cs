@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using Cosmere.Lightweave.Patch;
-using HarmonyLib;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -14,9 +12,6 @@ public static class MainMenuLinkHarvester {
     internal static List<ListableOption>? Captured;
 
     private static List<HarvestedLink>? cache;
-
-    private static readonly FieldInfo? WebLinkImage = AccessTools.Field(typeof(ListableOption_WebLink), "image");
-    private static readonly FieldInfo? WebLinkUrl = AccessTools.Field(typeof(ListableOption_WebLink), "url");
 
     public static IReadOnlyList<HarvestedLink> GetLinks() {
         if (cache != null) {
@@ -74,12 +69,12 @@ public static class MainMenuLinkHarvester {
         Texture2D? icon = null;
         Action? onClick = opt.action;
 
-        if (opt is ListableOption_WebLink) {
-            if (WebLinkImage?.GetValue(opt) is Texture2D tex) {
+        if (opt is ListableOption_WebLink webLink) {
+            if (webLink.image is Texture2D tex) {
                 icon = tex;
             }
 
-            if (onClick == null && WebLinkUrl?.GetValue(opt) is string url && !string.IsNullOrEmpty(url)) {
+            if (onClick == null && webLink.url is string url && !string.IsNullOrEmpty(url)) {
                 onClick = () => Application.OpenURL(url);
             }
         }

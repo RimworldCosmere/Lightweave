@@ -8,7 +8,7 @@ namespace Cosmere.Lightweave.Patch;
 [Patch(typeof(OptionListingUtility))]
 public static class PlaygroundMenuLinkPatch {
     [Inject(At.Head, nameof(OptionListingUtility.DrawOptionListing))]
-    public static void Prefix(ControlHandle<float> ch, List<ListableOption> optList) {
+    public static void Prefix(List<ListableOption> optList) {
         if (!Prefs.DevMode || optList == null) {
             return;
         }

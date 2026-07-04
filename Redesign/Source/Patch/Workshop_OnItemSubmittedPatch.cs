@@ -1,6 +1,6 @@
 using System;
+using Concord;
 using Cosmere.Lightweave.Redesign.Publish;
-using HarmonyLib;
 using Steamworks;
 using Verse.Steam;
 
@@ -11,9 +11,10 @@ namespace Cosmere.Lightweave.Redesign.Patch;
 /// records the outcome on <see cref="PublishSession"/> so the publish dialog can advance to its
 /// Result step. No-ops for uploads we did not initiate (no active session).
 /// </summary>
-[HarmonyPatch(typeof(Workshop), "OnItemSubmitted")]
+[Patch(typeof(Workshop))]
 public static class Workshop_OnItemSubmittedPatch {
-    public static void Postfix(SubmitItemUpdateResult_t result, bool IOFailure) {
+    [Inject(At.Tail, "OnItemSubmitted")]
+    public static void Postfix(ControlHandle ch, SubmitItemUpdateResult_t result, bool IOFailure) {
         string? packageId = PublishSession.ActivePackageId;
         if (packageId == null) {
             return;

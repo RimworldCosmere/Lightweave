@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using HarmonyLib;
+using System.Reflection;
 using RimWorld;
 using RimWorld.Planet;
 using UnityEngine;
@@ -11,6 +11,8 @@ using Verse.Profile;
 namespace Cosmere.Lightweave.Redesign.NewColony;
 
 public static class NewColonyLauncher {
+    private static readonly FieldInfo? AnomalyPlaystyleDefField =
+        typeof(Difficulty).GetField("anomalyPlaystyleDef", BindingFlags.NonPublic | BindingFlags.Instance);
     private static int provisionSig;
     private static int worldGenToken;
     private static int worldGenSig;
@@ -415,7 +417,7 @@ public static class NewColonyLauncher {
 
         AnomalyPlaystyleDef? playstyle = DefDatabase<AnomalyPlaystyleDef>.GetNamedSilentFail(anomalyParams.PlaystyleDefName);
         if (playstyle != null) {
-            Traverse.Create(difficulty).Field("anomalyPlaystyleDef").SetValue(playstyle);
+            AnomalyPlaystyleDefField?.SetValue(difficulty, playstyle);
         }
         return difficulty;
     }

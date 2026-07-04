@@ -1,15 +1,15 @@
 using System;
+using Concord;
 using Cosmere.Lightweave.Redesign.LoadColony;
 using Cosmere.Lightweave.Runtime;
-using HarmonyLib;
-using RimWorld;
 using Verse;
 
 namespace Cosmere.Lightweave.Redesign.Patch;
 
-[HarmonyPatch(typeof(GameDataSaveLoader), nameof(GameDataSaveLoader.SaveGame))]
+[Patch(typeof(GameDataSaveLoader))]
 public static class SaveGameMetadataPatch {
-    public static void Postfix(string fileName) {
+    [Inject(At.Tail, nameof(GameDataSaveLoader.SaveGame))]
+    public static void Postfix(ControlHandle ch, string fileName) {
         try {
             string saveFilePath = GenFilePaths.FilePathForSavedGame(fileName);
             SaveSidecarData data = SaveSidecar.CaptureFromCurrentGame();

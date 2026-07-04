@@ -39,7 +39,8 @@ public static class MetadataTable {
             new KeyValueRow("CL_MainMenu_Meta_Version".Translate(), ResolveVersion()),
             new KeyValueRow("CL_MainMenu_Meta_Build".Translate(), ResolveBuildStamp()),
             new KeyValueRow("CL_MainMenu_Meta_Channel".Translate(), ResolveChannel()),
-            new KeyValueRow("CL_MainMenu_Meta_Harmony".Translate(), ResolveHarmonyVersion()),
+            new KeyValueRow("CL_MainMenu_Meta_Concord".Translate(), ResolveAssemblyVersion("Concord")),
+            new KeyValueRow("CL_MainMenu_Meta_Harmony".Translate(), ResolveAssemblyVersion("0Harmony")),
             new KeyValueRow("CL_MainMenu_Meta_Mods".Translate(), CountModsLine()),
         ];
     }
@@ -74,12 +75,12 @@ public static class MetadataTable {
             : "CL_MainMenu_Meta_ChannelStable".Translate();
     }
 
-    private static string ResolveHarmonyVersion() {
+    private static string ResolveAssemblyVersion(string assemblyName) {
         try {
-            Assembly? harmony = AppDomain.CurrentDomain.GetAssemblies()
-                .FirstOrDefault(a => a.GetName().Name == "0Harmony");
-            if (harmony != null) {
-                Version v = harmony.GetName().Version;
+            Assembly? assembly = AppDomain.CurrentDomain.GetAssemblies()
+                .FirstOrDefault(a => a.GetName().Name == assemblyName);
+            if (assembly != null) {
+                Version v = assembly.GetName().Version;
                 return "v" + v;
             }
         } catch { }

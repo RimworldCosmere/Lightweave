@@ -43,6 +43,7 @@
     <CL_MainMenu_Meta_Channel>Channel</CL_MainMenu_Meta_Channel>
     <CL_MainMenu_Meta_ChannelDev>latest · dev</CL_MainMenu_Meta_ChannelDev>
     <CL_MainMenu_Meta_ChannelStable>latest · stable</CL_MainMenu_Meta_ChannelStable>
+    <CL_MainMenu_Meta_Concord>Concord</CL_MainMenu_Meta_Concord>
     <CL_MainMenu_Meta_Harmony>Harmony</CL_MainMenu_Meta_Harmony>
     <CL_MainMenu_Meta_Layout>Scale</CL_MainMenu_Meta_Layout>
     <CL_MainMenu_Meta_Mods>Mods</CL_MainMenu_Meta_Mods>

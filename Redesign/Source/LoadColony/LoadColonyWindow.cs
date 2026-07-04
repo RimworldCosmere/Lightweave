@@ -1,17 +1,18 @@
 using System;
 using System.Reflection;
 using Cosmere.Lightweave.Runtime;
-using HarmonyLib;
 using RimWorld;
 using Verse;
 
 namespace Cosmere.Lightweave.Redesign.LoadColony;
 
 internal sealed class LoadColonyWindow : LightweaveWindow {
-    private static readonly FieldInfo? FilesField = AccessTools.Field(typeof(Dialog_FileList), "files");
-    private static readonly MethodInfo? ReloadFilesMethod = AccessTools.Method(typeof(Dialog_FileList), "ReloadFiles");
 
     private readonly Dialog_SaveFileList_Load inner;
+    private static readonly FieldInfo? FilesField =
+        typeof(Dialog_SaveFileList_Load).GetField("files", BindingFlags.NonPublic | BindingFlags.Instance);
+    private static readonly MethodInfo? ReloadFilesMethod =
+        typeof(Dialog_SaveFileList_Load).GetMethod("ReloadFiles", BindingFlags.NonPublic | BindingFlags.Instance);
 
     public LoadColonyWindow() : this(new Dialog_SaveFileList_Load()) { }
 
@@ -20,8 +21,7 @@ internal sealed class LoadColonyWindow : LightweaveWindow {
     }
 
     protected override LightweaveNode Body() {
-        List<SaveFileInfo> files = FilesField?.GetValue(inner) as List<SaveFileInfo>
-                                   ?? new List<SaveFileInfo>();
+        List<SaveFileInfo> files = (FilesField?.GetValue(inner) as List<SaveFileInfo>) ?? new List<SaveFileInfo>();
         return LoadColonyRoot.Build(
             files,
             () => Close(),

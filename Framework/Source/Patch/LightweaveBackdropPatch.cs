@@ -67,7 +67,7 @@ public static class LightweaveBackdropRegistry {
 [Patch]
 public abstract class WindowStackOnGUI_BackdropPatch : WindowStack {
     [Inject(At.Head, nameof(WindowStackOnGUI))]
-    public void Prefix(ControlHandle ch) {
+    public void Prefix() {
         if (Event.current == null || Event.current.type != EventType.Repaint) {
             return;
         }

@@ -122,14 +122,16 @@ public static class IdeoDraftMutations {
         ideo.style.RecalculateAvailableStyleItems();
     }
 
-    // Re-rolls just the non-structure memes via vanilla's foundation lever (protected, so reached by
-    // reflection), then re-runs the same compatibility recache as a manual meme edit.
+    // Re-rolls just the non-structure memes via vanilla's foundation lever, then re-runs the same
+    // compatibility recache as a manual meme edit.
     public static void RandomizeMemes(Ideo ideo) {
         List<MemeDef> oldMemes = new List<MemeDef>(ideo.memes);
-        System.Reflection.MethodInfo method = HarmonyLib.AccessTools.Method(typeof(IdeoFoundation), "RandomizeMemes");
-        method.Invoke(ideo.foundation, [Parms()]);
+        RandomizeMemesMethod?.Invoke(ideo.foundation, new object[] { Parms() });
         RecacheForMemeChange(ideo, oldMemes);
     }
+
+    private static readonly System.Reflection.MethodInfo? RandomizeMemesMethod =
+        typeof(IdeoFoundation).GetMethod("RandomizeMemes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
     public static void RandomizeStyles(Ideo ideo) {
         ideo.foundation.RandomizeStyles();

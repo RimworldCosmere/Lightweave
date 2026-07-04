@@ -1,5 +1,5 @@
+using Concord;
 using Cosmere.Lightweave.Settings;
-using HarmonyLib;
 using UnityEngine;
 using Verse;
 
@@ -16,8 +16,7 @@ public class LightweaveRedesignMod : Verse.Mod, ILightweaveSettings {
         instance = this;
         Settings = GetSettings<LightweaveRedesignSettings>();
         BootRedesignMainMenu = Settings.RedesignMainMenu;
-        Harmony harmony = new Harmony("cosmere.lightweave.redesign");
-        harmony.PatchAll(typeof(LightweaveRedesignMod).Assembly);
+        Patcher.Apply(typeof(LightweaveRedesignMod).Assembly);
     }
 
     public static void Save() {

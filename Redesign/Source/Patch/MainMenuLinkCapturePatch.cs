@@ -1,15 +1,16 @@
 using System.Collections.Generic;
+using Concord;
 using Cosmere.Lightweave.Redesign.MainMenu;
-using HarmonyLib;
 using Verse;
 
 namespace Cosmere.Lightweave.Redesign.Patch;
 
-[HarmonyPatch(typeof(OptionListingUtility), nameof(OptionListingUtility.DrawOptionListing))]
+[Patch(typeof(OptionListingUtility))]
 public static class MainMenuLinkCapturePatch {
-    public static bool Prefix(List<ListableOption> optList, ref float __result) {
+    [Inject(At.Head, nameof(OptionListingUtility.DrawOptionListing))]
+    public static void Prefix(ControlHandle<float> ch, List<ListableOption> optList) {
         if (!MainMenuLinkHarvester.Capturing) {
-            return true;
+            return;
         }
 
         if (optList != null) {
@@ -21,7 +22,7 @@ public static class MainMenuLinkCapturePatch {
             }
         }
 
-        __result = 0f;
-        return false;
+        ch.ReturnValue = 0f;
+        ch.Cancel();
     }
 }

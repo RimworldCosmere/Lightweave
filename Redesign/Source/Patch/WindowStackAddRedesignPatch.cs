@@ -1,60 +1,56 @@
+using System.Reflection;
+using Concord;
 using Cosmere.Lightweave.Redesign.Settings;
-using System;
 using Cosmere.Lightweave.Redesign.LoadColony;
 using Cosmere.Lightweave.Redesign.ModOptions;
 using Cosmere.Lightweave.Redesign.ModsConfig;
 using Cosmere.Lightweave.Redesign.Options;
 using Cosmere.Lightweave.Runtime;
 using Cosmere.Lightweave.Settings;
-using HarmonyLib;
 using RimWorld;
 using Verse;
 
 namespace Cosmere.Lightweave.Redesign.Patch;
 
-[HarmonyPatch(typeof(WindowStack), nameof(WindowStack.Add), [typeof(Window)])]
-public static class WindowStackAddRedesignPatch {
-    public static bool Prefix(WindowStack __instance, Window window) {
+[Patch]
+public abstract class WindowStackAddRedesignPatch : WindowStack {
+    private static readonly FieldInfo? ModField =
+        typeof(Dialog_ModSettings).GetField("mod", BindingFlags.NonPublic | BindingFlags.Instance);
+
+    [Inject(At.Head, nameof(Add), parameterTypes: [typeof(Window)])]
+    public Control Prefix(Window window) {
         LightweaveRedesignSettings? settings = LightweaveRedesignMod.Settings;
         if (settings == null || !settings.RedesignMainMenu) {
-            return true;
+            return Control.Continue;
         }
 
         if (window is LightweaveWindow) {
-            return true;
+            return Control.Continue;
         }
 
+        WindowStack self = this;
         switch (window) {
             case Dialog_SaveFileList_Load loadDialog:
-                __instance.Add(new LoadColonyWindow(loadDialog));
-                return false;
+                self.Add(new LoadColonyWindow(loadDialog));
+                return Control.Cancel;
 
             case Dialog_Options options:
-                __instance.Add(new OptionsWindow(options));
-                return false;
+                self.Add(new OptionsWindow(options));
+                return Control.Cancel;
 
             case Page_ModsConfig page when page.next == null && page.prev == null:
-                __instance.Add(new ModsConfigWindow(page));
-                return false;
+                self.Add(new ModsConfigWindow(page));
+                return Control.Cancel;
 
             case Dialog_ModSettings modSettings:
-                Mod? mod = ResolveDialogMod(modSettings);
+                Mod? mod = ModField?.GetValue(modSettings) as Mod;
                 if (mod is ILightweaveSettings) {
-                    __instance.Add(new LightweaveModSettingsWindow(mod));
-                    return false;
+                    self.Add(new LightweaveModSettingsWindow(mod));
+                    return Control.Cancel;
                 }
-                return true;
+                return Control.Continue;
         }
 
-        return true;
-    }
-
-    private static System.Reflection.FieldInfo? ModField = HarmonyLib.AccessTools.Field(typeof(Dialog_ModSettings), "mod");
-
-    private static Mod? ResolveDialogMod(Dialog_ModSettings dialog) {
-        if (ModField == null) {
-            return null;
-        }
-        return ModField.GetValue(dialog) as Mod;
+        return Control.Continue;
     }
 }
