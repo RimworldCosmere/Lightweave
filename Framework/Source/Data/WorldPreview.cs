@@ -25,7 +25,7 @@ public static class WorldPreview {
     private const float StartingAltitude = 550f * 1.1f * 1.1f;
     private const float MaxAltitude = 1100f;
     private const float ZoomStep = 0.1f;
-    private const float RollSpeed = 1.5f;
+    private const float RollSpeed = 0.5f;
 
     public static LightweaveNode Create(
         [DocParam("Fired when the hovered tile changes. The argument is the tile under the cursor.", TypeOverride = "Action<PlanetTile>?", DefaultOverride = "null")]
@@ -123,12 +123,14 @@ public static class WorldPreview {
                 return;
             }
 
-            if (current.type == EventType.ScrollWheel) {
+            // The wheel is captured and Use()d at the top of LightweaveRoot.Render, so current.type is
+            // already Used here - a live current.type == ScrollWheel check never fires. Pull the stashed
+            // delta instead; our Mouse.IsOver + IsTopmost gate above is the under-cursor guard.
+            if (LightweaveScrollView.TryConsumeWheel(out float wheelDeltaY)) {
                 altitude.Current = Mathf.Clamp(
-                    altitude.Current * (1f + current.delta.y * ZoomStep),
+                    altitude.Current * (1f + wheelDeltaY * ZoomStep),
                     WorldCameraDriver.MinAltitude,
                     MaxAltitude);
-                current.Use();
                 return;
             }
 

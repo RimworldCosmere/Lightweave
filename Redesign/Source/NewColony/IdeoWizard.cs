@@ -39,17 +39,21 @@ public static class IdeoWizard {
         StateHandle<IdeoSubPicker> sub,
         StateHandle<int> rev,
         StateHandle<SectionLock> locks,
-        StateHandle<IdeoEditorTab> tab
+        StateHandle<IdeoDetailSection> tab
     ) {
+        // The deity being edited by the Deity modal in the wizard's Customize step. Created above the
+        // modals so the step-3 deity pencil (in BuildDetail) and the modal body share it.
+        StateHandle<IdeoFoundation_Deity.Deity?> deityTarget = UseState<IdeoFoundation_Deity.Deity?>(null);
+
         // Picker steps (Structure, Starting meme) sit at 80rem (~1280px); the wider Customize editor
         // step at 82.5rem (~1320px, the mock's editor width).
         Rem wizardWidth = step.Value == StepCount - 1 ? new Rem(82.5f) : new Rem(80f);
         LightweaveNode wizard = Modal.Create(
             wizardOpen.Value,
-            () => BuildWizard(wizardOpen, step, sub, rev, locks, tab),
+            () => BuildWizard(wizardOpen, step, sub, rev, locks, tab, deityTarget),
             () => Close(wizardOpen, step, sub),
             width: wizardWidth,
-            height: new Rem(64f));
+            height: new Rem(72f));
 
         LightweaveNode structurePicker = Modal.Create(
             sub.Value == IdeoSubPicker.Structure,
@@ -79,12 +83,28 @@ public static class IdeoWizard {
             width: new Rem(48f),
             height: new Rem(34f));
 
+        LightweaveNode iconPicker = Modal.Create(
+            sub.Value == IdeoSubPicker.Icon,
+            () => IdeologyEditor.BuildIconPicker(sub, rev),
+            () => sub.Set(IdeoSubPicker.None),
+            width: new Rem(46f),
+            height: new Rem(38f));
+
+        LightweaveNode deityEditor = Modal.Create(
+            sub.Value == IdeoSubPicker.Deity,
+            () => IdeologyEditor.BuildDeityEditor(sub, rev, deityTarget),
+            () => sub.Set(IdeoSubPicker.None),
+            width: new Rem(36f),
+            height: new Rem(30f));
+
         LightweaveNode node = NodeBuilder.New("IdeoWizardOverlays", 0, nameof(IdeoWizard));
         node.Children.Add(wizard);
         node.Children.Add(structurePicker);
         node.Children.Add(memePicker);
         node.Children.Add(stylePicker);
         node.Children.Add(preceptPicker);
+        node.Children.Add(iconPicker);
+        node.Children.Add(deityEditor);
         node.MeasureWidth = () => 0f;
         node.Measure = _ => 0f;
         node.Paint = (rect, _) => {
@@ -93,6 +113,8 @@ public static class IdeoWizard {
             PaintOverlay(memePicker, rect);
             PaintOverlay(stylePicker, rect);
             PaintOverlay(preceptPicker, rect);
+            PaintOverlay(iconPicker, rect);
+            PaintOverlay(deityEditor, rect);
         };
         return node;
     }
@@ -118,7 +140,8 @@ public static class IdeoWizard {
         StateHandle<IdeoSubPicker> sub,
         StateHandle<int> rev,
         StateHandle<SectionLock> locks,
-        StateHandle<IdeoEditorTab> tab
+        StateHandle<IdeoDetailSection> tab,
+        StateHandle<IdeoFoundation_Deity.Deity?> deityTarget
     ) {
         int current = Mathf.Clamp(step.Value, 0, StepCount - 1);
 
@@ -128,7 +151,7 @@ public static class IdeoWizard {
         return Stack.Create(SpacingScale.None, root => {
             root.Add(BuildHeader(wizardOpen, step, sub, current));
             root.Add(Divider.Horizontal(style: hairline));
-            root.AddFlex(BuildBody(current, sub, rev, locks, tab));
+            root.AddFlex(BuildBody(current, sub, rev, locks, tab, deityTarget));
             root.Add(Divider.Horizontal(style: hairline));
             root.Add(BuildFooter(wizardOpen, step, sub, rev, locks, current));
         }, style: new Style {
@@ -196,13 +219,15 @@ public static class IdeoWizard {
     }
 
     private static LightweaveNode BuildStepIndicator(int current) {
-        return HStack.Create(SpacingScale.Xl, h => {
+        return HStack.Create(SpacingScale.None, h => {
             for (int i = 0; i < StepCount; i++) {
                 h.AddHug(StepGroup(i, current));
                 if (i < StepCount - 1) {
-                    // Fixed-width connector (mock .nc-wiz-step-sep is a rule between chips), NOT a
-                    // flex divider — a stretched divider read as a full-width strip in-game.
-                    h.Add(StepConnector(i < current), new Rem(3f).ToPixels());
+                    // Flex connectors on both gaps justify the three step groups across the full
+                    // width: structure hugs the left, customize hugs the right, and the middle group
+                    // lands centered because the two flex rules between them grow equally. The strip
+                    // gap is None so the flex connectors own all the horizontal spacing.
+                    h.AddFlex(StepConnector(i < current));
                 }
             }
         }, align: FlexAlign.Center, style: new Style { Width = Length.Stretch });
@@ -270,27 +295,33 @@ public static class IdeoWizard {
         // The Stack only honors a fixed item height when it is passed as the Add(node, heightPx) arg;
         // a style-only Height is treated as Hug and collapses to 0. So the spacer and rule heights are
         // passed explicitly. Offset spacer + 1px rule + flex tail places the rule on the circle midline.
+        // The rule sits inside an HStack with 2rem spacer boxes on each side so it does not butt against
+        // the adjacent step chips (Stack does not apply child Margin, hence the explicit pad boxes).
+        LightweaveNode ruleRow = HStack.Create(SpacingScale.None, h => {
+            h.Add(Box.Create(), new Rem(2f).ToPixels());
+            h.AddFlex(Box.Create(style: new Style {
+                Width = Length.Stretch,
+                Background = BackgroundSpec.Of(done ? ThemeSlot.SurfaceAccent : ThemeSlot.BorderFaint),
+            }));
+            h.Add(Box.Create(), new Rem(2f).ToPixels());
+        }, style: new Style { Width = Length.Stretch });
         return Stack.Create(SpacingScale.None, s => {
             s.Add(Box.Create(style: new Style { Width = Length.Stretch }), new Rem(StepConnectorOffset).ToPixels());
-            s.Add(
-                Box.Create(style: new Style {
-                    Width = Length.Stretch,
-                    Background = BackgroundSpec.Of(done ? ThemeSlot.SurfaceAccent : ThemeSlot.BorderFaint),
-                }),
-                new Rem(1f / 16f).ToPixels());
+            s.Add(ruleRow, new Rem(1f / 16f).ToPixels());
             s.AddFlex(Box.Create());
         }, style: new Style { Height = Length.Rem(1.875f) });
     }
 
-    private static LightweaveNode BuildBody(int current, StateHandle<IdeoSubPicker> sub, StateHandle<int> rev, StateHandle<SectionLock> locks, StateHandle<IdeoEditorTab> tab) {
+    private static LightweaveNode BuildBody(int current, StateHandle<IdeoSubPicker> sub, StateHandle<int> rev, StateHandle<SectionLock> locks, StateHandle<IdeoDetailSection> tab, StateHandle<IdeoFoundation_Deity.Deity?> deityTarget) {
         if (current == 0) {
             return BuildStructureStep(rev);
         }
         if (current == 1) {
             return BuildBeliefStep(rev);
         }
-        // BuildDetail owns its own internal well ScrollArea (scroll inversion); no outer wrap.
-        return IdeologyEditor.BuildDetail(sub, rev, locks, tab);
+        // BuildDetail owns its own outer body ScrollArea (#17): the whole identity/rows/narrative/
+        // rail+pane column scrolls as one unit, so the step host must not wrap it again.
+        return IdeologyEditor.BuildDetail(sub, rev, locks, tab, deityTarget);
     }
 
     private static LightweaveNode BuildStructureStep(StateHandle<int> rev) {

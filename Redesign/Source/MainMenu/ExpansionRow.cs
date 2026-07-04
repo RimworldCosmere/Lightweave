@@ -51,7 +51,7 @@ public static class ExpansionRow {
             })),
             style: new Style {
                 Padding = new EdgeInsets(SpacingScale.Xs, SpacingScale.Md, SpacingScale.Xs, SpacingScale.Md),
-                Background = BackgroundSpec.Blur(ThemeSlot.ExpansionBarSurface, 8f),
+                Background = BackgroundSpec.Blur(ThemeSlot.Glass3, 6f),
                 Border = BorderSpec.All(new Rem(0.0625f), ThemeSlot.AccentGlow),
                 Radius = RadiusSpec.All(RadiusScale.Pill),
             }

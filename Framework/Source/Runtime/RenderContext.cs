@@ -16,7 +16,7 @@ public sealed class RenderContext {
     private readonly Stack<int> pathHashStack = new Stack<int>();
     public Stack<object> ContextValues = new Stack<object>();
     public Stack<Direction> DirectionStack = new Stack<Direction>();
-    public Breakpoint Breakpoint = Breakpoint.Xs;
+    public Breakpoint Breakpoint = Breakpoint.P720;
     public int? FocusedNodeId;
     public readonly HookStore Hooks;
     public int? HoveredNodeId;

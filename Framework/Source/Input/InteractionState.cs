@@ -28,7 +28,7 @@ public readonly record struct InteractionState(bool Hovered, bool Pressed, bool 
             UnityEngine.Event evt = UnityEngine.Event.current;
             if (evt != null) {
                 Vector2 screenPos = GUIUtility.GUIToScreenPoint(evt.mousePosition);
-                if (HoverBlockRegistry.IsBlocked(screenPos)) {
+                if (HoverBlockRegistry.IsBlocked(ctx.RootId, screenPos)) {
                     hovered = false;
                 }
             }

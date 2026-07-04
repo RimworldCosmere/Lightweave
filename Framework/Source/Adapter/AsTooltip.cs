@@ -85,7 +85,7 @@ public static class AsTooltip {
         // overlay's own content paints at depth > 0, so its tooltips still fire.
         Event? currentEvent = Event.current;
         if (ctx.OverlayContentDepth == 0 && currentEvent != null
-            && HoverBlockRegistry.IsBlocked(GUIUtility.GUIToScreenPoint(currentEvent.mousePosition))) {
+            && HoverBlockRegistry.IsBlocked(ctx.RootId, GUIUtility.GUIToScreenPoint(currentEvent.mousePosition))) {
             return;
         }
 

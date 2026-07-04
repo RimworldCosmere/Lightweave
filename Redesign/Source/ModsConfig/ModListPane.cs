@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Cosmere.Lightweave.Input;
+using Cosmere.Lightweave.Icons;
 using Cosmere.Lightweave.Layout;
 using Cosmere.Lightweave.Navigation;
 using Cosmere.Lightweave.Rendering;
@@ -36,6 +37,12 @@ public static class ModListPane {
     private static readonly Rem ColAuthor = new Rem(13f);
     private static readonly Rem ColVersion = new Rem(5.625f);
     private static readonly Rem ColStatus = new Rem(5.625f);
+
+    // Author + textual status columns show only on 1440p-class displays and up.
+    // Below that (e.g. 1080p) the list runs compact: Author hidden, status icon-only.
+    private static bool IsCompact() {
+        return Breakpoints.Current < Breakpoint.P1440;
+    }
 
     public static LightweaveNode Create(
         List<ModMetaData> mods,
@@ -122,12 +129,15 @@ public static class ModListPane {
                 null
             );
 
-            ColumnRects cols = ComputeColumns(rect);
+            bool compact = IsCompact();
+            ColumnRects cols = ComputeColumns(rect, compact);
             Rem fontSize = new Rem(0.8f);
 
             TextDraw.Draw(cols.Order, "CL_ModsConfig_Col_Order".Translate(), FontRole.Mono, fontSize, TextAnchor.MiddleLeft, ThemeSlot.MetadataLabel);
             TextDraw.Draw(cols.Name, ((string)"CL_ModsConfig_Col_Name".Translate()).ToUpperInvariant(), FontRole.Mono, fontSize, TextAnchor.MiddleLeft, ThemeSlot.MetadataLabel);
-            TextDraw.Draw(cols.Author, ((string)"CL_ModsConfig_Col_Author".Translate()).ToUpperInvariant(), FontRole.Mono, fontSize, TextAnchor.MiddleLeft, ThemeSlot.MetadataLabel);
+            if (!compact) {
+                TextDraw.Draw(cols.Author, ((string)"CL_ModsConfig_Col_Author".Translate()).ToUpperInvariant(), FontRole.Mono, fontSize, TextAnchor.MiddleLeft, ThemeSlot.MetadataLabel);
+            }
             TextDraw.Draw(cols.Version, ((string)"CL_ModsConfig_Col_Version".Translate()).ToUpperInvariant(), FontRole.Mono, fontSize, TextAnchor.MiddleLeft, ThemeSlot.MetadataLabel);
             TextDraw.Draw(cols.Status, ((string)"CL_ModsConfig_Col_Status".Translate()).ToUpperInvariant(), FontRole.Mono, fontSize, TextAnchor.MiddleRight, ThemeSlot.MetadataLabel);
         };
@@ -185,7 +195,7 @@ public static class ModListPane {
             if (inList && e.type == EventType.MouseDown && e.button == 0 && hoverIdx >= 0) {
                 ModMetaData hovMod = mods[hoverIdx];
                 Rect rowR = new Rect(rect.x, rect.y + hoverIdx * rowH, rect.width, rowH);
-                ColumnRects cols = ComputeColumns(rowR);
+                ColumnRects cols = ComputeColumns(rowR, IsCompact());
                 if (!cols.Check.Contains(e.mousePosition)) {
                     dragPressedPackageId = hovMod.PackageId;
                     dragSourcePackageId = hovMod.PackageId;
@@ -279,25 +289,30 @@ public static class ModListPane {
                 PaintBox.Draw(stripe, BackgroundSpec.Of(ThemeSlot.SurfaceAccent), null, null);
             }
 
-            ColumnRects cols = ComputeColumns(rect);
+            bool compact = IsCompact();
+            ColumnRects cols = ComputeColumns(rect, compact);
 
             if (isDragSource) {
                 using (TintScope.Opacity(0.45f)) {
                     DrawOrder(cols.Order, loadOrder, theme);
                     DrawCheckbox(cols.Check, mod, theme);
                     DrawName(cols.Name, mod, theme);
-                    DrawAuthor(cols.Author, mod, theme);
+                    if (!compact) {
+                        DrawAuthor(cols.Author, mod, theme);
+                    }
                     DrawVersion(cols.Version, mod, theme);
-                    DrawStatus(cols.Status, mod, theme);
+                    DrawStatus(cols.Status, mod, theme, compact);
                 }
             }
             else {
                 DrawOrder(cols.Order, loadOrder, theme);
                 DrawCheckbox(cols.Check, mod, theme);
                 DrawName(cols.Name, mod, theme);
-                DrawAuthor(cols.Author, mod, theme);
+                if (!compact) {
+                    DrawAuthor(cols.Author, mod, theme);
+                }
                 DrawVersion(cols.Version, mod, theme);
-                DrawStatus(cols.Status, mod, theme);
+                DrawStatus(cols.Status, mod, theme, compact);
             }
 
             if (!ActiveDragRegistry.IsActive) {
@@ -426,28 +441,38 @@ public static class ModListPane {
         TextDraw.Draw(r, version, FontRole.Mono, new Rem(0.85f), TextAnchor.MiddleLeft, ThemeSlot.TextMuted, FontStyle.Normal, TextClipping.Clip);
     }
 
-    private static void DrawStatus(Rect r, ModMetaData mod, Theme.Theme theme) {
+    private static void DrawStatus(Rect r, ModMetaData mod, Theme.Theme theme, bool iconOnly) {
         string text;
         ThemeSlot slot;
+        IconRef icon;
         if (!mod.Active) {
             text = (string)"CL_ModsConfig_Row_Status_Disabled".Translate();
             slot = ThemeSlot.TextMuted;
+            icon = Phosphor.Prohibit;
         }
         else {
             int conflicts = ModConflicts.CountFor(mod);
             if (conflicts > 0) {
                 text = "CL_ModsConfig_Row_Status_Conflict".Translate(conflicts.Named("COUNT")).Resolve();
                 slot = ThemeSlot.StatusDanger;
+                icon = Phosphor.Warning;
             }
             else {
                 text = (string)"CL_ModsConfig_Row_Status_Ok".Translate();
                 slot = ThemeSlot.StatusSuccess;
+                icon = Phosphor.CheckCircle;
             }
         }
+
+        if (iconOnly) {
+            TextDraw.Draw(r, icon.Glyph, FontRole.Body, new Rem(1.1f), TextAnchor.MiddleRight, slot, fontOverride: icon.ResolveFont());
+            return;
+        }
+
         TextDraw.Draw(r, text, FontRole.Mono, new Rem(0.85f), TextAnchor.MiddleRight, slot);
     }
 
-    private static ColumnRects ComputeColumns(Rect rect) {
+    private static ColumnRects ComputeColumns(Rect rect, bool hideAuthor) {
         float padX = PaddingX.ToPixels();
         float colOrderW = ColOrder.ToPixels();
         float colCheckW = ColCheck.ToPixels();
@@ -465,9 +490,19 @@ public static class ModListPane {
         float right = rect.xMax - padX;
         Rect status = new Rect(right - colStatusW, rect.y, colStatusW, rect.height);
         Rect version = new Rect(status.x - gap - colVersionW, rect.y, colVersionW, rect.height);
-        Rect author = new Rect(version.x - gap - colAuthorW, rect.y, colAuthorW, rect.height);
 
-        float nameW = Mathf.Max(0f, author.x - gap - x);
+        Rect author;
+        float nameRight;
+        if (hideAuthor) {
+            author = new Rect(version.x, rect.y, 0f, rect.height);
+            nameRight = version.x - gap;
+        }
+        else {
+            author = new Rect(version.x - gap - colAuthorW, rect.y, colAuthorW, rect.height);
+            nameRight = author.x - gap;
+        }
+
+        float nameW = Mathf.Max(0f, nameRight - x);
         Rect name = new Rect(x, rect.y, nameW, rect.height);
 
         return new ColumnRects(order, check, name, author, version, status);

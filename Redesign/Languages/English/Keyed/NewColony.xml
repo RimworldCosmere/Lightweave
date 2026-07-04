@@ -254,7 +254,17 @@
   <CL_NewColony_Ideology_Editor_Section_Animals>Animals</CL_NewColony_Ideology_Editor_Section_Animals>
   <CL_NewColony_Ideology_Editor_Section_Deities>Deities</CL_NewColony_Ideology_Editor_Section_Deities>
   <CL_NewColony_Ideology_Editor_Section_Structure>Structure</CL_NewColony_Ideology_Editor_Section_Structure>
-  <CL_NewColony_Ideology_Editor_EditSymbols>Edit symbols</CL_NewColony_Ideology_Editor_EditSymbols>
+  <CL_NewColony_Ideology_Editor_EditIcon>Edit icon &amp; color</CL_NewColony_Ideology_Editor_EditIcon>
+  <CL_NewColony_Ideology_Editor_Apply>Apply</CL_NewColony_Ideology_Editor_Apply>
+  <CL_NewColony_Ideology_Editor_Picker_Icon_Title>Icon &amp; color</CL_NewColony_Ideology_Editor_Picker_Icon_Title>
+  <CL_NewColony_Ideology_Editor_Picker_Icon_Subtitle>Pick the symbol shape and identity color for this ideoligion.</CL_NewColony_Ideology_Editor_Picker_Icon_Subtitle>
+  <CL_NewColony_Ideology_Editor_Picker_Icon_Shape>SHAPE</CL_NewColony_Ideology_Editor_Picker_Icon_Shape>
+  <CL_NewColony_Ideology_Editor_Picker_Icon_Color>COLOR</CL_NewColony_Ideology_Editor_Picker_Icon_Color>
+  <CL_NewColony_Ideology_Editor_Picker_Deity_Title>Edit deity</CL_NewColony_Ideology_Editor_Picker_Deity_Title>
+  <CL_NewColony_Ideology_Editor_Picker_Deity_Subtitle>Name, title, and gender for this god.</CL_NewColony_Ideology_Editor_Picker_Deity_Subtitle>
+  <CL_NewColony_Ideology_Editor_DeityName>Name</CL_NewColony_Ideology_Editor_DeityName>
+  <CL_NewColony_Ideology_Editor_DeityTitle>Title</CL_NewColony_Ideology_Editor_DeityTitle>
+  <CL_NewColony_Ideology_Editor_DeityGender>Gender</CL_NewColony_Ideology_Editor_DeityGender>
   <CL_NewColony_Ideology_Editor_Deities_Empty>None - venerates spirits</CL_NewColony_Ideology_Editor_Deities_Empty>
   <CL_NewColony_Ideology_Editor_NarrativeLocked>Locked</CL_NewColony_Ideology_Editor_NarrativeLocked>
   <CL_NewColony_Ideology_Editor_LockHint>{COUNT} locked - skipped</CL_NewColony_Ideology_Editor_LockHint>
@@ -282,6 +292,40 @@
   <CL_NewColony_Ideology_Editor_Picker_Building_Subtitle>Required or venerated buildings the belief expects in your colony.</CL_NewColony_Ideology_Editor_Picker_Building_Subtitle>
   <CL_NewColony_Ideology_Editor_Picker_Animal_Title>Add an animal</CL_NewColony_Ideology_Editor_Picker_Animal_Title>
   <CL_NewColony_Ideology_Editor_Picker_Animal_Subtitle>Venerated animals your colonists revere. The specific animal is rolled when added.</CL_NewColony_Ideology_Editor_Picker_Animal_Subtitle>
+
+  <CL_NewColony_Ideology_Editor_Section_Culture>Culture</CL_NewColony_Ideology_Editor_Section_Culture>
+  <CL_NewColony_Ideology_Editor_Section_Xenotypes>Xenotypes</CL_NewColony_Ideology_Editor_Section_Xenotypes>
+  <CL_NewColony_Ideology_Editor_Section_Apparel>Apparel</CL_NewColony_Ideology_Editor_Section_Apparel>
+  <CL_NewColony_Ideology_Editor_Section_Appearance>Appearance</CL_NewColony_Ideology_Editor_Section_Appearance>
+  <CL_NewColony_Ideology_Editor_Rail_Belief>Belief</CL_NewColony_Ideology_Editor_Rail_Belief>
+  <CL_NewColony_Ideology_Editor_Rail_Preferences>Preferences</CL_NewColony_Ideology_Editor_Rail_Preferences>
+  <CL_NewColony_Ideology_Editor_Adjective>Adjective</CL_NewColony_Ideology_Editor_Adjective>
+  <CL_NewColony_Ideology_Editor_MemberNoun>Member noun</CL_NewColony_Ideology_Editor_MemberNoun>
+  <CL_NewColony_Ideology_Editor_RitualRoom>Ritual room</CL_NewColony_Ideology_Editor_RitualRoom>
+  <CL_NewColony_Ideology_Editor_RitualAmbience>Ritual ambience</CL_NewColony_Ideology_Editor_RitualAmbience>
+  <CL_NewColony_Ideology_Editor_RitualAmbience_L1>Ritual</CL_NewColony_Ideology_Editor_RitualAmbience_L1>
+  <CL_NewColony_Ideology_Editor_RitualAmbience_L2>Ambience</CL_NewColony_Ideology_Editor_RitualAmbience_L2>
+  <CL_NewColony_Ideology_Editor_RitualAmbience_Tip>Preview the ongoing-ritual ambience sound.</CL_NewColony_Ideology_Editor_RitualAmbience_Tip>
+  <CL_NewColony_Ideology_Editor_EditField>Edit</CL_NewColony_Ideology_Editor_EditField>
+  <CL_NewColony_Ideology_Editor_NoCulture>No culture</CL_NewColony_Ideology_Editor_NoCulture>
+  <CL_NewColony_Ideology_Editor_CultureCaption>drives pawn &amp; faction naming</CL_NewColony_Ideology_Editor_CultureCaption>
+  <CL_NewColony_Ideology_Editor_StructureCaption>foundational meme - one per ideoligion</CL_NewColony_Ideology_Editor_StructureCaption>
+  <CL_NewColony_Ideology_Editor_AddDeity>Add deity</CL_NewColony_Ideology_Editor_AddDeity>
+  <CL_NewColony_Ideology_Editor_AddXenotype>Add xenotype</CL_NewColony_Ideology_Editor_AddXenotype>
+  <CL_NewColony_Ideology_Editor_AddApparel>Add apparel desire</CL_NewColony_Ideology_Editor_AddApparel>
+  <CL_NewColony_Ideology_Editor_EditDeity>Edit deity</CL_NewColony_Ideology_Editor_EditDeity>
+  <CL_NewColony_Ideology_Editor_RemoveDeity>Remove deity</CL_NewColony_Ideology_Editor_RemoveDeity>
+  <CL_NewColony_Ideology_Editor_Appearance_HairBeard>Hair &amp; beard</CL_NewColony_Ideology_Editor_Appearance_HairBeard>
+  <CL_NewColony_Ideology_Editor_Appearance_Tattoo>Tattoos</CL_NewColony_Ideology_Editor_Appearance_Tattoo>
+  <CL_NewColony_Ideology_Editor_Appearance_InUse>{COUNT} in use</CL_NewColony_Ideology_Editor_Appearance_InUse>
+  <CL_NewColony_Ideology_Editor_Appearance_Edit>Edit allowed styles</CL_NewColony_Ideology_Editor_Appearance_Edit>
+  <CL_NewColony_Ideology_Editor_PaneHeaderCount>{SECTION} - {COUNT}</CL_NewColony_Ideology_Editor_PaneHeaderCount>
+  <CL_NewColony_Ideology_Editor_NarrativeEdit>Edit</CL_NewColony_Ideology_Editor_NarrativeEdit>
+  <CL_NewColony_Ideology_Editor_NarrativeDone>Done</CL_NewColony_Ideology_Editor_NarrativeDone>
+  <CL_NewColony_Ideology_Editor_Picker_Xenotype_Title>Add a preferred xenotype</CL_NewColony_Ideology_Editor_Picker_Xenotype_Title>
+  <CL_NewColony_Ideology_Editor_Picker_Xenotype_Subtitle>Xenotypes this ideoligion favors for new members. Only those compatible with the current memes are shown.</CL_NewColony_Ideology_Editor_Picker_Xenotype_Subtitle>
+  <CL_NewColony_Ideology_Editor_Picker_Apparel_Title>Add an apparel desire</CL_NewColony_Ideology_Editor_Picker_Apparel_Title>
+  <CL_NewColony_Ideology_Editor_Picker_Apparel_Subtitle>Apparel requirements or taboos the belief enforces. Only those compatible with the current memes are shown.</CL_NewColony_Ideology_Editor_Picker_Apparel_Subtitle>
 
   <CL_NewColony_Ideology_PreparingWorld>Preparing the world...</CL_NewColony_Ideology_PreparingWorld>
 

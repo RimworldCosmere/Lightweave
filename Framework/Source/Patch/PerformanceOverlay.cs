@@ -1,4 +1,7 @@
+using Cosmere.Lightweave.Rendering;
 using Cosmere.Lightweave.Settings;
+using Cosmere.Lightweave.Theme;
+using Cosmere.Lightweave.Tokens;
 using UnityEngine;
 using UnityEngine.Profiling;
 using Verse;
@@ -34,7 +37,7 @@ internal static class PerformanceOverlay {
 
     private static Texture2D? bgTex;
 
-    private static readonly string[] RowLabels = ["FPS", "AVG", "MAX", "GPU"];
+    private static readonly string[] RowLabels = ["FPS", "AVG", "MAX", "GPU", "RAM", "VRAM"];
     private const string ValueMeasureSample = "999.9 ms";
 
     // Stable, nonzero immediate-window id. WindowStack negates it internally.
@@ -155,7 +158,7 @@ internal static class PerformanceOverlay {
         // stable as the readouts change digits each frame.
         float scale = LightweaveMod.Settings?.FontScale ?? 1f;
         padPx = Mathf.Round(8f * scale);
-        rowGapPx = Mathf.Round(2f * scale);
+        rowGapPx = Mathf.Round(1f * scale);
         colGapPx = Mathf.Round(6f * scale);
 
         Vector2 valueSize = Text.CalcSize(ValueMeasureSample);
@@ -172,7 +175,7 @@ internal static class PerformanceOverlay {
         labelWidthPx = Mathf.Ceil(labelW);
 
         float boxW = padPx + labelWidthPx + colGapPx + valueWidthPx + padPx;
-        float boxH = padPx + rowHeightPx * 4f + rowGapPx * 3f + padPx;
+        float boxH = padPx + rowHeightPx * RowLabels.Length + rowGapPx * (RowLabels.Length - 1) + padPx;
 
         float screenW = Verse.UI.screenWidth;
         boxRect = new Rect(screenW - boxW - 8f, 8f, boxW, boxH);
@@ -199,24 +202,36 @@ internal static class PerformanceOverlay {
 
         Rect box = new Rect(0f, 0f, boxRect.width, boxRect.height);
 
-        GUI.color = new Color(0f, 0f, 0f, 0.78f);
-        GUI.DrawTexture(box, bgTex);
-        GUI.color = new Color(1f, 1f, 1f, 0.18f);
-        DrawRectOutline(box);
+        // Frosted Glass3 background matching the continue bar / dock buttons / EXPANSIONS bar.
+        // box is window-local; BackdropBlur maps its UV via GUIToScreenPoint so the frost samples
+        // the correct screen region even though this draws inside an above-Super ImmediateWindow.
+        float radiusPx = Mathf.Round(6f * (LightweaveMod.Settings?.FontScale ?? 1f));
+        BackdropBlur.Draw(box, 6f, cornerRadiusPx: radiusPx);
+        Vector4 radVec = new Vector4(radiusPx, radiusPx, radiusPx, radiusPx);
+        GUI.color = Color.white;
+        GUI.DrawTexture(box, bgTex, ScaleMode.StretchToFill, true, 0f, ThemeRegistry.Active.GetColor(ThemeSlot.Glass3), Vector4.zero, radVec);
         GUI.color = Color.white;
 
+        Theme.Theme theme = ThemeRegistry.Active;
+        Color labelColor = theme.GetColor(ThemeSlot.TextSecondary);
+        Color neutralValue = theme.GetColor(ThemeSlot.TextPrimary);
+
         Rect cursor = new Rect(box.x + padPx, box.y + padPx, labelWidthPx + colGapPx + valueWidthPx, rowHeightPx);
-        DrawRow(cursor, "FPS", FormatFps(emaFps), FpsColor(emaFps), labelWidthPx, colGapPx);
+        DrawRow(cursor, "FPS", FormatFps(emaFps), labelColor, FpsColor(theme, emaFps), labelWidthPx, colGapPx);
         cursor.y += rowHeightPx + rowGapPx;
-        DrawRow(cursor, "AVG", FormatMs(emaFrameMs), MsColor(emaFrameMs), labelWidthPx, colGapPx);
+        DrawRow(cursor, "AVG", FormatMs(emaFrameMs), labelColor, MsColor(theme, emaFrameMs), labelWidthPx, colGapPx);
         cursor.y += rowHeightPx + rowGapPx;
-        DrawRow(cursor, "MAX", FormatMs(displayMaxMs), MsColor(displayMaxMs), labelWidthPx, colGapPx);
+        DrawRow(cursor, "MAX", FormatMs(displayMaxMs), labelColor, MsColor(theme, displayMaxMs), labelWidthPx, colGapPx);
         cursor.y += rowHeightPx + rowGapPx;
         if (recordersAvailable) {
-            DrawRow(cursor, "GPU", FormatMs(emaGpuWaitMs), GpuColor(emaGpuWaitMs, emaFrameMs), labelWidthPx, colGapPx);
+            DrawRow(cursor, "GPU", FormatMs(emaGpuWaitMs), labelColor, GpuColor(theme, emaGpuWaitMs, emaFrameMs), labelWidthPx, colGapPx);
         } else {
-            DrawRow(cursor, "GPU", "n/a", new Color(0.55f, 0.55f, 0.58f, 1f), labelWidthPx, colGapPx);
+            DrawRow(cursor, "GPU", "n/a", labelColor, theme.GetColor(ThemeSlot.TextMuted), labelWidthPx, colGapPx);
         }
+        cursor.y += rowHeightPx + rowGapPx;
+        DrawRow(cursor, "RAM", FormatMb(Profiler.GetTotalAllocatedMemoryLong()), labelColor, neutralValue, labelWidthPx, colGapPx);
+        cursor.y += rowHeightPx + rowGapPx;
+        DrawRow(cursor, "VRAM", FormatMb((long)Texture.currentTextureMemory), labelColor, neutralValue, labelWidthPx, colGapPx);
 
         Text.Font = prevFont;
         Text.Anchor = prevAnchor;
@@ -225,24 +240,17 @@ internal static class PerformanceOverlay {
         GUI.contentColor = prevContentColor;
     }
 
-    private static void DrawRow(Rect row, string label, string value, Color valueColor, float labelW, float colGap) {
+    private static void DrawRow(Rect row, string label, string value, Color labelColor, Color valueColor, float labelW, float colGap) {
         Rect labelRect = new Rect(row.x, row.y, labelW, row.height);
         Rect valueRect = new Rect(row.x + labelW + colGap, row.y, row.width - labelW - colGap, row.height);
 
         Text.Anchor = TextAnchor.MiddleLeft;
-        GUI.contentColor = new Color(0.78f, 0.78f, 0.82f, 1f);
+        GUI.contentColor = labelColor;
         Widgets.Label(labelRect, label);
 
         Text.Anchor = TextAnchor.MiddleRight;
         GUI.contentColor = valueColor;
         Widgets.Label(valueRect, value);
-    }
-
-    private static void DrawRectOutline(Rect r) {
-        GUI.DrawTexture(new Rect(r.x, r.y, r.width, 1f), bgTex);
-        GUI.DrawTexture(new Rect(r.x, r.yMax - 1f, r.width, 1f), bgTex);
-        GUI.DrawTexture(new Rect(r.x, r.y, 1f, r.height), bgTex);
-        GUI.DrawTexture(new Rect(r.xMax - 1f, r.y, 1f, r.height), bgTex);
     }
 
     private static void EnsureTextures() {
@@ -273,38 +281,45 @@ internal static class PerformanceOverlay {
         return ms.ToString("0.0") + " ms";
     }
 
-    private static Color FpsColor(float fps) {
+    private static string FormatMb(long bytes) {
+        if (bytes <= 0L) {
+            return "--";
+        }
+        return (bytes / (1024L * 1024L)).ToString() + " MB";
+    }
+
+    private static Color FpsColor(Theme.Theme theme, float fps) {
         if (fps >= 55f) {
-            return new Color(0.62f, 0.85f, 0.55f, 1f);
+            return theme.GetColor(ThemeSlot.StatusSuccess);
         }
         if (fps >= 30f) {
-            return new Color(0.95f, 0.78f, 0.36f, 1f);
+            return theme.GetColor(ThemeSlot.StatusWarning);
         }
-        return new Color(0.92f, 0.45f, 0.42f, 1f);
+        return theme.GetColor(ThemeSlot.StatusDanger);
     }
 
-    private static Color MsColor(float ms) {
+    private static Color MsColor(Theme.Theme theme, float ms) {
         if (ms <= TargetFrameMs * 1.1f) {
-            return new Color(0.62f, 0.85f, 0.55f, 1f);
+            return theme.GetColor(ThemeSlot.StatusSuccess);
         }
         if (ms <= TargetFrameMs * 2f) {
-            return new Color(0.95f, 0.78f, 0.36f, 1f);
+            return theme.GetColor(ThemeSlot.StatusWarning);
         }
-        return new Color(0.92f, 0.45f, 0.42f, 1f);
+        return theme.GetColor(ThemeSlot.StatusDanger);
     }
 
-    private static Color GpuColor(float gpuMs, float frameMs) {
+    private static Color GpuColor(Theme.Theme theme, float gpuMs, float frameMs) {
         if (frameMs <= 0f) {
-            return new Color(0.78f, 0.78f, 0.82f, 1f);
+            return theme.GetColor(ThemeSlot.TextMuted);
         }
         float ratio = gpuMs / frameMs;
         if (ratio >= 0.55f) {
-            return new Color(0.92f, 0.45f, 0.42f, 1f);
+            return theme.GetColor(ThemeSlot.StatusDanger);
         }
         if (ratio >= 0.30f) {
-            return new Color(0.95f, 0.78f, 0.36f, 1f);
+            return theme.GetColor(ThemeSlot.StatusWarning);
         }
-        return new Color(0.62f, 0.85f, 0.55f, 1f);
+        return theme.GetColor(ThemeSlot.StatusSuccess);
     }
 
     private static void EnsureRecorders() {

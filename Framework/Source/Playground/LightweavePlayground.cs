@@ -149,7 +149,7 @@ public sealed class LightweavePlayground : LightweaveWindow {
         { "disclosure", "Lightweave/Navigation/Disclosure.cs" },
         { "accordion", "Lightweave/Surfaces/Accordion.cs" },
         { "section", "Lightweave/Navigation/Section.cs" },
-        { "sidenav", "Lightweave/Playground/PlaygroundRail.cs" },
+        { "sidenav", "Lightweave/Navigation/SideNav.cs" },
         { "window", "Lightweave/Runtime/LightweaveWindow.cs" },
         { "dialog", "Lightweave/Feedback/Dialog.cs" },
         { "modal", "Lightweave/Feedback/Modal.cs" },
@@ -350,7 +350,7 @@ public sealed class LightweavePlayground : LightweaveWindow {
             SpacingScale.None,
             r => {
                 r.AddFlex(mainScroll);
-                if (RenderContext.Current.Breakpoint >= Breakpoint.Lg) {
+                if (RenderContext.Current.Breakpoint >= Breakpoint.P1080) {
                     r.Add(tocNode, new Rem(17f).ToPixels());
                 }
             }

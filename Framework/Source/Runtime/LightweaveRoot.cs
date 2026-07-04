@@ -47,7 +47,7 @@ public static class LightweaveRoot {
         RenderContext ctx = new RenderContext(store) { RootId = rootId, RootRect = inRect };
         ctx.ThemeStack.Push(themeOverride ?? GetBaseTheme());
         ctx.DirectionStack.Push(directionOverride ?? DetectDirection());
-        ctx.Breakpoint = Breakpoints.For(inRect.width);
+        ctx.Breakpoint = Breakpoints.For(Verse.UI.screenWidth);
         ctx.PointerPos = Event.current?.mousePosition ?? Vector2.zero;
         RenderContext.Push(ctx);
 

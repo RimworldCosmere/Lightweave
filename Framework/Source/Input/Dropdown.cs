@@ -68,8 +68,11 @@ public static class Dropdown {
 
         node.MeasureWidth = () => {
             Theme.Theme theme = RenderContext.Current.Theme;
-            Font font = theme.GetFont(FontRole.Body);
-            int pixelSize = Mathf.RoundToInt(new Rem(0.9375f).ToFontPx());
+            // Measure with the bold weight + draw size the trigger actually renders (Button variant uses
+            // BodyBold @ 0.875rem). Measuring regular Body @ 0.9375rem underestimated bold's wider glyphs,
+            // so the longest label (e.g. "Astropolitan") overflowed into the chevron gap.
+            Font font = theme.GetFont(FontRole.BodyBold);
+            int pixelSize = Mathf.RoundToInt(new Rem(0.875f).ToFontPx());
             GUIStyle gs = GuiStyleCache.GetOrCreate(font, pixelSize);
             float maxLabelW = 0f;
             for (int i = 0; i < options.Count; i++) {
@@ -82,9 +85,12 @@ public static class Dropdown {
                     maxLabelW = w;
                 }
             }
-            float chevronReserve = new Rem(1.5f).ToPixels();
-            float padPx = SpacingScale.Sm.ToPixels();
-            return Mathf.Ceil(maxLabelW + chevronReserve + padPx * 2f);
+            // Reserve exactly what ComputeLayout consumes around the label: left pad + (pad + chevron +
+            // pad) on the right. The old (1.5rem chevron + Sm*2 pad) under-reserved by ~1.75rem, squeezing
+            // the label rect so long values clipped into the chevron.
+            float padPx = SelectorTrigger.PaddingX.ToPixels();
+            float chevronPx = SelectorTrigger.ChevronWidth.ToPixels();
+            return Mathf.Ceil(maxLabelW + padPx * 3f + chevronPx);
         };
 
         node.Paint = (allocatedRect, paintChildren) => {
@@ -291,7 +297,7 @@ public static class Dropdown {
         Rect screen = new Rect(0f, 0f, Screen.width, Screen.height);
         Rect popoverLocal = PopoverLayout.Resolve(rect, PopoverPlacement.Bottom, dir, size, screen);
         Rect popoverScreen = OverlayAnchor.CaptureAbsolute(popoverLocal);
-        HoverBlockRegistry.Register(popoverScreen);
+        HoverBlockRegistry.Register(RenderContext.Current.RootId, popoverScreen);
 
         Action drawOverlay = () => {
             Rect anchorHere = OverlayAnchor.ResolveLocal(anchorAbsolute);

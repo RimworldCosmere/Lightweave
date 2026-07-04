@@ -214,7 +214,7 @@ public static class Grid {
         };
         return new DocSample(() =>
             Grid.Create(
-                Breakpoints.PickRef(oneCol, md: twoCol, lg: fourCol),
+                Breakpoints.PickRef(oneCol, p1080: twoCol, p1440: fourCol),
                 SpacingScale.Xs,
                 k => {
                     k.Add(SampleChip("1"));

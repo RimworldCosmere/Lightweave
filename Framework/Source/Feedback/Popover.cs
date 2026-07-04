@@ -92,7 +92,7 @@ public static class Popover {
 
             Rect popoverHere = PopoverLayout.Resolve(anchorRect, placement, dir, size, screen);
             Rect popoverScreen = OverlayAnchor.CaptureAbsolute(popoverHere);
-            HoverBlockRegistry.Register(popoverScreen);
+            HoverBlockRegistry.Register(RenderContext.Current.RootId, popoverScreen);
 
             Action drawOverlay = () => {
                 Rect anchorHere = OverlayAnchor.ResolveLocal(anchorAbsolute);

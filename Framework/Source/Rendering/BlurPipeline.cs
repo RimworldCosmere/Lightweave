@@ -89,10 +89,13 @@ public static class BlurPipeline {
         mat.SetFloat(CornerRadiusId, effectiveRadius);
         mat.SetVector(RectSizeId, new Vector4(snappedPx.width, snappedPx.height, 0f, 0f));
 
-        // Map the surface's absolute screen rect to the full-screen capture's UV. flipY=true
-        // because the capture RT is bottom-origin while GUI rects are top-origin.
+        // Map the surface's screen rect to the full-screen capture's UV. GUIToScreenPoint
+        // unwinds any enclosing GUI.BeginGroup offset (e.g. an ImmediateWindow), so this is
+        // identity at top level but correct for surfaces drawn inside a window (perf overlay,
+        // modals, dropdowns). flipY=true because the capture RT is bottom-origin.
+        Vector2 screenTopLeft = GUIUtility.GUIToScreenPoint(new Vector2(clippedPx.x, clippedPx.y));
         (float ux, float uy, float uw, float uh) = BlurPipelineMath.ScreenUvSubRect(
-            clippedPx.x, clippedPx.y, clippedPx.width, clippedPx.height,
+            screenTopLeft.x, screenTopLeft.y, clippedPx.width, clippedPx.height,
             UI.screenWidth, UI.screenHeight, flipY: true);
         mat.SetVector(SubRectUvId, new Vector4(ux, uy, uw, uh));
 

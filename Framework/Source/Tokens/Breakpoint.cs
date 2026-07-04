@@ -1,63 +1,53 @@
 namespace Cosmere.Lightweave.Tokens;
 
+// Display-resolution tiers, named after the major 16:9 standards. Resolved once per frame
+// from the actual screen width (UI.screenWidth), not the surface/window width - a primitive
+// in a narrow pane on a 4K display reads P2160, because the tier describes the monitor, not
+// the rect it happens to occupy.
 public enum Breakpoint {
-    Xs = 0,
-    Sm = 1,
-    Md = 2,
-    Lg = 3,
-    Xl = 4,
-    Xxl = 5,
+    P720 = 0,
+    P1080 = 1,
+    P1440 = 2,
+    P2160 = 3,
 }
 
 public static class Breakpoints {
-    public const float SmMinPx = 640f;
-    public const float MdMinPx = 768f;
-    public const float LgMinPx = 1024f;
-    public const float XlMinPx = 1280f;
-    public const float XxlMinPx = 1536f;
+    public const float P1080MinPx = 1920f;
+    public const float P1440MinPx = 2560f;
+    public const float P2160MinPx = 3840f;
 
     public static Breakpoint For(float widthPx) {
-        if (widthPx >= XxlMinPx) return Breakpoint.Xxl;
-        if (widthPx >= XlMinPx) return Breakpoint.Xl;
-        if (widthPx >= LgMinPx) return Breakpoint.Lg;
-        if (widthPx >= MdMinPx) return Breakpoint.Md;
-        if (widthPx >= SmMinPx) return Breakpoint.Sm;
-        return Breakpoint.Xs;
+        if (widthPx >= P2160MinPx) return Breakpoint.P2160;
+        if (widthPx >= P1440MinPx) return Breakpoint.P1440;
+        if (widthPx >= P1080MinPx) return Breakpoint.P1080;
+        return Breakpoint.P720;
     }
 
-    public static Breakpoint Current => Runtime.RenderContext.CurrentOrNull?.Breakpoint ?? Breakpoint.Xs;
+    public static Breakpoint Current => Runtime.RenderContext.CurrentOrNull?.Breakpoint ?? Breakpoint.P720;
 
     public static T Pick<T>(
-        T xs,
-        T? sm = null,
-        T? md = null,
-        T? lg = null,
-        T? xl = null,
-        T? xxl = null
+        T p720,
+        T? p1080 = null,
+        T? p1440 = null,
+        T? p2160 = null
     ) where T : struct {
         Breakpoint current = Current;
-        if (xxl.HasValue && current >= Breakpoint.Xxl) return xxl.Value;
-        if (xl.HasValue && current >= Breakpoint.Xl) return xl.Value;
-        if (lg.HasValue && current >= Breakpoint.Lg) return lg.Value;
-        if (md.HasValue && current >= Breakpoint.Md) return md.Value;
-        if (sm.HasValue && current >= Breakpoint.Sm) return sm.Value;
-        return xs;
+        if (p2160.HasValue && current >= Breakpoint.P2160) return p2160.Value;
+        if (p1440.HasValue && current >= Breakpoint.P1440) return p1440.Value;
+        if (p1080.HasValue && current >= Breakpoint.P1080) return p1080.Value;
+        return p720;
     }
 
     public static T PickRef<T>(
-        T xs,
-        T? sm = null,
-        T? md = null,
-        T? lg = null,
-        T? xl = null,
-        T? xxl = null
+        T p720,
+        T? p1080 = null,
+        T? p1440 = null,
+        T? p2160 = null
     ) where T : class {
         Breakpoint current = Current;
-        if (xxl != null && current >= Breakpoint.Xxl) return xxl;
-        if (xl != null && current >= Breakpoint.Xl) return xl;
-        if (lg != null && current >= Breakpoint.Lg) return lg;
-        if (md != null && current >= Breakpoint.Md) return md;
-        if (sm != null && current >= Breakpoint.Sm) return sm;
-        return xs;
+        if (p2160 != null && current >= Breakpoint.P2160) return p2160;
+        if (p1440 != null && current >= Breakpoint.P1440) return p1440;
+        if (p1080 != null && current >= Breakpoint.P1080) return p1080;
+        return p720;
     }
 }

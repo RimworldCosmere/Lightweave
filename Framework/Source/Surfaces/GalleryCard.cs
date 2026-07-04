@@ -28,7 +28,7 @@ public static class GalleryCard {
     private static readonly Rem AvatarSize = new Rem(2.75f);
     private static readonly Rem RowGap = new Rem(0.75f);
     private static readonly Rem BodyGap = new Rem(0.3125f);
-    private static readonly Rem NameSize = new Rem(1.0625f);
+    private static readonly Rem NameSize = new Rem(1.1875f);
     private static readonly Rem DescSize = new Rem(0.719f);
     private static readonly Rem RemoveSize = new Rem(1.5f);
     private static readonly Rem RemoveInset = new Rem(0.4375f);

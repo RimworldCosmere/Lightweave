@@ -75,7 +75,7 @@ internal static class LightweaveHitTracker {
         RenderContext ctx = RenderContext.Current;
         Vector2 screenPoint = GUIUtility.GUIToScreenPoint(e.mousePosition);
 
-        if (ctx != null && ctx.OverlayContentDepth == 0 && HoverBlockRegistry.IsBlocked(screenPoint)) {
+        if (ctx != null && ctx.OverlayContentDepth == 0 && HoverBlockRegistry.IsBlocked(ctx.RootId, screenPoint)) {
             return false;
         }
 

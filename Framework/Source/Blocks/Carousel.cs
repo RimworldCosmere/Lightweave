@@ -124,13 +124,14 @@ public static class Carousel {
 
             int count = slides.Count;
             int visibleClamped = Mathf.Clamp(visible, 1, count);
-            int maxIndex = loop ? count - 1 : Mathf.Max(0, count - visibleClamped);
-            int clamped = loop
+            bool loopActive = CarouselMath.LoopActive(count, visible, loop);
+            int maxIndex = loopActive ? count - 1 : Mathf.Max(0, count - visibleClamped);
+            int clamped = loopActive
                 ? ((currentIndex % count) + count) % count
                 : Mathf.Clamp(currentIndex, 0, maxIndex);
 
             int animTarget = clamped;
-            if (loop) {
+            if (loopActive) {
                 RefHandle<int> virt = UseRef(clamped);
                 int prev = virt.Current;
                 int realPrev = ((prev % count) + count) % count;
@@ -183,7 +184,7 @@ public static class Carousel {
             float stride = slotWidth + interSlideGap;
 
             using (ClipScope.Begin(viewport)) {
-                if (loop) {
+                if (loopActive) {
                     float wrappedAnim = ((animIndex % count) + count) % count;
                     for (int i = 0; i < count; i++) {
                         float diff = i - wrappedAnim;
@@ -230,8 +231,8 @@ public static class Carousel {
             if (wantArrows) {
                 Rect leftZone = leftArrow;
                 Rect rightZone = rightArrow;
-                bool dimLeft = !loop && clamped == 0;
-                bool dimRight = !loop && clamped == maxIndex;
+                bool dimLeft = !loopActive && clamped == 0;
+                bool dimRight = !loopActive && clamped == maxIndex;
                 DrawArrow(leftZone, theme, true, dimLeft);
                 DrawArrow(rightZone, theme, false, dimRight);
 
@@ -241,7 +242,7 @@ public static class Carousel {
                 LightweaveHitTracker.Track(rightZone);
 
                 int Step(int from, int direction) {
-                    if (loop) {
+                    if (loopActive) {
                         return ((from + direction) % count + count) % count;
                     }
 
@@ -286,7 +287,7 @@ public static class Carousel {
                     Rect hitRect = new Rect(dot.x - DotGapPx / 2f, dotRect.y, dot.width + DotGapPx, dotRect.height);
 
                     bool inWindow;
-                    if (loop) {
+                    if (loopActive) {
                         int rel = ((logical - clamped) % count + count) % count;
                         inWindow = rel < visibleClamped;
                     }
@@ -311,7 +312,7 @@ public static class Carousel {
 
             if (keyboardEnabled && count > visibleClamped && rect.Contains(Event.current.mousePosition)) {
                 int KbStep(int from, int direction) {
-                    if (loop) {
+                    if (loopActive) {
                         return ((from + direction) % count + count) % count;
                     }
 

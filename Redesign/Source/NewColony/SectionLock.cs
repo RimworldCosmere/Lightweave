@@ -19,4 +19,12 @@ public enum SectionLock {
     Animals = 1 << 8,
     Structure = 1 << 9,
     Deities = 1 << 10,
+    Name = 1 << 11,
+    Adjective = 1 << 12,
+    MemberNoun = 1 << 13,
+    RitualRoom = 1 << 14,
+    Culture = 1 << 15,
+    Xenotypes = 1 << 16,
+    Apparel = 1 << 17,
+    Appearance = 1 << 18,
 }

@@ -28,7 +28,7 @@ public static class IdeologyTab {
         Hooks.Hooks.StateHandle<IdeoSubPicker> sub = Hooks.Hooks.UseState(IdeoSubPicker.None);
         Hooks.Hooks.StateHandle<int> rev = Hooks.Hooks.UseState(0);
         Hooks.Hooks.StateHandle<SectionLock> locks = Hooks.Hooks.UseState(SectionLock.None);
-        Hooks.Hooks.StateHandle<IdeoEditorTab> editorTab = Hooks.Hooks.UseState(IdeoEditorTab.Memes);
+        Hooks.Hooks.StateHandle<IdeoDetailSection> editorTab = Hooks.Hooks.UseState(IdeoDetailSection.Memes);
 
         IdeologyParams value = ideology.Value;
         bool worldReady = NewColonyLauncher.WorldReady;

@@ -43,6 +43,8 @@ public static class Avatar {
         RadiusScale? radius = null,
         [DocParam("Font role used to render initials/digits. Defaults to Display (serif). Pass Mono for digits that must sit dead-center: serif numerals carry asymmetric side-bearings and read off-center in a small badge, where tabular mono figures center cleanly.")]
         FontRole initialsFont = FontRole.Display,
+        [DocParam("Optional corner indicator color (e.g. an ideoligion's identity color). When set, a small ringed dot is drawn over the badge's bottom-right corner.", TypeOverride = "Color?", DefaultOverride = "null")]
+        Color? cornerDot = null,
         Style? style = null,
         string[]? classes = null,
         string? id = null,
@@ -103,6 +105,20 @@ public static class Avatar {
                     sizeRem * 0.45f,
                     fg
                 );
+            }
+
+            if (cornerDot.HasValue) {
+                // A small identity swatch overlapping the bottom-right corner, with a ring drawn in the
+                // surrounding surface color so the dot reads as a raised badge over the avatar edge.
+                float dot = sizePx * 0.28f;
+                float ring = sizePx * 0.05f;
+                // Tuck the dot just inside the bottom-right corner (a small inset) rather than letting it
+                // hang most of the way off the edge - it should read as nestled in the corner, not detached.
+                float inset = ring * 2f;
+                Rect ringRect = new Rect(square.xMax - dot - inset, square.yMax - dot - inset, dot, dot);
+                Rect dotRect = new Rect(ringRect.x + ring, ringRect.y + ring, ringRect.width - ring * 2f, ringRect.height - ring * 2f);
+                PaintBox.Draw(ringRect, BackgroundSpec.Of(theme.GetColor(ThemeSlot.SurfaceSunken)), null, RadiusSpec.All(RadiusScale.Full));
+                PaintBox.Draw(dotRect, BackgroundSpec.Of(cornerDot.Value), null, RadiusSpec.All(RadiusScale.Full));
             }
         };
 

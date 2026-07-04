@@ -72,7 +72,7 @@ public static class Modal {
             // behind the modal goes non-topmost (LightweaveHitTracker.IsTopmost / AsTooltip consult
             // HoverBlockRegistry when OverlayContentDepth == 0). The modal's own body paints with
             // OverlayContentDepth > 0 below, so its controls and tooltips stay live.
-            HoverBlockRegistry.Register(GUIUtility.GUIToScreenRect(host));
+            HoverBlockRegistry.Register(RenderContext.Current.RootId, GUIUtility.GUIToScreenRect(host));
 
             float maxW = host.width * 0.95f;
             float maxH = host.height * 0.95f;

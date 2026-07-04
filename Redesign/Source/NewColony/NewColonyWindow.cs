@@ -16,9 +16,10 @@ internal sealed class NewColonyWindow : LightweaveWindow {
     protected override RadiusSpec? CardRadius => RadiusSpec.All(RadiusScale.None);
     protected override EdgeInsets? CardPadding => EdgeInsets.All(new Rem(0f));
     protected override bool DrawAccentGradient => false;
-    // Opaque warm-dark base (not the translucent WindowGlass) so the main-menu splash behind the
-    // window does not bleed through the content area — the New Colony flow reads as its own surface.
-    protected override BackgroundSpec? CardBackground => BackgroundSpec.Of(ThemeSlot.SurfaceTranslucentDark);
+    // Theme-toned backdrop over the dimmed main-menu splash: MenuVignette is paper on the light
+    // themes (cosmere/roshar) so the header text reads, and dark on the dark themes. Its <1 alpha
+    // lets the splash show through faintly as the backdrop photo. Body/footer get their own panels.
+    protected override BackgroundSpec? CardBackground => BackgroundSpec.Of(ThemeSlot.MenuVignette);
 
     public override void DoWindowContents(Rect inRect) {
         NewColonyLauncher.PumpPendingGen();
@@ -31,6 +32,9 @@ internal sealed class NewColonyWindow : LightweaveWindow {
 
     public override void PostClose() {
         base.PostClose();
+        // The ambience preview is a frame-maintained sustainer; stop it on any close path so it does not
+        // keep playing after the window is gone.
+        AmbiencePreview.Stop();
         // Runs for every close path (Escape, click-away, headline/commit buttons), unlike the
         // Root's close callback which only the buttons invoke. Without this, an Escape-close
         // leaves NewColonyLauncher.OwnsWorld true, so NewColonyMenuPersistencePatch keeps
@@ -39,6 +43,14 @@ internal sealed class NewColonyWindow : LightweaveWindow {
         if (!NewColonyLauncher.Committed) {
             NewColonyLauncher.Teardown();
         }
+    }
+
+
+    public override void WindowUpdate() {
+        base.WindowUpdate();
+        // Per-frame game-loop hook (unlike the render path, which only fires on input events). The
+        // ambience preview sustainer needs maintaining every frame or it self-ends.
+        AmbiencePreview.Tick();
     }
 
     protected override LightweaveNode Body() {

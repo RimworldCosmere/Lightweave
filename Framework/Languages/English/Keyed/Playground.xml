@@ -772,8 +772,8 @@
     <CL_Playground_accordion_Body_OldMagic>The Old Magic is unavailable in this view. Seek the Nightwatcher in Ashland to unlock its boons and banes.</CL_Playground_accordion_Body_OldMagic>
 
     <CL_Playground_sidenav_Title>SideNav</CL_Playground_sidenav_Title>
-    <CL_Playground_sidenav_What>Vertical category rail with inline sub-nav that expands on click or after a short hover. Scrolls when content overflows.</CL_Playground_sidenav_What>
-    <CL_Playground_sidenav_When>Use as the primary navigator for surfaces with many peer views. Reach for Tabs when the set is short and horizontal space is free.</CL_Playground_sidenav_When>
+    <CL_Playground_sidenav_What>Vertical navigation rail of grouped rows, each with an optional icon and trailing count. Groups are separated by a divider and labelled by an eyebrow.</CL_Playground_sidenav_What>
+    <CL_Playground_sidenav_When>Drive a content pane from a flat, always-visible list of sections. Reach for Tabs when the set is short and horizontal space is free.</CL_Playground_sidenav_When>
 
     <CL_Playground_buttongroup_Title>ButtonGroup</CL_Playground_buttongroup_Title>
     <CL_Playground_buttongroup_What>Row of connected buttons sharing borders and corner rounding. Each button fires an independent action.</CL_Playground_buttongroup_What>
@@ -867,14 +867,12 @@
     <CL_Playground_responsive_ResponsiveColumns>Column count flows per breakpoint</CL_Playground_responsive_ResponsiveColumns>
     <CL_Playground_responsive_ResponsiveFont>Font size steps per breakpoint</CL_Playground_responsive_ResponsiveFont>
     <CL_Playground_responsive_Sample_Card>Card {INDEX}</CL_Playground_responsive_Sample_Card>
-    <CL_Playground_responsive_Sample_Heading>Resize the playground</CL_Playground_responsive_Sample_Heading>
-    <CL_Playground_responsive_Sample_Body>This block reacts to viewport width via Breakpoints.Pick — drag the window edge to flip between tiers.</CL_Playground_responsive_Sample_Body>
-    <CL_Playground_Breakpoint_Xs>Xs</CL_Playground_Breakpoint_Xs>
-    <CL_Playground_Breakpoint_Sm>Sm</CL_Playground_Breakpoint_Sm>
-    <CL_Playground_Breakpoint_Md>Md</CL_Playground_Breakpoint_Md>
-    <CL_Playground_Breakpoint_Lg>Lg</CL_Playground_Breakpoint_Lg>
-    <CL_Playground_Breakpoint_Xl>Xl</CL_Playground_Breakpoint_Xl>
-    <CL_Playground_Breakpoint_Xxl>Xxl</CL_Playground_Breakpoint_Xxl>
+    <CL_Playground_responsive_Sample_Heading>Screen resolution tier</CL_Playground_responsive_Sample_Heading>
+    <CL_Playground_responsive_Sample_Body>This block reacts to the display resolution via Breakpoints.Pick — the active tier reflects your monitor, not the window size.</CL_Playground_responsive_Sample_Body>
+    <CL_Playground_Breakpoint_P720>720p</CL_Playground_Breakpoint_P720>
+    <CL_Playground_Breakpoint_P1080>1080p</CL_Playground_Breakpoint_P1080>
+    <CL_Playground_Breakpoint_P1440>1440p</CL_Playground_Breakpoint_P1440>
+    <CL_Playground_Breakpoint_P2160>4K</CL_Playground_Breakpoint_P2160>
 
     <CL_Playground_Tooltip_Variant_AllSides>All sides</CL_Playground_Tooltip_Variant_AllSides>
     <CL_Playground_Tooltip_Variant_LongDelay>Long delay</CL_Playground_Tooltip_Variant_LongDelay>

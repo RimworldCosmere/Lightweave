@@ -67,6 +67,23 @@ public struct LightweaveScrollView : IDisposable {
         _pendingWheelDeltaY = 0f;
     }
 
+
+    // Non-scroll consumers (e.g. the world globe pane) that want the wheel for their own gesture call
+    // this from their Layout pass. The wheel is captured + Use()d at Render-top, so its live event type
+    // is already Used by the time any primitive runs - the only way to read it is the stashed delta.
+    // Frame-scoped like Dispose's apply; consuming clears the pending flag so no scroll view also grabs
+    // it. The caller is responsible for its own under-cursor / topmost gate.
+    public static bool TryConsumeWheel(out float deltaY) {
+        if (_pendingWheel && _pendingWheelFrame == Time.frameCount) {
+            deltaY = _pendingWheelDeltaY;
+            _pendingWheel = false;
+            _pendingWheelDeltaY = 0f;
+            return true;
+        }
+        deltaY = 0f;
+        return false;
+    }
+
     public static float WidthFor(ScrollAreaVariant variant) {
         return variant switch {
             ScrollAreaVariant.Slim => SlimRailWidth,
@@ -154,7 +171,7 @@ public struct LightweaveScrollView : IDisposable {
             return true;
         }
 
-        return !HoverBlockRegistry.IsBlocked(GUIUtility.GUIToScreenPoint(guiMousePos));
+        return !HoverBlockRegistry.IsBlocked(ctx.RootId, GUIUtility.GUIToScreenPoint(guiMousePos));
     }
 
     public float Height => contentHeight;

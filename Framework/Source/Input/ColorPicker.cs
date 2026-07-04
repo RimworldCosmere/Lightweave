@@ -127,6 +127,11 @@ public static class ColorPicker {
 
                 DrawSwatch(swatchRect, swatchColor, theme, selected, hovered, effectiveDisabled);
 
+                // Register the swatch as a hit rect so IsTopmost recognizes it as the front-most control
+                // under the cursor. Without this, a ColorPicker inside an overlay/modal (where many other
+                // rects are tracked) has IsTopmost match some other rect and silently drop every click.
+                LightweaveHitTracker.Track(swatchRect);
+
                 gridBounds = anyDrawn ? RectUnion(gridBounds, swatchRect) : swatchRect;
                 anyDrawn = true;
 

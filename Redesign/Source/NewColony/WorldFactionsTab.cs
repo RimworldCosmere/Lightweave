@@ -30,7 +30,7 @@ public static class WorldFactionsTab {
         Hooks.Hooks.StateHandle<IdeoSubPicker> sub = Hooks.Hooks.UseState(IdeoSubPicker.None);
         Hooks.Hooks.StateHandle<int> rev = Hooks.Hooks.UseState(0);
         Hooks.Hooks.StateHandle<SectionLock> locks = Hooks.Hooks.UseState(SectionLock.None);
-        Hooks.Hooks.StateHandle<IdeoEditorTab> tab = Hooks.Hooks.UseState(IdeoEditorTab.Memes);
+        Hooks.Hooks.StateHandle<IdeoDetailSection> tab = Hooks.Hooks.UseState(IdeoDetailSection.Memes);
 
         if (NewColonyLauncher.Generating || !NewColonyLauncher.WorldReady) {
             return BuildEmpty();

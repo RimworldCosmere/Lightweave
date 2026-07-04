@@ -12,7 +12,6 @@ public static class MenuButtons {
         return HStack.Create(SpacingScale.Xs, h => {
             h.AddFlex(DockTile.Create("CL_MainMenu_NewColony".Translate(), "N", MainMenuActions.NewColony, false));
             h.AddFlex(DockTile.Create("CL_MainMenu_LoadGame".Translate(), "L", MainMenuActions.OpenLoadDialog, !anyMapFiles));
-            h.AddFlex(DockTile.Create("CL_MainMenu_Tutorial".Translate(), string.Empty, MainMenuActions.Tutorial, false));
             h.AddFlex(DockTile.Create("CL_MainMenu_Mods".Translate(), "M", MainMenuActions.OpenMods, false));
             h.AddFlex(DockTile.Create("CL_MainMenu_Options".Translate(), "O", MainMenuActions.OpenOptions, false));
             h.AddFlex(MoreButton.Create());

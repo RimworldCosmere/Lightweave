@@ -88,9 +88,17 @@ public static class Wrap {
             if (flow) {
                 float maxChildHeight = 0f;
                 for (int i = 0; i < kids.Count; i++) {
-                    float? childHeight = kids[i].PreferredHeight;
-                    if (kids[i].IsInFlow() && childHeight.HasValue) {
-                        maxChildHeight = Mathf.Max(maxChildHeight, childHeight.Value);
+                    if (!kids[i].IsInFlow()) {
+                        continue;
+                    }
+                    // Prefer an explicit PreferredHeight, but fall back to Measure() at the child's own
+                    // cell width. Without the Measure fallback, content-sized chips (a Box wrapping an
+                    // HStack of avatar + text + buttons) report no PreferredHeight, so the row collapses
+                    // to the 1.75rem default and clips the chip's taller content.
+                    float childHeight = kids[i].PreferredHeight
+                        ?? (kids[i].Measure?.Invoke(CellWidth(kids[i], minW)) ?? 0f);
+                    if (childHeight > maxChildHeight) {
+                        maxChildHeight = childHeight;
                     }
                 }
                 return maxChildHeight > 0f ? maxChildHeight : new Rem(1.75f).ToPixels();
@@ -98,11 +106,18 @@ public static class Wrap {
             return minW * 0.6f;
         }
 
+        (float left, float top, float right, float bottom) ResolvePaddingPixels() {
+            Style s = node.GetResolvedStyle();
+            EdgeInsets pad = s.Padding ?? EdgeInsets.Zero;
+            return pad.Resolve(RenderContext.Current.Direction);
+        }
+
         node.MeasureWidth = () => {
             int flowCount = FlowCount();
             if (flowCount == 0) {
                 return 0f;
             }
+            (float pl, _, float pr, _) = ResolvePaddingPixels();
             float gapPx = gap.ToPixels();
             float minW = Mathf.Max(minChildWidth.ToPixels(), 1f);
             if (flow) {
@@ -118,9 +133,9 @@ public static class Wrap {
                     total += CellWidth(child, minW);
                     first = false;
                 }
-                return total;
+                return total + pl + pr;
             }
-            return flowCount * minW + Math.Max(0, flowCount - 1) * gapPx;
+            return flowCount * minW + Math.Max(0, flowCount - 1) * gapPx + pl + pr;
         };
 
         node.Measure = availableWidth => {
@@ -128,6 +143,14 @@ public static class Wrap {
             if (flowCount == 0) {
                 return 0f;
             }
+
+            // Account for our own Style.Padding: the paint pipeline shrinks our rect by it before
+            // children lay out, so the column math (and returned height) must use the same shrunk
+            // width - otherwise a padded Wrap measures a different column count than it paints,
+            // and a wrapping ScrollArea over it under-measures and refuses to scroll.
+            (float padL, float padT, float padR, float padB) = ResolvePaddingPixels();
+            float vPad = padT + padB;
+            availableWidth = Mathf.Max(0f, availableWidth - padL - padR);
 
             float gapPx = gap.ToPixels();
             float minW = Mathf.Max(minChildWidth.ToPixels(), 1f);
@@ -149,7 +172,7 @@ public static class Wrap {
                         x += (x > 0f ? gapPx : 0f) + cw;
                     }
                 }
-                return rows * rowH + Mathf.Max(0, rows - 1) * gapPx;
+                return rows * rowH + Mathf.Max(0, rows - 1) * gapPx + vPad;
             }
 
             int perRow = PerRow(availableWidth, gapPx, minW);
@@ -173,11 +196,11 @@ public static class Wrap {
                     }
                     total += rowMax;
                 }
-                return total + gapPx * Mathf.Max(0, rows - 1);
+                return total + gapPx * Mathf.Max(0, rows - 1) + vPad;
             }
 
             int gridRows = (flowCount + perRow - 1) / perRow;
-            return gridRows * rowH + Mathf.Max(0, gridRows - 1) * gapPx;
+            return gridRows * rowH + Mathf.Max(0, gridRows - 1) * gapPx + vPad;
         };
 
         node.Paint = (rect, paintChildren) => {

@@ -55,7 +55,7 @@ public static class NewColonyRoot {
             return null;
         }, [activeTab]);
 
-        return Stack.Create(SpacingScale.None, root => {
+        LightweaveNode body = Stack.Create(SpacingScale.None, root => {
             root.Add(BuildHeadline(close));
             root.Add(BuildTabs(activeTab, order, scenarioName, tellerDefName, diffDefName, world, anomalyParams, ideologyParams, tab));
             root.AddFlex(BuildBody(activeTab, scenarioName, tellerDefName, diffDefName, world, anomalyParams, ideologyParams, pickedTile));
@@ -64,6 +64,8 @@ public static class NewColonyRoot {
                 root.Add(BuildDisabledScrim());
             }
         }, style: new Style { Position = Position.Relative });
+
+        return body;
     }
 
     private static LightweaveNode BuildDisabledScrim() {
@@ -165,7 +167,7 @@ public static class NewColonyRoot {
                 Height = Length.Stretch,
                 Margin = new EdgeInsets(new Rem(0.75f), new Rem(1.75f), new Rem(0.75f), new Rem(1.75f)),
                 Padding = padding,
-                Background = BackgroundSpec.Of(ThemeSlot.ShelfTint),
+                Background = BackgroundSpec.Of(ThemeSlot.GlassFrost),
                 Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderSubtle),
                 Radius = RadiusSpec.All(RadiusScale.Md),
             });
@@ -252,7 +254,7 @@ public static class NewColonyRoot {
 
         LightweaveNode footerCard = WindowFooter.Create(content: content, actions: actions, drawDivider: false, style: new Style {
             Width = Length.Stretch,
-            Background = BackgroundSpec.Of(ThemeSlot.ShelfTint),
+            Background = BackgroundSpec.Of(ThemeSlot.Glass1),
             Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderSubtle),
             Radius = RadiusSpec.All(RadiusScale.Md),
         });

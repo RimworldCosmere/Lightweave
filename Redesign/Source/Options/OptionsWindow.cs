@@ -14,6 +14,10 @@ internal sealed class OptionsWindow : LightweaveWindow {
         inner = existing;
     }
 
+    // Match the Playground's full-bleed initial size rather than the default capped card.
+    public override UnityEngine.Vector2 InitialSize =>
+        new UnityEngine.Vector2(UI.screenWidth * 0.85f, UI.screenHeight * 0.9f);
+
     protected override LightweaveNode Body() {
         return OptionsRoot.Build(inner, () => Close());
     }

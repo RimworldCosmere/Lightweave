@@ -50,7 +50,7 @@ public static class ScadrialTheme {
             [ThemeSlot.DividerFaint] = new Color(0.722f, 0.753f, 0.800f, 0.18f),
             [ThemeSlot.Glass1] = new Color(0.102f, 0.125f, 0.157f, 0.55f),
             [ThemeSlot.Glass2] = new Color(0.102f, 0.125f, 0.157f, 0.78f),
-            [ThemeSlot.Glass3] = new Color(0.067f, 0.086f, 0.114f, 0.92f),
+            [ThemeSlot.Glass3] = new Color(0.067f, 0.086f, 0.114f, 0.60f),
             [ThemeSlot.WindowGlass] = new Color(0.067f, 0.086f, 0.114f, 0.92f),
             [ThemeSlot.DlcRoyalty] = new Color(0.831f, 0.659f, 0.341f),
             [ThemeSlot.DlcIdeology] = new Color(0.788f, 0.478f, 0.357f),

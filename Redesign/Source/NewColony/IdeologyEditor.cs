@@ -13,6 +13,7 @@ using Cosmere.Lightweave.Types;
 using RimWorld;
 using UnityEngine;
 using Verse;
+using Verse.Sound;
 using static Cosmere.Lightweave.Hooks.Hooks;
 using Avatar = Cosmere.Lightweave.Data.Avatar;
 using Text = Cosmere.Lightweave.Typography.Typography.Text;
@@ -31,6 +32,10 @@ public enum IdeoSubPicker {
     Relic,
     Building,
     Animal,
+    Culture,
+    Apparel,
+    Icon,
+    Deity,
 }
 
 // The "Customize ideoligion" editor, rendered as in-surface Modal overlays inside the Ideology tab's
@@ -44,15 +49,19 @@ public static class IdeologyEditor {
         StateHandle<IdeoSubPicker> sub,
         StateHandle<int> rev,
         StateHandle<SectionLock> locks,
-        StateHandle<IdeoEditorTab> tab,
+        StateHandle<IdeoDetailSection> tab,
         Ideo? target = null
     ) {
+        // The deity being edited by the Deity modal. Set by a deity chip's pencil, read by BuildDeityEditor.
+        // Created here (above both modals) so the pencil in BuildAttributeRow and the modal body share it.
+        StateHandle<IdeoFoundation_Deity.Deity?> deityTarget = UseState<IdeoFoundation_Deity.Deity?>(null);
+
         LightweaveNode editor = Modal.Create(
             editorOpen.Value,
-            () => BuildEditor(editorOpen, sub, rev, locks, tab, target),
+            () => BuildEditor(editorOpen, sub, rev, locks, tab, deityTarget, target),
             () => Close(editorOpen, sub),
             width: new Rem(120f),
-            height: new Rem(64f));
+            height: new Rem(72f));
 
         LightweaveNode structurePicker = Modal.Create(
             sub.Value == IdeoSubPicker.Structure,
@@ -117,6 +126,34 @@ public static class IdeologyEditor {
             width: new Rem(48f),
             height: new Rem(34f));
 
+        LightweaveNode xenotypePicker = Modal.Create(
+            sub.Value == IdeoSubPicker.Xeno,
+            () => BuildXenotypePicker(sub, rev, target),
+            () => sub.Set(IdeoSubPicker.None),
+            width: new Rem(48f),
+            height: new Rem(34f));
+
+        LightweaveNode apparelPicker = Modal.Create(
+            sub.Value == IdeoSubPicker.Apparel,
+            () => BuildApparelPicker(sub, rev, target),
+            () => sub.Set(IdeoSubPicker.None),
+            width: new Rem(48f),
+            height: new Rem(34f));
+
+        LightweaveNode iconPicker = Modal.Create(
+            sub.Value == IdeoSubPicker.Icon,
+            () => BuildIconPicker(sub, rev, target),
+            () => sub.Set(IdeoSubPicker.None),
+            width: new Rem(46f),
+            height: new Rem(38f));
+
+        LightweaveNode deityEditor = Modal.Create(
+            sub.Value == IdeoSubPicker.Deity,
+            () => BuildDeityEditor(sub, rev, deityTarget, target),
+            () => sub.Set(IdeoSubPicker.None),
+            width: new Rem(36f),
+            height: new Rem(30f));
+
         LightweaveNode node = NodeBuilder.New("IdeoEditorOverlays", 0, nameof(IdeologyEditor));
         node.Children.Add(editor);
         node.Children.Add(structurePicker);
@@ -128,6 +165,10 @@ public static class IdeologyEditor {
         node.Children.Add(relicPicker);
         node.Children.Add(buildingPicker);
         node.Children.Add(animalPicker);
+        node.Children.Add(xenotypePicker);
+        node.Children.Add(apparelPicker);
+        node.Children.Add(iconPicker);
+        node.Children.Add(deityEditor);
         node.MeasureWidth = () => 0f;
         node.Measure = _ => 0f;
         node.Paint = (rect, _) => {
@@ -141,6 +182,10 @@ public static class IdeologyEditor {
             PaintOverlay(relicPicker, rect);
             PaintOverlay(buildingPicker, rect);
             PaintOverlay(animalPicker, rect);
+            PaintOverlay(xenotypePicker, rect);
+            PaintOverlay(apparelPicker, rect);
+            PaintOverlay(iconPicker, rect);
+            PaintOverlay(deityEditor, rect);
         };
         return node;
     }
@@ -159,7 +204,7 @@ public static class IdeologyEditor {
         rev.Set(rev.Value + 1);
     }
 
-    private static LightweaveNode BuildEditor(StateHandle<bool> editorOpen, StateHandle<IdeoSubPicker> sub, StateHandle<int> rev, StateHandle<SectionLock> locks, StateHandle<IdeoEditorTab> tab, Ideo? target = null) {
+    private static LightweaveNode BuildEditor(StateHandle<bool> editorOpen, StateHandle<IdeoSubPicker> sub, StateHandle<int> rev, StateHandle<SectionLock> locks, StateHandle<IdeoDetailSection> tab, StateHandle<IdeoFoundation_Deity.Deity?> deityTarget, Ideo? target = null) {
         return Stack.Create(SpacingScale.None, root => {
             root.Add(BuildHeader(editorOpen, sub, rev, target));
             root.Add(Divider.Horizontal());
@@ -167,10 +212,10 @@ public static class IdeologyEditor {
             // player-draft editor keeps the two-pane grid (rail + detail).
             if (target != null) {
                 // BuildDetail owns its own internal well ScrollArea (scroll inversion); no outer wrap.
-                root.AddFlex(BuildDetail(sub, rev, locks, tab, target));
+                root.AddFlex(BuildDetail(sub, rev, locks, tab, deityTarget, target));
             }
             else {
-                root.AddFlex(BuildGrid(sub, rev, locks, tab, target));
+                root.AddFlex(BuildGrid(sub, rev, locks, tab, deityTarget, target));
             }
             root.Add(Divider.Horizontal());
             root.Add(BuildFooter(editorOpen, sub, rev, locks, target));
@@ -263,14 +308,14 @@ public static class IdeologyEditor {
         });
     }
 
-    private static LightweaveNode BuildGrid(StateHandle<IdeoSubPicker> sub, StateHandle<int> rev, StateHandle<SectionLock> locks, StateHandle<IdeoEditorTab> tab, Ideo? target = null) {
+    private static LightweaveNode BuildGrid(StateHandle<IdeoSubPicker> sub, StateHandle<int> rev, StateHandle<SectionLock> locks, StateHandle<IdeoDetailSection> tab, StateHandle<IdeoFoundation_Deity.Deity?> deityTarget, Ideo? target = null) {
         return HStack.Create(SpacingScale.None, h => {
             h.Add(ScrollArea.Create(
                 BuildRail(target),
                 style: new Style { Width = Length.Stretch, Height = Length.Stretch }), new Rem(30f).ToPixels());
             h.AddHug(Divider.Vertical());
             // BuildDetail owns its own internal well ScrollArea (scroll inversion); no outer wrap.
-            h.AddFlex(BuildDetail(sub, rev, locks, tab, target));
+            h.AddFlex(BuildDetail(sub, rev, locks, tab, deityTarget, target));
         }, style: new Style { Width = Length.Stretch, Height = Length.Stretch });
     }
 
@@ -361,50 +406,291 @@ public static class IdeologyEditor {
         return null;
     }
 
-    internal static LightweaveNode BuildDetail(StateHandle<IdeoSubPicker> sub, StateHandle<int> rev, StateHandle<SectionLock> locks, StateHandle<IdeoEditorTab> tab, Ideo? target = null) {
+    internal static LightweaveNode BuildDetail(StateHandle<IdeoSubPicker> sub, StateHandle<int> rev, StateHandle<SectionLock> locks, StateHandle<IdeoDetailSection> section, StateHandle<IdeoFoundation_Deity.Deity?> deityTarget, Ideo? target = null) {
         Ideo? ideo = target ?? IdeoDraft.Active();
 
-        // Scroll inversion: the identity header, attribute row, narrative, and tab strip are a FIXED top
-        // group; only the well below the strip scrolls. The three BuildDetail hosts (wizard step 3,
-        // standalone faction editor, draft grid) therefore must NOT wrap this in their own ScrollArea.
+        // The whole editor body scrolls as one unit (#17): identity header, attribute rows, narrative,
+        // and the rail+pane all live inside a single outer ScrollArea so the content can be taller than
+        // the modal without spilling past the pinned footer. The rail and pane render at their natural
+        // height (no inner ScrollArea, no Height.Stretch) and the outer scroll covers them.
         LightweaveNode top = Stack.Create(SpacingScale.Lg, t => {
-            t.Add(BuildIdentityHeader(ideo, sub, rev));
-            t.Add(BuildAttributeRow(ideo, sub, rev, locks));
-            t.Add(BuildNarrativeSection(ideo, locks));
+            t.Add(BuildIdentityHeader(ideo, sub, rev, locks));
+            t.Add(BuildAttributeRow(ideo, sub, rev, locks, deityTarget));
+            // Narrative gets its own breathing room (~10px top/bottom) so it separates from the rows
+            // above and the belief pane below.
+            t.Add(Box.Create(
+                children: c => c.Add(BuildNarrativeSection(ideo, rev)),
+                style: new Style { Width = Length.Stretch, Padding = new EdgeInsets(new Rem(0.625f), new Rem(0f), new Rem(0.625f), new Rem(0f)) }));
         }, style: new Style {
             Width = Length.Stretch,
             Padding = new EdgeInsets(new Rem(1.25f), new Rem(1.875f), new Rem(1f), new Rem(1.875f)),
         });
 
-        // The tab strip sits flush above the well (its border-top reads continuous with the strip), so
-        // the strip carries side padding only and no bottom gap.
-        LightweaveNode tabs = Box.Create(
-            children: c => c.Add(BuildSectionTabs(ideo, tab, locks)),
+        // Detail rail + pane: the rail lists the belief sections and the preference sections under two
+        // eyebrows; the pane renders the active section. Both render natural-height; the outer scroll
+        // owns the overflow. A MinHeight floor keeps the split tall enough to read when the active
+        // section is short.
+        LightweaveNode railPane = Box.Create(
+            children: c => c.Add(BuildDetailSplit(ideo, sub, rev, locks, section)),
             style: new Style {
                 Width = Length.Stretch,
-                Padding = new EdgeInsets(new Rem(0f), new Rem(1.875f), new Rem(0f), new Rem(1.875f)),
-            });
-
-        LightweaveNode wellWrap = Box.Create(
-            children: c => c.Add(BuildWell(ideo, sub, rev, locks, tab.Value)),
-            style: new Style {
-                Width = Length.Stretch,
-                Height = Length.Stretch,
+                MinHeight = new Rem(26f),
                 Padding = new EdgeInsets(new Rem(0f), new Rem(1.875f), new Rem(1.375f), new Rem(1.875f)),
             });
 
-        return Stack.Create(SpacingScale.None, d => {
+        LightweaveNode body = Stack.Create(SpacingScale.None, d => {
             d.Add(top);
-            d.Add(tabs);
-            d.AddFlex(wellWrap);
-        }, style: new Style { Width = Length.Stretch, Height = Length.Stretch });
+            d.Add(railPane);
+        }, style: new Style { Width = Length.Stretch });
+
+        return ScrollArea.Create(body, style: new Style { Width = Length.Stretch, Height = Length.Stretch });
     }
 
-    private static LightweaveNode BuildIdentityHeader(Ideo? ideo, StateHandle<IdeoSubPicker> sub, StateHandle<int> rev) {
+    private static LightweaveNode BuildDetailSplit(Ideo? ideo, StateHandle<IdeoSubPicker> sub, StateHandle<int> rev, StateHandle<SectionLock> locks, StateHandle<IdeoDetailSection> section) {
+        // Rail and pane render at natural height; the outer BuildDetail ScrollArea owns the overflow.
+        // FlexAlign.Stretch makes the shorter column match the taller one so both backgrounds fill the
+        // row, but neither carries an inner scroller (that would nest inside the body scroll).
+        LightweaveNode rail = Box.Create(
+            children: c => c.Add(BuildDetailRail(ideo, section)),
+            style: new Style {
+                Background = BackgroundSpec.Of(ThemeSlot.SurfaceSunken),
+                Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderDefault),
+            });
+
+        LightweaveNode pane = Box.Create(
+            children: c => c.Add(BuildSectionPane(ideo, sub, rev, locks, section.Value)),
+            style: new Style {
+                Width = Length.Stretch,
+                Background = BackgroundSpec.Of(ThemeSlot.SurfaceSunken),
+                Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderDefault),
+            });
+
+        return HStack.Create(SpacingScale.None, h => {
+            h.Add(rail, new Rem(14.25f).ToPixels());
+            h.AddFlex(pane);
+        }, align: FlexAlign.Stretch, style: new Style { Width = Length.Stretch });
+    }
+
+    private static LightweaveNode BuildDetailRail(Ideo? ideo, StateHandle<IdeoDetailSection> section) {
+        List<SideNavItem> belief = new List<SideNavItem>(EditorTabs.Length);
+        for (int i = 0; i < EditorTabs.Length; i++) {
+            IdeoEditorTab t = EditorTabs[i];
+            int count = TabCount(ideo, t);
+            belief.Add(new SideNavItem(
+                IdeoDetailSections.Id(IdeoDetailSections.FromBeliefTab(t)),
+                TabLabel(t),
+                SectionIcon(IdeoDetailSections.FromBeliefTab(t)),
+                count > 0 ? count : (int?)null));
+        }
+
+        List<SideNavItem> preferences = [
+            new SideNavItem(
+                IdeoDetailSections.Id(IdeoDetailSection.Xenotypes),
+                (string)"CL_NewColony_Ideology_Editor_Section_Xenotypes".Translate(),
+                SectionIcon(IdeoDetailSection.Xenotypes),
+                PreferenceCount(ideo, IdeoDetailSection.Xenotypes)),
+            new SideNavItem(
+                IdeoDetailSections.Id(IdeoDetailSection.Apparel),
+                (string)"CL_NewColony_Ideology_Editor_Section_Apparel".Translate(),
+                SectionIcon(IdeoDetailSection.Apparel),
+                PreferenceCount(ideo, IdeoDetailSection.Apparel)),
+            new SideNavItem(
+                IdeoDetailSections.Id(IdeoDetailSection.Appearance),
+                (string)"CL_NewColony_Ideology_Editor_Section_Appearance".Translate(),
+                SectionIcon(IdeoDetailSection.Appearance),
+                null),
+        ];
+
+        List<SideNavGroup> groups = [
+            new SideNavGroup(belief, (string)"CL_NewColony_Ideology_Editor_Rail_Belief".Translate()),
+            new SideNavGroup(preferences, (string)"CL_NewColony_Ideology_Editor_Rail_Preferences".Translate()),
+        ];
+
+        // No ScrollArea here: the rail renders at its natural list height and the outer BuildDetail
+        // scroll owns the overflow (#17). Wrapping it in an inner scroll would nest a 0-height viewport
+        // inside the hugging body scroll.
+        // Wrap in a Box with 1rem right padding (#8): SideNav paints its rows edge-to-edge across its
+        // own rect and does not read Style.Padding, so the inset has to come from a padded parent.
+        return Box.Create(
+            children: c => c.Add(SideNav.Create(
+                groups,
+                IdeoDetailSections.Id(section.Value),
+                id => section.Set(IdeoDetailSections.Parse(id)),
+                style: new Style { Width = Length.Stretch })),
+            style: new Style {
+                Width = Length.Stretch,
+                Padding = new EdgeInsets(new Rem(0f), new Rem(1f), new Rem(0f), new Rem(0f)),
+            });
+    }
+
+    private static IconRef SectionIcon(IdeoDetailSection section) {
+        return section switch {
+            IdeoDetailSection.Memes => Icons.Phosphor.Asterisk,
+            IdeoDetailSection.Precepts => Icons.Phosphor.ListChecks,
+            IdeoDetailSection.Rituals => Icons.Phosphor.Book,
+            IdeoDetailSection.Roles => Icons.Phosphor.UserCircle,
+            IdeoDetailSection.Relics => Icons.Phosphor.Diamond,
+            IdeoDetailSection.Buildings => Icons.Phosphor.Buildings,
+            IdeoDetailSection.Animals => Icons.Phosphor.PawPrint,
+            IdeoDetailSection.Xenotypes => Icons.Phosphor.Dna,
+            IdeoDetailSection.Apparel => Icons.Phosphor.TShirt,
+            IdeoDetailSection.Appearance => Icons.Phosphor.Smiley,
+            _ => Icons.Phosphor.Asterisk,
+        };
+    }
+
+    private static int? PreferenceCount(Ideo? ideo, IdeoDetailSection section) {
+        if (ideo == null) {
+            return null;
+        }
+
+        int count = section switch {
+            IdeoDetailSection.Xenotypes => IdeoDraftMutations.CountPrecepts<Precept_Xenotype>(ideo),
+            IdeoDetailSection.Apparel => IdeoDraftMutations.CountPrecepts<Precept_Apparel>(ideo),
+            _ => 0,
+        };
+        return count > 0 ? count : (int?)null;
+    }
+
+    private static LightweaveNode BuildSectionPane(Ideo? ideo, StateHandle<IdeoSubPicker> sub, StateHandle<int> rev, StateHandle<SectionLock> locks, IdeoDetailSection section) {
+        IdeoEditorTab? belief = IdeoDetailSections.BeliefTab(section);
+        if (belief.HasValue) {
+            return BuildWell(ideo, sub, rev, locks, belief.Value);
+        }
+
+        LightweaveNode content = section switch {
+            IdeoDetailSection.Xenotypes => BuildPreferenceList<Precept_Xenotype>(
+                ideo, rev,
+                "CL_NewColony_Ideology_Editor_Section_Xenotypes",
+                "CL_NewColony_Ideology_Editor_AddXenotype",
+                IdeoSubPicker.Xeno, sub),
+            IdeoDetailSection.Apparel => BuildPreferenceList<Precept_Apparel>(
+                ideo, rev,
+                "CL_NewColony_Ideology_Editor_Section_Apparel",
+                "CL_NewColony_Ideology_Editor_AddApparel",
+                IdeoSubPicker.Apparel, sub),
+            IdeoDetailSection.Appearance => BuildAppearancePane(ideo),
+            _ => EmptyLabel(),
+        };
+
+        // Natural height: the outer BuildDetail ScrollArea owns the overflow (#17).
+        return Box.Create(
+            children: c => c.Add(content),
+            style: new Style { Width = Length.Stretch });
+    }
+
+    private static LightweaveNode PaneHeader(string titleKey, int count) {
+        return HStack.Create(SpacingScale.Sm, h => {
+            string title = count > 0
+                ? (string)"CL_NewColony_Ideology_Editor_PaneHeaderCount".Translate(titleKey.Translate().Named("SECTION"), count.Named("COUNT"))
+                : (string)titleKey.Translate();
+            h.AddHug(Text.Create(title.ToUpperInvariant(), style: new Style {
+                FontFamily = FontRole.Mono,
+                FontSize = new Rem(0.6875f),
+                LetterSpacing = Tracking.Of(0.18f),
+                TextColor = ThemeSlot.TextMuted,
+            }));
+            h.AddFlex(Box.Create(style: new Style {
+                Height = Length.Rem(1f / 16f),
+                Background = BackgroundSpec.Of(ThemeSlot.BorderFaint),
+            }));
+        }, align: FlexAlign.Center, style: new Style { Width = Length.Stretch });
+    }
+
+    private static LightweaveNode BuildPreferenceList<T>(Ideo? ideo, StateHandle<int> rev, string titleKey, string addKey, IdeoSubPicker picker, StateHandle<IdeoSubPicker> sub) where T : Precept {
+        List<T> precepts = [];
+        if (ideo != null) {
+            IdeoDraftMutations.CollectPrecepts(ideo, precepts);
+        }
+
+        return Stack.Create(SpacingScale.Md, s => {
+            s.Add(PaneHeader(titleKey, precepts.Count));
+            s.Add(Wrap.Create(SpacingScale.Xs, new Rem(2.5f), w => {
+                for (int i = 0; i < precepts.Count; i++) {
+                    T captured = precepts[i];
+                    w.Add(RemovableChip(
+                        captured.Icon,
+                        captured.LabelCap,
+                        captured.def.description,
+                        () => {
+                            if (ideo != null) {
+                                IdeoDraftMutations.RemovePrecept(ideo, captured);
+                                Bump(rev);
+                            }
+                        }));
+                }
+                w.Add(AddButton((string)addKey.Translate(), () => sub.Set(picker)));
+            }, flow: true));
+        }, style: new Style {
+            Width = Length.Stretch,
+            Padding = new EdgeInsets(new Rem(1.125f), new Rem(1.25f), new Rem(1.25f), new Rem(1.25f)),
+        });
+    }
+
+    private static LightweaveNode BuildAppearancePane(Ideo? ideo) {
+        return Stack.Create(SpacingScale.Md, s => {
+            s.Add(PaneHeader("CL_NewColony_Ideology_Editor_Section_Appearance", 0));
+            s.Add(Layout.Grid.Create(
+                [new GridTrack.Fr(1f), new GridTrack.Fr(1f)],
+                gap: SpacingScale.Sm,
+                children: cells => {
+                    cells.Add(AppearanceCard(
+                        ideo,
+                        "CL_NewColony_Ideology_Editor_Appearance_HairBeard",
+                        ideo?.style?.NumHairAndBeardStylesAvailable ?? 0,
+                        StyleItemTab.HairAndBeard));
+                    cells.Add(AppearanceCard(
+                        ideo,
+                        "CL_NewColony_Ideology_Editor_Appearance_Tattoo",
+                        ideo?.style?.NumTattooStylesAvailable ?? 0,
+                        StyleItemTab.Tattoo));
+                },
+                style: new Style { Width = Length.Stretch }));
+        }, style: new Style {
+            Width = Length.Stretch,
+            Padding = new EdgeInsets(new Rem(1.125f), new Rem(1.25f), new Rem(1.25f), new Rem(1.25f)),
+        });
+    }
+
+    private static LightweaveNode AppearanceCard(Ideo? ideo, string labelKey, int inUse, StyleItemTab tab) {
+        LightweaveNode body = Stack.Create(SpacingScale.Xs, b => {
+            b.Add(Text.Create((string)labelKey.Translate(), style: new Style {
+                FontFamily = FontRole.Display,
+                FontSize = new Rem(0.9375f),
+                TextColor = ThemeSlot.TextPrimary,
+            }));
+            b.Add(Text.Create(
+                (string)"CL_NewColony_Ideology_Editor_Appearance_InUse".Translate(inUse.Named("COUNT")),
+                style: new Style {
+                    FontFamily = FontRole.Mono,
+                    FontSize = new Rem(0.625f),
+                    LetterSpacing = Tracking.Of(0.06f),
+                    TextColor = ThemeSlot.TextMuted,
+                }));
+        });
+
+        return SelectableSurface.Create(
+            child: body,
+            onSelect: () => {
+                if (ideo != null) {
+                    IdeoDraftMutations.OpenAppearanceEditor(ideo, tab);
+                }
+            },
+            variant: SelectableSurfaceVariant.Tile,
+            tooltip: "CL_NewColony_Ideology_Editor_Appearance_Edit".Translate(),
+            padding: new EdgeInsets(new Rem(0.75f), new Rem(0.875f), new Rem(0.75f), new Rem(0.875f)),
+            style: new Style {
+                Width = Length.Stretch,
+                Background = BackgroundSpec.Of(ThemeSlot.Glass1),
+                Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderDefault),
+            });
+    }
+
+    private static LightweaveNode BuildIdentityHeader(Ideo? ideo, StateHandle<IdeoSubPicker> sub, StateHandle<int> rev, StateHandle<SectionLock> locks) {
         MemeDef? structure = StructureMeme(ideo);
 
-        // The big symbol badge is itself the "edit symbols" affordance - clicking it opens the style/symbol
-        // picker. The trailing ghost button is the explicit, labeled twin of the same action.
+        // The big symbol badge is the icon affordance - clicking it opens the icon shape + color picker.
+        // A corner swatch shows the ideo's identity color (the picker changes it).
         LightweaveNode bigBadge = SelectableSurface.Create(
             child: Avatar.Create(
                 string.Empty,
@@ -415,57 +701,202 @@ public static class IdeologyEditor {
                 texture: ideo?.Icon ?? structure?.Icon,
                 icon: ideo == null && structure == null ? Icons.Phosphor.Compass : (IconRef?)null,
                 iconScale: 0.62f,
-                tintTexture: false,
+                tintTexture: ideo?.Icon != null,
+                tintColor: ideo?.Color,
+                cornerDot: ideo?.Color,
                 chrome: false),
-            onSelect: () => sub.Set(IdeoSubPicker.Style),
+            onSelect: () => {
+                if (ideo != null) {
+                    sub.Set(IdeoSubPicker.Icon);
+                }
+            },
             variant: SelectableSurfaceVariant.Tile,
-            tooltip: "CL_NewColony_Ideology_Editor_EditSymbols".Translate(),
+            tooltip: "CL_NewColony_Ideology_Editor_EditIcon".Translate(),
             padding: EdgeInsets.All(new Rem(0.25f)),
             style: new Style { Background = BackgroundSpec.Of(ThemeSlot.Glass1) });
 
-        LightweaveNode nameCol = Stack.Create(SpacingScale.Xxs, n => {
-            n.Add(TextField.Create(
-                IdeoName(ideo),
-                value => {
+        LightweaveNode nameField = TextField.Create(
+            IdeoName(ideo),
+            value => {
+                if (ideo != null) {
+                    IdeoDraftMutations.Rename(ideo, value);
+                    Bump(rev);
+                }
+            },
+            instanceKey: ideo,
+            variant: Variant.Ghost,
+            style: new Style {
+                FontFamily = FontRole.Display,
+                FontSize = new Rem(1.5f),
+                LetterSpacing = Tracking.Of(0.02f),
+                TextColor = ThemeSlot.TextPrimary,
+                Width = Length.Stretch,
+            });
+
+        LightweaveNode nameLine = HStack.Create(SpacingScale.Sm, h => {
+            h.AddFlex(HStack.Create(SpacingScale.Xs, f => {
+                f.AddFlex(nameField);
+                f.AddHug(SectionLockToggle(SectionLock.Name, locks));
+                f.AddHug(SectionRandomize(() => {
                     if (ideo != null) {
-                        IdeoDraftMutations.Rename(ideo, value);
+                        IdeoDraftMutations.RandomizeTextSymbols(ideo, locks.Value);
                         Bump(rev);
                     }
-                },
-                instanceKey: ideo,
-                variant: Variant.Ghost,
-                style: new Style {
-                    FontFamily = FontRole.Display,
-                    FontSize = new Rem(1.5f),
-                    LetterSpacing = Tracking.Of(0.02f),
-                    TextColor = ThemeSlot.TextPrimary,
-                    Width = Length.Stretch,
-                }));
-            n.Add(Text.Create(IdentitySubline(structure), style: new Style {
-                FontFamily = FontRole.Mono,
-                FontSize = new Rem(0.6875f),
-                LetterSpacing = Tracking.Of(0.04f),
-                TextColor = ThemeSlot.TextMuted,
+                }, disabled: (locks.Value & SectionLock.Name) != 0));
+            }, align: FlexAlign.Center, style: new Style {
+                Width = Length.Stretch,
+                Padding = new EdgeInsets(new Rem(0.25f), new Rem(0.5f), new Rem(0.25f), new Rem(0.625f)),
+                Background = BackgroundSpec.Of(ThemeSlot.Glass1),
             }));
-        }, style: new Style { Width = Length.Stretch });
+            h.AddHug(BuildAmbiencePill(ideo));
+        }, align: FlexAlign.Stretch, style: new Style { Width = Length.Stretch });
 
-        LightweaveNode editSymbols = Button.Create(
-            ((string)"CL_NewColony_Ideology_Editor_EditSymbols".Translate()).ToUpperInvariant(),
-            () => sub.Set(IdeoSubPicker.Style),
-            Variant.Ghost,
-            leading: Glyph.Create(Icons.Phosphor.Palette, new Style { FontSize = new Rem(0.75f) }),
-            style: new Style {
-                FontFamily = FontRole.Mono,
-                FontSize = new Rem(0.6875f),
-                LetterSpacing = Tracking.Of(0.12f),
-                TextColor = ThemeSlot.TextSecondary,
-            });
+        LightweaveNode miniGrid = Layout.Grid.Create(
+            [new GridTrack.Fr(1f), new GridTrack.Fr(1f), new GridTrack.Fr(1f)],
+            gap: SpacingScale.Sm,
+            children: cells => {
+                cells.Add(MiniField(
+                    "CL_NewColony_Ideology_Editor_Adjective",
+                    ideo?.adjective ?? string.Empty,
+                    SectionLock.Adjective, locks,
+                    value => { if (ideo != null) { IdeoDraftMutations.SetAdjective(ideo, value); Bump(rev); } },
+                    ideo != null));
+                cells.Add(MiniField(
+                    "CL_NewColony_Ideology_Editor_MemberNoun",
+                    ideo?.memberName ?? string.Empty,
+                    SectionLock.MemberNoun, locks,
+                    value => { if (ideo != null) { IdeoDraftMutations.SetMemberName(ideo, value); Bump(rev); } },
+                    ideo != null));
+                cells.Add(MiniField(
+                    "CL_NewColony_Ideology_Editor_RitualRoom",
+                    ideo?.RitualSeatDef?.LabelCap ?? string.Empty,
+                    SectionLock.RitualRoom, locks,
+                    null,
+                    false));
+            },
+            style: new Style { Width = Length.Stretch });
+
+        LightweaveNode idCol = Stack.Create(SpacingScale.Sm, n => {
+            n.Add(nameLine);
+            n.Add(miniGrid);
+        }, style: new Style { Width = Length.Stretch });
 
         return HStack.Create(SpacingScale.Md, h => {
             h.AddHug(bigBadge);
-            h.AddFlex(nameCol);
-            h.AddHug(editSymbols);
-        }, style: new Style { Width = Length.Stretch }, align: FlexAlign.Center);
+            h.AddFlex(idCol);
+        }, style: new Style { Width = Length.Stretch }, align: FlexAlign.Start);
+    }
+
+    private static LightweaveNode BuildAmbiencePill(Ideo? ideo) {
+        // The preview sustainer is owned + frame-maintained by AmbiencePreview (pumped from
+        // NewColonyWindow.WindowUpdate); this just reflects its state and toggles it. The glyph is Pause
+        // while playing, Play otherwise. The label stacks RITUAL / AMBIENCE on two lines per the mock.
+        bool playing = AmbiencePreview.IsPlaying;
+
+        LightweaveNode label = Stack.Create(SpacingScale.None, l => {
+            l.Add(Text.Create(((string)"CL_NewColony_Ideology_Editor_RitualAmbience_L1".Translate()).ToUpperInvariant(), style: AmbienceLabelStyle()));
+            l.Add(Text.Create(((string)"CL_NewColony_Ideology_Editor_RitualAmbience_L2".Translate()).ToUpperInvariant(), style: AmbienceLabelStyle()));
+        });
+
+        LightweaveNode body = HStack.Create(SpacingScale.Sm, h => {
+            h.AddHug(Avatar.Create(
+                string.Empty,
+                size: new Rem(1.875f),
+                accent: ThemeSlot.TextOnAccent,
+                background: ThemeSlot.SurfaceAccent,
+                border: ThemeSlot.SurfaceAccent,
+                icon: playing ? Icons.Phosphor.Pause : Icons.Phosphor.Play,
+                iconScale: 0.45f,
+                radius: RadiusScale.Full));
+            h.AddHug(label);
+        }, align: FlexAlign.Center);
+
+        return SelectableSurface.Create(
+            child: body,
+            onSelect: () => {
+                if (ideo != null) {
+                    AmbiencePreview.Toggle(ideo);
+                }
+            },
+            variant: SelectableSurfaceVariant.Tile,
+            tooltip: "CL_NewColony_Ideology_Editor_RitualAmbience_Tip".Translate(),
+            padding: new EdgeInsets(new Rem(0.3125f), new Rem(0.625f), new Rem(0.3125f), new Rem(0.625f)),
+            style: new Style {
+                Background = BackgroundSpec.Of(ThemeSlot.AccentSoft),
+                Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.SurfaceAccent),
+            });
+    }
+
+    private static Style AmbienceLabelStyle() {
+        return new Style {
+            FontFamily = FontRole.Mono,
+            FontSize = new Rem(0.5625f),
+            LetterSpacing = Tracking.Of(0.08f),
+            TextColor = ThemeSlot.TextSecondary,
+        };
+    }
+
+    // One compact identity field: an eyebrow key over a value, with a lock + pencil cluster (NO dice -
+    // re-rolling is driven by the name field's symbol regenerate, not per mini-field). The pencil swaps
+    // the value text for an inline TextField; a null onCommit (e.g. the derived ritual room) disables it.
+    private static LightweaveNode MiniField(string keyKey, string value, SectionLock lockFlag, StateHandle<SectionLock> locks, System.Action<string>? onCommit, bool editable) {
+        StateHandle<bool> editing = UseState(false);
+        bool locked = (locks.Value & lockFlag) != 0;
+        bool canEdit = editable && onCommit != null && !locked;
+
+        LightweaveNode valueRow;
+        if (editing.Value && canEdit) {
+            valueRow = TextField.Create(
+                value,
+                committed => {
+                    onCommit!(committed);
+                    editing.Set(false);
+                },
+                instanceKey: keyKey,
+                variant: Variant.Ghost,
+                style: new Style {
+                    FontFamily = FontRole.Body,
+                    FontSize = new Rem(0.875f),
+                    TextColor = ThemeSlot.TextPrimary,
+                    Width = Length.Stretch,
+                });
+        }
+        else {
+            valueRow = HStack.Create(SpacingScale.Xxs, h => {
+                h.AddFlex(Text.Create(value, style: new Style {
+                    FontFamily = FontRole.Body,
+                    FontSize = new Rem(0.875f),
+                    TextColor = ThemeSlot.TextSecondary,
+                }));
+                h.AddHug(SectionLockToggle(lockFlag, locks));
+                h.AddHug(IconButton.Create(
+                    Glyph.Create(Icons.Phosphor.PencilSimple, new Style {
+                        FontSize = new Rem(0.625f),
+                        TextColor = canEdit ? ThemeSlot.TextMuted : ThemeSlot.BorderDefault,
+                    }),
+                    () => editing.Set(true),
+                    disabled: !canEdit,
+                    iconSize: new Rem(0.75f),
+                    tooltipKey: "CL_NewColony_Ideology_Editor_EditField"));
+            }, align: FlexAlign.Center, style: new Style { Width = Length.Stretch });
+        }
+
+        return Stack.Create(SpacingScale.Xxs, s => {
+            s.Add(Text.Create(
+                ((string)keyKey.Translate()).ToUpperInvariant(),
+                style: new Style {
+                    FontFamily = FontRole.Mono,
+                    FontSize = new Rem(0.59375f),
+                    LetterSpacing = Tracking.Of(0.12f),
+                    TextColor = ThemeSlot.TextMuted,
+                }));
+            s.Add(valueRow);
+        }, style: new Style {
+            Width = Length.Stretch,
+            Padding = new EdgeInsets(new Rem(0.5f), new Rem(0.75f), new Rem(0.5f), new Rem(0.75f)),
+            Background = BackgroundSpec.Of(ThemeSlot.Glass1),
+            Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderFaint),
+        });
     }
 
     
@@ -478,18 +909,52 @@ public static class IdeologyEditor {
     // The generated scripture, shown with a left accent rule (mock .scripture). The narrative is derived
     // from memes/precepts and isn't separately editable, so it carries an always-on "LOCKED" marker
     // instead of a toggle; it regenerates naturally when the beliefs change.
-    private static LightweaveNode BuildNarrativeSection(Ideo? ideo, StateHandle<SectionLock> locks) {
+    private static LightweaveNode BuildNarrativeSection(Ideo? ideo, StateHandle<int> rev) {
+        StateHandle<bool> editing = UseState(false);
         string narrative = ideo?.description ?? string.Empty;
 
         LightweaveNode header = HStack.Create(SpacingScale.Xs, h => {
             h.AddHug(NewColonyControls.SectionLabel((string)"CL_NewColony_Ideology_Editor_Section_Narrative".Translate(), trailingRule: false));
-            h.AddFlex(Box.Create());
-            h.AddHug(CountTag.Create((string)"CL_NewColony_Ideology_Editor_NarrativeLocked".Translate(), CountTagTone.Accent));
+            h.AddFlex(Box.Create(style: new Style {
+                Height = Length.Rem(1f / 16f),
+                Background = BackgroundSpec.Of(ThemeSlot.BorderFaint),
+            }));
+            h.AddHug(Button.Create(
+                ((string)(editing.Value
+                    ? "CL_NewColony_Ideology_Editor_NarrativeDone"
+                    : "CL_NewColony_Ideology_Editor_NarrativeEdit").Translate()).ToUpperInvariant(),
+                () => editing.Set(!editing.Value),
+                Variant.Ghost,
+                leading: Glyph.Create(
+                    editing.Value ? Icons.Phosphor.Check : Icons.Phosphor.PencilSimple,
+                    new Style { FontSize = new Rem(0.75f) }),
+                style: new Style {
+                    Height = new Rem(1.875f),
+                    FontFamily = FontRole.Mono,
+                    FontSize = new Rem(0.6875f),
+                    TextColor = ThemeSlot.SurfaceAccent,
+                }));
         }, align: FlexAlign.Center, style: new Style { Width = Length.Stretch });
 
-        LightweaveNode body = string.IsNullOrEmpty(narrative)
-            ? EmptyLabel()
-            : HStack.Create(SpacingScale.Sm, h => {
+        LightweaveNode body;
+        if (editing.Value) {
+            body = TextArea.Create(
+                narrative,
+                value => { if (ideo != null) { IdeoDraftMutations.SetNarrative(ideo, value); Bump(rev); } },
+                instanceKey: ideo,
+                style: new Style {
+                    Width = Length.Stretch,
+                    MinHeight = new Rem(4.625f),
+                    FontFamily = FontRole.Body,
+                    FontSize = new Rem(0.875f),
+                    TextColor = ThemeSlot.TextPrimary,
+                });
+        }
+        else if (string.IsNullOrEmpty(narrative)) {
+            body = EmptyLabel();
+        }
+        else {
+            body = HStack.Create(SpacingScale.Sm, h => {
                 h.AddHug(Box.Create(style: new Style {
                     Width = Length.Rem(2f / 16f),
                     Height = Length.Stretch,
@@ -501,6 +966,7 @@ public static class IdeologyEditor {
                     TextColor = ThemeSlot.TextSecondary,
                 }));
             }, align: FlexAlign.Stretch, style: new Style { Width = Length.Stretch });
+        }
 
         return Stack.Create(SpacingScale.Sm, s => {
             s.Add(header);
@@ -576,24 +1042,7 @@ public static class IdeologyEditor {
         IdeoEditorTab.Animals,
     ];
 
-    private static LightweaveNode BuildSectionTabs(Ideo? ideo, StateHandle<IdeoEditorTab> tab, StateHandle<SectionLock> locks) {
-        return Segmented.Create(
-            tab.Value,
-            EditorTabs,
-            TabLabel,
-            t => tab.Set(t),
-            countFn: t => {
-                int n = TabCount(ideo, t);
-                return n > 0 ? n.ToString() : null;
-            },
-            lockFn: t => TabLockState(t, locks),
-            onLockToggle: t => ToggleTabLock(t, locks),
-            labelSize: new Rem(0.9375f),
-            labelRole: FontRole.Display,
-            boxedCount: true,
-            bordered: false,
-            style: new Style { Width = Length.Stretch, Height = new Rem(2.75f) });
-    }
+    
 
     // Shared "OVERALL IMPACT n · word" cluster used by both footers (standalone editor + wizard step 3).
     internal static LightweaveNode ImpactReadout(Ideo? ideo) {
@@ -661,92 +1110,162 @@ public static class IdeologyEditor {
     // The three attribute cards under the identity header: Structure, Deities, Styles. Each is a bordered
     // dark box with a header (label + lock + shuffle) over its body. Folds in the old in-header structure
     // picker, the deities row, and the styles section.
-    private static LightweaveNode BuildAttributeRow(Ideo? ideo, StateHandle<IdeoSubPicker> sub, StateHandle<int> rev, StateHandle<SectionLock> locks) {
+    private static LightweaveNode BuildAttributeRow(Ideo? ideo, StateHandle<IdeoSubPicker> sub, StateHandle<int> rev, StateHandle<SectionLock> locks, StateHandle<IdeoFoundation_Deity.Deity?> deityTarget) {
         MemeDef? structure = StructureMeme(ideo);
 
-        LightweaveNode structureBody = SelectableSurface.Create(
+        LightweaveNode cultureValue = HStack.Create(SpacingScale.Sm, h => {
+            h.AddHug(Dropdown.Create(
+                ideo?.culture,
+                Cultures(),
+                c => c != null ? c.LabelCap.ToString() : (string)"CL_NewColony_Ideology_Editor_NoCulture".Translate(),
+                c => {
+                    if (ideo != null && c != null) {
+                        IdeoDraftMutations.SetCulture(ideo, c);
+                        Bump(rev);
+                    }
+                },
+                variant: DropdownVariant.Button,
+                buttonStyle: Variant.Ghost,
+                instanceKey: ideo));
+            h.AddHug(Text.Create((string)"CL_NewColony_Ideology_Editor_CultureCaption".Translate(), style: new Style {
+                FontFamily = FontRole.Mono, FontSize = new Rem(0.59375f), TextColor = ThemeSlot.TextMuted,
+            }));
+        }, align: FlexAlign.Center);
+
+        LightweaveNode cultureRow = AttrRow(Icons.Phosphor.Globe, "CL_NewColony_Ideology_Editor_Section_Culture",
+            cultureValue, SectionLock.Culture, locks,
+            () => { if (ideo != null) { IdeoDraftMutations.RandomizeCulture(ideo, locks.Value); Bump(rev); } });
+
+        LightweaveNode structureTrigger = SelectableSurface.Create(
             child: HStack.Create(SpacingScale.Sm, h => {
+                if (structure?.Icon != null) {
+                    h.AddHug(Avatar.Create(string.Empty, size: new Rem(1.625f),
+                        accent: ThemeSlot.SurfaceAccent, background: ThemeSlot.AccentSoft, border: ThemeSlot.BorderFaint,
+                        texture: structure.Icon, iconScale: 0.7f, tintTexture: false));
+                }
                 h.AddHug(Text.Create(
                     structure != null ? structure.LabelCap.ToString() : (string)"CL_NewColony_Ideology_Editor_NoStructure".Translate(),
-                    style: new Style { FontFamily = FontRole.Display, FontSize = new Rem(1f), TextColor = ThemeSlot.TextPrimary }));
-                h.AddHug(Glyph.Create(Icons.Phosphor.CaretDown, new Style { FontSize = new Rem(0.75f), TextColor = ThemeSlot.TextMuted }));
+                    style: new Style { FontFamily = FontRole.Display, FontSize = new Rem(0.9375f), TextColor = ThemeSlot.TextPrimary }));
+                h.AddHug(Glyph.Create(Icons.Phosphor.CaretDown, new Style { FontSize = new Rem(0.6875f), TextColor = ThemeSlot.TextMuted }));
             }, align: FlexAlign.Center),
             onSelect: () => sub.Set(IdeoSubPicker.Structure),
             variant: SelectableSurfaceVariant.Tile,
             tooltip: "CL_NewColony_Ideology_Editor_Picker_Structure_Title".Translate(),
-            padding: new EdgeInsets(new Rem(0.3125f), new Rem(0.75f), new Rem(0.3125f), new Rem(0.625f)),
-            style: new Style { Background = BackgroundSpec.Of(ThemeSlot.Glass1) });
+            padding: new EdgeInsets(new Rem(0.25f), new Rem(0.625f), new Rem(0.25f), new Rem(0.4375f)),
+            style: new Style { Background = BackgroundSpec.Of(ThemeSlot.Glass1), Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderDefault) });
 
-        LightweaveNode structureCard = AttributeCard(
-            "CL_NewColony_Ideology_Editor_Section_Structure", SectionLock.Structure, locks,
-            () => {
-                if (ideo != null) {
-                    IdeoDraftMutations.RandomizeStructure(ideo);
-                    Bump(rev);
-                }
-            }, structureBody, null);
+        LightweaveNode structureValue = HStack.Create(SpacingScale.Sm, h => {
+            h.AddHug(structureTrigger);
+            h.AddHug(Text.Create((string)"CL_NewColony_Ideology_Editor_StructureCaption".Translate(), style: new Style {
+                FontFamily = FontRole.Mono, FontSize = new Rem(0.59375f), TextColor = ThemeSlot.TextMuted,
+            }));
+        }, align: FlexAlign.Center);
+
+        LightweaveNode structureRow = AttrRow(Icons.Phosphor.Compass, "CL_NewColony_Ideology_Editor_Section_Structure",
+            structureValue, SectionLock.Structure, locks,
+            () => { if (ideo != null) { IdeoDraftMutations.RandomizeStructure(ideo); Bump(rev); } });
 
         IdeoFoundation_Deity? deityFoundation = ideo?.foundation as IdeoFoundation_Deity;
-        LightweaveNode deitiesBody = Wrap.Create(SpacingScale.Xs, new Rem(8f), w => {
-            bool any = false;
+        bool hasDeitySupport = deityFoundation != null && ideo != null && ideo.DeityCountRange.max > 0;
+        int deityCount = deityFoundation?.DeitiesListForReading.Count ?? 0;
+        LightweaveNode deitiesValue = Wrap.Create(SpacingScale.Xs, new Rem(2.5f), w => {
             if (deityFoundation != null) {
                 foreach (IdeoFoundation_Deity.Deity deity in deityFoundation.DeitiesListForReading) {
-                    any = true;
-                    w.Add(DeityChip(deity));
+                    IdeoFoundation_Deity.Deity captured = deity;
+                    w.Add(DeityChip(captured,
+                        () => {
+                            deityTarget.Set(captured);
+                            sub.Set(IdeoSubPicker.Deity);
+                        },
+                        () => {
+                            if (ideo != null) {
+                                IdeoDraftMutations.RemoveDeity(ideo, captured);
+                                Bump(rev);
+                            }
+                        }));
                 }
             }
-            if (!any) {
+            if (ideo != null && IdeoDraftMutations.CanAddDeity(ideo)) {
+                w.Add(AddButton((string)"CL_NewColony_Ideology_Editor_AddDeity".Translate(), () => {
+                    IdeoDraftMutations.AddDeity(ideo);
+                    Bump(rev);
+                }));
+            }
+            else if (!hasDeitySupport && deityCount == 0) {
+                // Foundations like Animism venerate spirits, not named gods (DeityCountRange.max == 0).
+                // Show the placeholder so the row reads as intentional rather than broken/empty.
                 w.Add(Text.Create((string)"CL_NewColony_Ideology_Editor_Deities_Empty".Translate(), style: new Style {
                     FontFamily = FontRole.Body, FontSize = new Rem(0.8125f), TextColor = ThemeSlot.TextMuted,
                 }));
             }
         }, flow: true);
 
-        LightweaveNode deitiesCard = AttributeCard(
-            "CL_NewColony_Ideology_Editor_Section_Deities", SectionLock.Deities, locks,
-            () => {
-                if (ideo != null) {
-                    IdeoDraftMutations.RegenerateDeities(ideo);
-                    Bump(rev);
-                }
-            }, deitiesBody, null);
+        LightweaveNode deitiesRow = AttrRow(Icons.Phosphor.Crown, "CL_NewColony_Ideology_Editor_Section_Deities",
+            deitiesValue, SectionLock.Deities, locks,
+            () => { if (ideo != null) { IdeoDraftMutations.RegenerateDeities(ideo); Bump(rev); } });
 
-        LightweaveNode stylesBody = Wrap.Create(SpacingScale.Xs, new Rem(2.5f), w => {
-            bool any = false;
+        LightweaveNode stylesValue = Wrap.Create(SpacingScale.Xs, new Rem(2.5f), w => {
             if (ideo?.thingStyleCategories != null) {
                 foreach (ThingStyleCategoryWithPriority style in ideo.thingStyleCategories) {
-                    any = true;
                     StyleCategoryDef captured = style.category;
-                    w.Add(RemovableChip(null, captured.LabelCap, captured.description, () => {
+                    w.Add(RemovableChip(captured.Icon, captured.LabelCap, captured.description, () => {
                         IdeoDraftMutations.ToggleStyle(ideo, captured);
                         Bump(rev);
                     }));
                 }
             }
-            if (!any) {
-                w.Add(EmptyLabel());
-            }
+            w.Add(AddButton((string)"CL_NewColony_Ideology_Editor_AddStyle".Translate(), () => sub.Set(IdeoSubPicker.Style)));
         }, flow: true);
 
-        LightweaveNode stylesCard = AttributeCard(
-            "CL_NewColony_Ideology_Editor_Section_Styles", SectionLock.Styles, locks,
-            () => {
-                if (ideo != null) {
-                    IdeoDraftMutations.RandomizeStyles(ideo);
-                    Bump(rev);
-                }
-            }, stylesBody,
-            AddButton((string)"CL_NewColony_Ideology_Editor_AddStyle".Translate(), () => sub.Set(IdeoSubPicker.Style)));
+        LightweaveNode stylesRow = AttrRow(Icons.Phosphor.Star, "CL_NewColony_Ideology_Editor_Section_Styles",
+            stylesValue, SectionLock.Styles, locks,
+            () => { if (ideo != null) { IdeoDraftMutations.RandomizeStyles(ideo); Bump(rev); } });
 
-        return Layout.Grid.Create(
-            [new GridTrack.Fr(1f), new GridTrack.Fr(1f), new GridTrack.Fr(1f)],
-            gap: SpacingScale.Sm,
-            children: cells => {
-                cells.Add(structureCard);
-                cells.Add(deitiesCard);
-                cells.Add(stylesCard);
-            },
-            style: new Style { Width = Length.Stretch });
+        return Stack.Create(SpacingScale.None, s => {
+            s.Add(cultureRow);
+            s.Add(structureRow);
+            s.Add(deitiesRow);
+            s.Add(stylesRow);
+        }, style: new Style { Width = Length.Stretch });
+    }
+
+    // One inline attribute row: a fixed-width lead (icon + eyebrow), a flexible value region, and a
+    // trailing lock + dice cluster. A top border separates rows; the first row's border is suppressed
+    // by the zero-gap Stack that hosts them (the visual rule comes from the row's own top border).
+    private static LightweaveNode AttrRow(IconRef leadIcon, string eyebrowKey, LightweaveNode value, SectionLock lockFlag, StateHandle<SectionLock> locks, System.Action onRandomize) {
+        LightweaveNode lead = HStack.Create(SpacingScale.Sm, h => {
+            h.AddHug(Glyph.Create(leadIcon, new Style { FontSize = new Rem(0.9375f), TextColor = ThemeSlot.TextSecondary }));
+            h.AddHug(Text.Create(
+                ((string)eyebrowKey.Translate()).ToUpperInvariant(),
+                style: new Style {
+                    FontFamily = FontRole.Mono,
+                    FontSize = new Rem(0.625f),
+                    LetterSpacing = Tracking.Of(0.1f),
+                    TextColor = ThemeSlot.TextMuted,
+                }));
+        }, align: FlexAlign.Center);
+
+        LightweaveNode tools = HStack.Create(SpacingScale.Xxs, h => {
+            h.AddHug(SectionLockToggle(lockFlag, locks));
+            h.AddHug(SectionRandomize(onRandomize, disabled: (locks.Value & lockFlag) != 0));
+        }, align: FlexAlign.Center);
+
+        return HStack.Create(SpacingScale.Md, h => {
+            // Lead column width = badge(4.5rem) + identity HStack gap(Md 1rem) so the row value boxes
+            // share a left edge with the name field and mini-grid above them (#4).
+            h.Add(lead, new Rem(5.5f).ToPixels());
+            h.AddFlex(value);
+            h.AddHug(tools);
+        }, align: FlexAlign.Start, style: new Style {
+            Width = Length.Stretch,
+            MinHeight = new Rem(3.25f),
+            Padding = new EdgeInsets(new Rem(0.6875f), new Rem(0f), new Rem(0.6875f), new Rem(0f)),
+            Border = new BorderSpec(Top: new Rem(1f / 16f), Color: ThemeSlot.BorderFaint),
+        });
+    }
+
+    private static IReadOnlyList<CultureDef> Cultures() {
+        return DefDatabase<CultureDef>.AllDefsListForReading;
     }
 
     private static LightweaveNode AttributeCard(string labelKey, SectionLock section, StateHandle<SectionLock> locks, System.Action onShuffle, LightweaveNode body, LightweaveNode? addAffordance) {
@@ -769,7 +1288,7 @@ public static class IdeologyEditor {
             style: new Style {
                 Width = Length.Stretch,
                 Padding = new EdgeInsets(new Rem(0.6875f), new Rem(0.875f), new Rem(0.6875f), new Rem(0.875f)),
-                Background = BackgroundSpec.Of(ThemeSlot.SurfaceTranslucentDark),
+                Background = BackgroundSpec.Of(ThemeSlot.SurfaceSunken),
                 Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderDefault),
                 Radius = RadiusSpec.None,
             });
@@ -798,7 +1317,7 @@ public static class IdeologyEditor {
             h.AddFlex(Text.Create((string)WellDescKey(t).Translate(), wrap: true, style: new Style {
                 FontFamily = FontRole.Body, FontSize = new Rem(0.78125f), TextColor = ThemeSlot.TextMuted,
             }));
-            h.AddHug(HStack.Create(SpacingScale.Xs, a => {
+            h.AddHug(HStack.Create(SpacingScale.Xxs, a => {
                 if (t == IdeoEditorTab.Memes) {
                     int score = IdeoComplexity.Score(NonStructureMemeCount(ideo), ideo?.PreceptsListForReading.Count ?? 0);
                     a.AddHug(CountTag.Create(
@@ -823,12 +1342,13 @@ public static class IdeologyEditor {
             Padding = new EdgeInsets(new Rem(1.125f), new Rem(1.25f), new Rem(1.25f), new Rem(1.25f)),
         });
 
+        // Natural height: the outer BuildDetail ScrollArea owns the overflow (#17). The well keeps its
+        // sunken-panel chrome but renders the gallery at full height instead of in an inner scroll.
         return Box.Create(
-            children: c => c.Add(ScrollArea.Create(content, style: new Style { Width = Length.Stretch, Height = Length.Stretch })),
+            children: c => c.Add(content),
             style: new Style {
                 Width = Length.Stretch,
-                Height = Length.Stretch,
-                Background = BackgroundSpec.Of(ThemeSlot.SurfaceTranslucentDark),
+                Background = BackgroundSpec.Of(ThemeSlot.SurfaceSunken),
                 Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderDefault),
                 Radius = RadiusSpec.None,
             });
@@ -994,27 +1514,33 @@ public static class IdeologyEditor {
     // regenerate. Lives in the identity header, not a tab.
     
 
-    private static LightweaveNode DeityChip(IdeoFoundation_Deity.Deity deity) {
+    private static LightweaveNode DeityChip(IdeoFoundation_Deity.Deity deity, System.Action onEdit, System.Action onRemove) {
         string name = deity.name ?? string.Empty;
-        string type = deity.type ?? string.Empty;
         return Box.Create(
             children: c => c.Add(HStack.Create(SpacingScale.Xs, h => {
+                if (deity.Icon != null) {
+                    h.AddHug(Avatar.Create(string.Empty, size: new Rem(1.375f),
+                        accent: ThemeSlot.SurfaceAccent, background: ThemeSlot.AccentSoft, border: ThemeSlot.BorderFaint,
+                        texture: deity.Icon, iconScale: 0.7f, tintTexture: false, radius: RadiusScale.Full));
+                }
                 h.AddHug(Text.Create(name, style: new Style {
                     FontFamily = FontRole.Display,
                     FontSize = new Rem(0.8125f),
                     TextColor = ThemeSlot.TextPrimary,
                 }));
-                if (!string.IsNullOrEmpty(type)) {
-                    h.AddHug(Text.Create(type.ToUpperInvariant(), style: new Style {
-                        FontFamily = FontRole.Mono,
-                        FontSize = new Rem(0.5625f),
-                        LetterSpacing = Tracking.Of(0.08f),
-                        TextColor = ThemeSlot.TextMuted,
-                    }));
-                }
+                h.AddHug(IconButton.Create(
+                    Glyph.Create(Icons.Phosphor.PencilSimple, new Style { FontSize = new Rem(0.625f) }),
+                    onEdit,
+                    iconSize: new Rem(0.75f),
+                    tooltipKey: "CL_NewColony_Ideology_Editor_EditDeity"));
+                h.AddHug(IconButton.Create(
+                    Glyph.Create(Icons.Phosphor.X, new Style { FontSize = new Rem(0.625f), TextColor = ThemeSlot.TextMuted }),
+                    onRemove,
+                    iconSize: new Rem(0.75f),
+                    tooltipKey: "CL_NewColony_Ideology_Editor_RemoveDeity"));
             }, align: FlexAlign.Center)),
             style: new Style {
-                Padding = new EdgeInsets(new Rem(0.25f), new Rem(0.5f), new Rem(0.25f), new Rem(0.5f)),
+                Padding = new EdgeInsets(new Rem(0.25f), new Rem(0.4375f), new Rem(0.25f), new Rem(0.3125f)),
                 Background = BackgroundSpec.Of(ThemeSlot.Glass1),
                 Radius = RadiusSpec.All(RadiusScale.Sm),
                 Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderFaint),
@@ -1089,6 +1615,164 @@ public static class IdeologyEditor {
         BuildTypedPreceptPicker(sub, rev, typeof(Precept_Animal),
             "CL_NewColony_Ideology_Editor_Picker_Animal_Title", "CL_NewColony_Ideology_Editor_Picker_Animal_Subtitle", "ideo_animal_", target);
 
+    internal static LightweaveNode BuildXenotypePicker(StateHandle<IdeoSubPicker> sub, StateHandle<int> rev, Ideo? target = null) =>
+        BuildTypedPreceptPicker(sub, rev, typeof(Precept_Xenotype),
+            "CL_NewColony_Ideology_Editor_Picker_Xenotype_Title", "CL_NewColony_Ideology_Editor_Picker_Xenotype_Subtitle", "ideo_xenotype_", target);
+
+    internal static LightweaveNode BuildApparelPicker(StateHandle<IdeoSubPicker> sub, StateHandle<int> rev, Ideo? target = null) =>
+        BuildTypedPreceptPicker(sub, rev, typeof(Precept_Apparel),
+            "CL_NewColony_Ideology_Editor_Picker_Apparel_Title", "CL_NewColony_Ideology_Editor_Picker_Apparel_Subtitle", "ideo_apparel_", target);
+
+    internal static LightweaveNode BuildIconPicker(StateHandle<IdeoSubPicker> sub, StateHandle<int> rev, Ideo? target = null) {
+        Ideo? ideo = target ?? IdeoDraft.Active();
+
+        StateHandle<IdeoIconDef?> pendingIcon = UseState(ideo?.iconDef);
+        StateHandle<ColorDef?> pendingColor = UseState(ideo?.colorDef);
+
+        List<ColorDef> allColors = DefDatabase<ColorDef>.AllDefsListForReading;
+        List<ColorDef> ideoColors = new List<ColorDef>(allColors.Count);
+        for (int i = 0; i < allColors.Count; i++) {
+            if (allColors[i].colorType == ColorType.Ideo) {
+                ideoColors.Add(allColors[i]);
+            }
+        }
+
+        Color[] palette = new Color[ideoColors.Count];
+        for (int i = 0; i < ideoColors.Count; i++) {
+            palette[i] = ideoColors[i].color;
+        }
+
+        Color previewColor = pendingColor.Value?.color ?? Color.white;
+
+        LightweaveNode colorPicker = ColorPicker.Create(
+            previewColor,
+            picked => {
+                for (int i = 0; i < ideoColors.Count; i++) {
+                    if (ideoColors[i].color == picked) {
+                        pendingColor.Set(ideoColors[i]);
+                        return;
+                    }
+                }
+            },
+            palette: palette,
+            style: new Style { Width = Length.Stretch });
+
+        List<IdeoIconDef> icons = DefDatabase<IdeoIconDef>.AllDefsListForReading;
+        LightweaveNode shapeGrid = Wrap.Create(SpacingScale.Xs, new Rem(2.75f), w => {
+            for (int i = 0; i < icons.Count; i++) {
+                IdeoIconDef captured = icons[i];
+                bool selected = captured == pendingIcon.Value;
+                w.Add(IconButton.Create(
+                    Avatar.Create(string.Empty, size: new Rem(1.75f),
+                        texture: captured.Icon, iconScale: 1f, tintColor: previewColor, chrome: false),
+                    () => pendingIcon.Set(captured),
+                    iconSize: new Rem(1.75f),
+                    active: selected,
+                    id: "ideo_icon_" + captured.defName));
+            }
+        }, flow: true, style: new Style { Width = Length.Stretch });
+
+        return Stack.Create(SpacingScale.Md, root => {
+            root.Add(PickerHeader(
+                (string)"CL_NewColony_Ideology_Editor_Picker_Add".Translate(),
+                (string)"CL_NewColony_Ideology_Editor_Picker_Icon_Title".Translate(),
+                (string)"CL_NewColony_Ideology_Editor_Picker_Icon_Subtitle".Translate()));
+            root.Add(Divider.Horizontal());
+            root.AddFlex(ScrollArea.Create(
+                Stack.Create(SpacingScale.Md, body => {
+                    body.Add(Text.Create((string)"CL_NewColony_Ideology_Editor_Picker_Icon_Color".Translate(), style: new Style {
+                        FontFamily = FontRole.Mono, FontSize = new Rem(0.625f),
+                        LetterSpacing = Tracking.Of(0.28f), TextColor = ThemeSlot.TextMuted,
+                    }));
+                    body.Add(colorPicker);
+                    body.Add(Text.Create((string)"CL_NewColony_Ideology_Editor_Picker_Icon_Shape".Translate(), style: new Style {
+                        FontFamily = FontRole.Mono, FontSize = new Rem(0.625f),
+                        LetterSpacing = Tracking.Of(0.28f), TextColor = ThemeSlot.TextMuted,
+                    }));
+                    body.Add(shapeGrid);
+                }, style: new Style { Width = Length.Stretch }),
+                style: new Style { Width = Length.Stretch, Height = Length.Stretch }));
+            root.Add(Divider.Horizontal());
+            root.Add(HStack.Create(SpacingScale.Sm, f => {
+                f.AddFlex(Box.Create());
+                f.AddHug(Button.Create((string)"CL_NewColony_Ideology_Editor_Picker_Close".Translate(),
+                    () => sub.Set(IdeoSubPicker.None), Variant.Ghost));
+                f.AddHug(Button.Create((string)"CL_NewColony_Ideology_Editor_Apply".Translate(),
+                    () => {
+                        if (ideo != null && pendingIcon.Value != null && pendingColor.Value != null) {
+                            IdeoDraftMutations.SetIcon(ideo, pendingIcon.Value, pendingColor.Value);
+                            Bump(rev);
+                        }
+                        sub.Set(IdeoSubPicker.None);
+                    },
+                    Variant.Primary));
+            }, style: new Style { Width = Length.Stretch }));
+        }, style: new Style {
+            Width = Length.Stretch,
+            Height = Length.Stretch,
+            Padding = EdgeInsets.All(new Rem(1.5f)),
+        });
+    }
+
+    internal static LightweaveNode BuildDeityEditor(StateHandle<IdeoSubPicker> sub, StateHandle<int> rev, StateHandle<IdeoFoundation_Deity.Deity?> deityTarget, Ideo? target = null) {
+        Ideo? ideo = target ?? IdeoDraft.Active();
+        IdeoFoundation_Deity.Deity? deity = deityTarget.Value;
+
+        StateHandle<string> name = UseState(deity?.name ?? string.Empty);
+        StateHandle<string> title = UseState(deity?.type ?? string.Empty);
+        StateHandle<Gender> gender = UseState(deity?.gender ?? Gender.None);
+
+        Gender[] genders = [Gender.None, Gender.Male, Gender.Female];
+
+        return Stack.Create(SpacingScale.Md, root => {
+            root.Add(PickerHeader(
+                (string)"CL_NewColony_Ideology_Editor_Picker_Add".Translate(),
+                (string)"CL_NewColony_Ideology_Editor_Picker_Deity_Title".Translate(),
+                (string)"CL_NewColony_Ideology_Editor_Picker_Deity_Subtitle".Translate()));
+            root.Add(Divider.Horizontal());
+            root.Add(Stack.Create(SpacingScale.Md, body => {
+                body.Add(DeityField((string)"CL_NewColony_Ideology_Editor_DeityName".Translate(),
+                    TextField.Create(name.Value, value => name.Set(value), instanceKey: deity,
+                        style: new Style { Width = Length.Stretch })));
+                body.Add(DeityField((string)"CL_NewColony_Ideology_Editor_DeityTitle".Translate(),
+                    TextField.Create(title.Value, value => title.Set(value), instanceKey: deity,
+                        style: new Style { Width = Length.Stretch })));
+                body.Add(DeityField((string)"CL_NewColony_Ideology_Editor_DeityGender".Translate(),
+                    Segmented.Create(gender.Value, genders, g => g.GetLabel().CapitalizeFirst(), g => gender.Set(g))));
+            }, style: new Style { Width = Length.Stretch }));
+            root.AddFlex(Box.Create());
+            root.Add(Divider.Horizontal());
+            root.Add(HStack.Create(SpacingScale.Sm, f => {
+                f.AddFlex(Box.Create());
+                f.AddHug(Button.Create((string)"CL_NewColony_Ideology_Editor_Picker_Close".Translate(),
+                    () => sub.Set(IdeoSubPicker.None), Variant.Ghost));
+                f.AddHug(Button.Create((string)"CL_NewColony_Ideology_Editor_Apply".Translate(),
+                    () => {
+                        if (ideo != null && deity != null) {
+                            IdeoDraftMutations.SetDeityFields(ideo, deity, name.Value.Trim(), title.Value.Trim(), gender.Value);
+                            Bump(rev);
+                        }
+                        sub.Set(IdeoSubPicker.None);
+                    },
+                    Variant.Primary));
+            }, style: new Style { Width = Length.Stretch }));
+        }, style: new Style {
+            Width = Length.Stretch,
+            Height = Length.Stretch,
+            Padding = EdgeInsets.All(new Rem(1.5f)),
+        });
+    }
+
+    private static LightweaveNode DeityField(string label, LightweaveNode control) {
+        return Stack.Create(SpacingScale.Xxs, s => {
+            s.Add(Text.Create(label, style: new Style {
+                FontFamily = FontRole.Mono, FontSize = new Rem(0.625f),
+                LetterSpacing = Tracking.Of(0.18f), TextColor = ThemeSlot.TextMuted,
+            }));
+            s.Add(control);
+        }, style: new Style { Width = Length.Stretch });
+    }
+
     // A full-width precept row: icon, issue title, precept-choice subline, and a remove button - matching the
     // mock's "Pain / IDEALIZED" cards rather than a cramped wrap of pills.
     // A precept card sized to fill its responsive grid cell: vanilla icon, issue title, precept-choice
@@ -1148,32 +1832,33 @@ public static class IdeologyEditor {
     
 
     private static LightweaveNode RemovableChip(Texture2D? icon, string label, string? tooltip, System.Action onRemove) {
-        LightweaveNode content = HStack.Create(SpacingScale.Sm, m => {
+        LightweaveNode content = HStack.Create(SpacingScale.Xs, m => {
             if (icon != null) {
-                m.AddHug(Avatar.Create(string.Empty, size: new Rem(4f),
+                m.AddHug(Avatar.Create(string.Empty, size: new Rem(1.5f),
                     accent: ThemeSlot.SurfaceAccent, background: ThemeSlot.Glass1,
-                    border: ThemeSlot.BorderDefault, texture: icon, iconScale: 0.62f, tintTexture: false));
+                    border: ThemeSlot.BorderFaint, texture: icon, iconScale: 0.72f, tintTexture: false,
+                    radius: RadiusScale.Sm));
             }
             m.AddHug(Text.Create(label, style: new Style {
                 FontFamily = FontRole.Display,
-                FontSize = new Rem(0.9375f),
+                FontSize = new Rem(0.8125f),
                 LetterSpacing = Tracking.Of(0.01f),
                 TextColor = ThemeSlot.TextPrimary,
             }));
             m.AddHug(IconButton.Create(
-                Glyph.Create(Icons.Phosphor.X, new Style { FontSize = new Rem(0.6875f) }),
+                Glyph.Create(Icons.Phosphor.X, new Style { FontSize = new Rem(0.625f) }),
                 onRemove,
+                iconSize: new Rem(0.75f),
                 tooltipKey: "CL_NewColony_Ideology_Editor_Remove"));
-        });
+        }, align: FlexAlign.Center);
 
         LightweaveNode box = Box.Create(
             children: c => c.Add(content),
             style: new Style {
-                Height = icon != null ? new Rem(4.625f) : new Rem(2.5f),
-                Padding = new EdgeInsets(new Rem(0.3125f), new Rem(0.625f), new Rem(0.3125f), new Rem(0.5f)),
+                Padding = new EdgeInsets(new Rem(0.25f), new Rem(0.5f), new Rem(0.25f), new Rem(0.3125f)),
                 Background = BackgroundSpec.Of(ThemeSlot.Glass1),
                 Radius = RadiusSpec.All(RadiusScale.Sm),
-                Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderDefault),
+                Border = BorderSpec.All(new Rem(1f / 16f), ThemeSlot.BorderFaint),
             });
 
         return string.IsNullOrEmpty(tooltip)
@@ -1295,7 +1980,7 @@ public static class IdeologyEditor {
                     bool selected = HasStyle(ideo, cat);
                     StyleCategoryDef captured = cat;
                     grid.Add(SelectableSurface.Create(
-                        child: PickerTile(null, cat.LabelCap, selected),
+                        child: PickerTile(cat.Icon, cat.LabelCap, selected),
                         selected: selected,
                         variant: SelectableSurfaceVariant.Tile,
                         onSelect: () => {

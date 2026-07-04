@@ -51,7 +51,7 @@ public static class ContextMenu {
             Event e = Event.current;
             RenderContext ctx = RenderContext.Current;
             bool occludedByOverlay = ctx.OverlayContentDepth == 0
-                && HoverBlockRegistry.IsBlocked(GUIUtility.GUIToScreenPoint(e.mousePosition));
+                && HoverBlockRegistry.IsBlocked(ctx.RootId, GUIUtility.GUIToScreenPoint(e.mousePosition));
             if (e.type == EventType.MouseUp && e.button == 1 && rect.Contains(e.mousePosition) && !occludedByOverlay) {
                 anchorPos.Set(e.mousePosition);
                 isOpen.Set(true);

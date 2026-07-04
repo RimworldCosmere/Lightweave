@@ -1361,10 +1361,10 @@ public static class UseBreakpointDoc {
         Breakpoint bp = UseBreakpoint();
 
         string copy;
-        if (bp >= Breakpoint.Lg) {
+        if (bp >= Breakpoint.P1440) {
             copy = (string)"CL_Playground_Hook_UseBreakpoint_AdaptiveLarge".Translate();
         }
-        else if (bp >= Breakpoint.Md) {
+        else if (bp >= Breakpoint.P1080) {
             copy = (string)"CL_Playground_Hook_UseBreakpoint_AdaptiveMedium".Translate();
         }
         else {
@@ -1380,8 +1380,8 @@ public static class UseBreakpointDoc {
     private static LightweaveNode BuildPickDoc() {
         Rem size = Breakpoints.Pick(
             new Rem(0.8125f),
-            md: new Rem(1.0625f),
-            lg: new Rem(1.375f)
+            p1080: new Rem(1.0625f),
+            p1440: new Rem(1.375f)
         );
 
         return Text.Create(
@@ -1393,8 +1393,8 @@ public static class UseBreakpointDoc {
     private static LightweaveNode BuildPickRefDoc() {
         string copy = Breakpoints.PickRef(
             (string)"CL_Playground_Hook_UseBreakpoint_PickRefCompact".Translate(),
-            md: (string)"CL_Playground_Hook_UseBreakpoint_PickRefMedium".Translate(),
-            lg: (string)"CL_Playground_Hook_UseBreakpoint_PickRefLarge".Translate()
+            p1080: (string)"CL_Playground_Hook_UseBreakpoint_PickRefMedium".Translate(),
+            p1440: (string)"CL_Playground_Hook_UseBreakpoint_PickRefLarge".Translate()
         );
 
         return Text.Create(
