@@ -1,13 +1,14 @@
 using System.Collections.Generic;
+using Concord;
 using Cosmere.Lightweave.Playground;
-using HarmonyLib;
 using Verse;
 
 namespace Cosmere.Lightweave.Patch;
 
-[HarmonyPatch(typeof(OptionListingUtility), nameof(OptionListingUtility.DrawOptionListing))]
+[Patch(typeof(OptionListingUtility))]
 public static class PlaygroundMenuLinkPatch {
-    public static void Prefix(List<ListableOption> optList) {
+    [Inject(At.Head, nameof(OptionListingUtility.DrawOptionListing))]
+    public static void Prefix(ControlHandle<float> ch, List<ListableOption> optList) {
         if (!Prefs.DevMode || optList == null) {
             return;
         }

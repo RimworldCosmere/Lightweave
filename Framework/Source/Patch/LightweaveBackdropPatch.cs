@@ -5,7 +5,7 @@ using Cosmere.Lightweave.Settings;
 using Cosmere.Lightweave.Theme;
 using Cosmere.Lightweave.Tokens;
 using Cosmere.Lightweave.Types;
-using HarmonyLib;
+using Concord;
 using UnityEngine;
 using Verse;
 
@@ -64,9 +64,10 @@ public static class LightweaveBackdropRegistry {
     }
 }
 
-[HarmonyPatch(typeof(WindowStack), nameof(WindowStack.WindowStackOnGUI))]
-public static class WindowStackOnGUI_BackdropPatch {
-    public static void Prefix() {
+[Patch]
+public abstract class WindowStackOnGUI_BackdropPatch : WindowStack {
+    [Inject(At.Head, nameof(WindowStackOnGUI))]
+    public void Prefix(ControlHandle ch) {
         if (Event.current == null || Event.current.type != EventType.Repaint) {
             return;
         }

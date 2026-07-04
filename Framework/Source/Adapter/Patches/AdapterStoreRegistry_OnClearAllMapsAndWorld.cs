@@ -1,11 +1,12 @@
-using HarmonyLib;
+using Concord;
 using Verse.Profile;
 
 namespace Cosmere.Lightweave.Adapter.Patches;
 
-[HarmonyPatch(typeof(MemoryUtility), nameof(MemoryUtility.ClearAllMapsAndWorld))]
+[Patch(typeof(MemoryUtility))]
 public static class AdapterStoreRegistry_OnClearAllMapsAndWorld {
-    private static void Prefix() {
+    [Inject(At.Head, nameof(MemoryUtility.ClearAllMapsAndWorld))]
+    public static void Prefix(ControlHandle ch) {
         AdapterStoreRegistry.ClearAll();
     }
 }

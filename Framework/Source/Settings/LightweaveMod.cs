@@ -1,4 +1,4 @@
-using HarmonyLib;
+using Concord;
 using UnityEngine;
 using Verse;
 
@@ -12,8 +12,7 @@ public class LightweaveMod : Verse.Mod, ILightweaveSettings {
     public LightweaveMod(ModContentPack content) : base(content) {
         instance = this;
         Settings = GetSettings<LightweaveSettings>();
-        Harmony harmony = new Harmony("cosmere.lightweave");
-        harmony.PatchAll(typeof(LightweaveMod).Assembly);
+        Patcher.Apply(typeof(LightweaveMod).Assembly);
     }
 
     public static void Save() {

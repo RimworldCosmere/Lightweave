@@ -1,30 +1,41 @@
-using HarmonyLib;
+using Concord;
 using RimWorld;
 using Verse;
 
 namespace Cosmere.Lightweave.Patch;
 
-[HarmonyPatch(typeof(UIRoot_Entry), nameof(UIRoot_Entry.UIRootOnGUI))]
-public static class UIRoot_Entry_PerformanceOverlayPatch {
-    // Prefix runs before base.UIRootOnGUI handles window events, so the toggle is
-    // caught even when a fullscreen modal window (e.g. the New Colony window) would
-    // otherwise absorb the keystroke.
-    public static void Prefix() {
+[Patch]
+public abstract class UIRoot_Entry_OverlayPatch : UIRoot_Entry {
+    [Inject(At.Head, nameof(UIRootOnGUI))]
+    public void Prefix(ControlHandle ch) {
         PerformanceOverlay.HandleToggleHotkey();
+
+        if (UIRootDragSkip.ShouldSkip()) {
+            UIRootDragSkip.RunMinimalDispatch();
+            ch.Cancel();
+        }
     }
 
-    public static void Postfix() {
+    [Inject(At.Tail, nameof(UIRootOnGUI))]
+    public void Postfix(ControlHandle ch) {
         PerformanceOverlay.Draw();
     }
 }
 
-[HarmonyPatch(typeof(UIRoot_Play), nameof(UIRoot_Play.UIRootOnGUI))]
-public static class UIRoot_Play_PerformanceOverlayPatch {
-    public static void Prefix() {
+[Patch]
+public abstract class UIRoot_Play_OverlayPatch : UIRoot_Play {
+    [Inject(At.Head, nameof(UIRootOnGUI))]
+    public void Prefix(ControlHandle ch) {
         PerformanceOverlay.HandleToggleHotkey();
+
+        if (UIRootDragSkip.ShouldSkip()) {
+            UIRootDragSkip.RunMinimalDispatch();
+            ch.Cancel();
+        }
     }
 
-    public static void Postfix() {
+    [Inject(At.Tail, nameof(UIRootOnGUI))]
+    public void Postfix(ControlHandle ch) {
         PerformanceOverlay.Draw();
     }
 }
