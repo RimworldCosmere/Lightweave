@@ -18,7 +18,7 @@
         <li>
             <packageId>cryptiklemur.rimlogging</packageId>
             <displayName>RimLogging</displayName>
-            <downloadUrl>https://github.com/cryptiklemur/rimworld-logging-framework</downloadUrl>
+            <downloadUrl>https://github.com/RimWorks/rimworld-logging-framework</downloadUrl>
         </li>
     </modDependencies>
     <loadAfter>
