@@ -17,7 +17,7 @@ on:
 
 jobs:
   build:
-    uses: cryptiklemur/steam-game-image-action/.github/workflows/build-image.yml@v1
+    uses: rimworks/steam-game-image-action/.github/workflows/build-image.yml@v1
     permissions:
       packages: write
       contents: read
