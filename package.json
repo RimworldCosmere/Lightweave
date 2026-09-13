@@ -4,6 +4,6 @@
     "@semantic-release/git": "^10.0.1",
     "execa": "^9.0.0",
     "semantic-release-replace-plugin": "^1.2.7",
-    "semantic-release-steam": "^1.0.1"
+    "semantic-release-steam": "^2.1.3"
   }
 }
