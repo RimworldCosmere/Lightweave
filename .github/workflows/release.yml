@@ -75,7 +75,7 @@ jobs:
         if: steps.assetbundle-cache.outputs.cache-hit != 'true'
         run: dotnet tool install --global dotnet-script
 
-      - uses: buildalon/unity-setup@v1
+      - uses: buildalon/unity-setup@v3
         if: steps.assetbundle-cache.outputs.cache-hit != 'true'
         with:
           unity-version: 2022.3.35f1
@@ -84,7 +84,7 @@ jobs:
           cache-installation: 'true'
           auto-update-hub: 'false'
 
-      - uses: buildalon/activate-unity-license@v1
+      - uses: buildalon/activate-unity-license@v3
         if: steps.assetbundle-cache.outputs.cache-hit != 'true'
         with:
           license: 'Personal'
