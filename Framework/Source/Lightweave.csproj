@@ -71,8 +71,8 @@
 
     <ItemGroup>
         <PackageReference Include="CryptikLemur.RimLogging" Version="[1.0.2,2.0.0)"/>
-        <PackageReference Include="CryptikLemur.RimObs.Library" Version="[1.0.1,2.0.0)"/>
-        <PackageReference Include="CryptikLemur.RimObs.Wire" Version="[1.0.1,2.0.0)"/>
+        <PackageReference Include="CryptikLemur.RimObs.Library" Version="[1.1.9, 2.0.0)"/>
+        <PackageReference Include="CryptikLemur.RimObs.Wire" Version="[1.1.9, 2.0.0)"/>
         <PackageReference Include="Concord.Ref" Version="0.4.1" PrivateAssets="all"/>
         <PackageReference Include="Concord.Analyzers" Version="0.4.1" PrivateAssets="all"/>
         <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" Version="1.0.3" PrivateAssets="all">
